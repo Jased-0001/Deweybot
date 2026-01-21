@@ -34,6 +34,7 @@ client = botClient()
 tree = app_commands.CommandTree(client)
 
 import commands.Nick
+import commands.Gif
 
 # RUN
 
