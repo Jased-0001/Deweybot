@@ -1,6 +1,6 @@
 # Code i stole from stackoverflow because mine didn't work
 from PIL import Image, ImageDraw, ImageSequence, ImageFont
-import io, textwrap
+import io, textwrap, sys
 
 im = Image.open('./gif/base.gif')
 font = ImageFont.truetype('./gif/Futura Extra Bold Condensed.otf', 25)
@@ -19,7 +19,7 @@ def gen(text):
         b = io.BytesIO()
         frame.save(b, format="GIF")
         old_frame = Image.open(b)
-        frame = Image.new("RGB", (300, 169 + textHeight), (255, 255, 255))
+        frame = Image.new("RGBA", (300, 169 + textHeight), (255, 255, 255))
         frame.paste(old_frame, (0, textHeight))
 
         # Draw the text on the frame
@@ -29,5 +29,8 @@ def gen(text):
 
         frames.append(frame)
 
-    frames[0].save('./gif/out.gif', save_all=True, append_images=frames[1:])
-gen("I'm Chuzzling It!")
+    
+    buffer = io.BytesIO()
+    frames[0].save(buffer, format="GIF", save_all=True, append_images=frames[1:], loop=0)
+    buffer.seek(0)
+    return buffer
