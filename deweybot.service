@@ -1,0 +1,15 @@
+#Place in /etc/systemd/system/deweybot.service, replace execstart, workingdirectory, and user
+[Unit]
+Description=Deweybot
+After=network.target
+
+[Service]
+ExecStart=/home/jase/Deweybot/StartBot.py
+WorkingDirectory=/home/jase/Deweybot/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=jase
+
+[Install]
+WantedBy=multi-user.target

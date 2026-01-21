@@ -10,7 +10,7 @@ async def self(ctx : discord.Interaction, user: discord.Member, nickname: str):
             previous = user.nick
             await user.edit(nick=nickname)
             await ctx.response.send_message(
-                f"Dewey blast! (name changed `{previous}` -> `{nickname}`)", ephemeral=False
+                f"<:Dewey:1463436505849528425> Dewey blast! <:Dewey:1463436505849528425> (name changed `{previous}` -> `{nickname}`)", ephemeral=False
             )
         except Exception as e:
             await ctx.response.send_message(
