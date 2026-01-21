@@ -2,8 +2,8 @@
 from PIL import Image, ImageDraw, ImageSequence, ImageFont
 import io, textwrap
 
-im = Image.open('./base.gif')
-font = ImageFont.truetype('./Futura Extra Bold Condensed.otf', 25)
+im = Image.open('./gif/base.gif')
+font = ImageFont.truetype('./gif/Futura Extra Bold Condensed.otf', 25)
 
 def gen(text):
     text = textwrap.fill(text, 20)
@@ -29,5 +29,5 @@ def gen(text):
 
         frames.append(frame)
 
-    frames[0].save('out.gif', save_all=True, append_images=frames[1:])
+    frames[0].save('./gif/out.gif', save_all=True, append_images=frames[1:])
 gen("I'm Chuzzling It!")
