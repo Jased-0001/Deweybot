@@ -5,14 +5,15 @@ import Permissions
 import gif
 
 @Bot.tree.command(name="house", description="house dr house md car accident funny gifs")
-async def self(ctx : discord.Interaction, user: discord.Member, text: str):
+async def self(ctx : discord.Interaction, text: str):
     if not Permissions.banned(ctx):
+        await ctx.response.defer()
         try:
-            gif.gen(text)
-            await ctx.response.send_message(file=discord.File('./gif/out.gif'))
+            image_file = discord.File(gif.gen(text),filename=f"haus.gif")
+            await ctx.followup.send(file=image_file)
 
         except Exception as e:
-            await ctx.response.send_message(
+            await ctx.followup.send(
                 "Aw blast (or whatever dewey would say, i havent watched the show) i had an error", ephemeral=True
             )
             raise e
