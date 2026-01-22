@@ -2,12 +2,11 @@ import discord
 from discord.ext import commands, tasks
 import Bot
 import Permissions
-print("La la la")
 
-@Bot.tree.command(name="cool-command", description="echo test")
+@Bot.tree.command(name="Testcommand", description="echo test")
 async def self(ctx : discord.Interaction, test_argument: str):
     await ctx.response.send_message(
-        test_argument, ephemeral=False
+        test_argument, ephemeral=True
     )
 
 #@Bot.tree.command(name="requires-staff", description="permission test")
