@@ -1,2 +1,4 @@
 __pycache__/
 dewey.yaml
+dewey.db
+images/*

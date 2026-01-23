@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 import Bot
-import Permissions
+import other.Permissions as Permissions
 import gif
 
 @Bot.tree.command(name="house", description="house dr house md car accident funny gifs")
@@ -9,7 +9,7 @@ async def self(ctx : discord.Interaction, text: str):
     if not Permissions.banned(ctx):
         await ctx.response.defer()
         try:
-            image_file = discord.File(gif.gen(text),filename=f"haus.gif")
+            image_file = discord.File(gif.gen(text),filename=f"{text.replace(" ", "_")}.gif")
             await ctx.followup.send(file=image_file)
 
         except Exception as e:

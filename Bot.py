@@ -5,12 +5,13 @@ from yaml import load,Loader
 with open("dewey.yaml", "r") as f:
     DeweyConfig = load(stream=f, Loader=Loader)
 
-import Permissions#, db_lib
+import other.Permissions as Permissions
+import db_lib
 
 
 intents = discord.Intents.default()
 
-#db_lib.init_db()
+db_lib.init_db()
 
 class botClient(discord.Client):
     def __init__(self):
@@ -25,15 +26,18 @@ class botClient(discord.Client):
         await self.change_presence(activity=discord.Activity(name="Dewin' it", type=3))
 
         print(f"Dewey'd as {self.user}")
-    #async def on_message(self, message):
-    #    if message.author == self.user:
-    #        return
+    async def on_message(self, message: discord.Message):
+        if message.author == self.user:
+            return
+        #print(message.author.name + " - " + message.content)
 
 
 client = botClient()
 tree = discord.app_commands.CommandTree(client)
 
 import commands.Nick
+import commands.Other
+import commands.Gacha
 import commands.Gif
 
 # RUN
