@@ -19,14 +19,14 @@ def gen(text):
         b = io.BytesIO()
         frame.save(b, format="GIF")
         old_frame = Image.open(b)
-        frame = Image.new("RGBA", (300, 169 + textHeight), (255, 255, 255, 0))
+        frame = Image.new("RGBA", (300, 168 + textHeight), (255, 255, 255, 0))
         frame.paste( (255,255,255), (0, 0, 300, textHeight))
 
         # Draw the text on the frame
         d = ImageDraw.Draw(frame)
         d.multiline_text((300 / 2, 12), text, (0,0,0), font, "ma", align="center", spacing=15)
         del d
-        frame.paste(old_frame, (0, textHeight + 1))
+        frame.paste(old_frame, (0, textHeight))
 
         frames.append(frame)
 
