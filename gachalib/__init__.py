@@ -1,12 +1,24 @@
-from xmlrpc.client import Boolean
 import db_lib,Bot
 import discord
 import os
 
-def get_card_by_id(id:int) -> dict | Boolean:
+def get_card_by_id(id:int) -> dict | bool:
     try:
         a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted FROM gacha WHERE (id) = (?)", (id,))[0]
-        return {'name':a[0],'description':a[1],'rarity':a[2],'filename':a[3],'maker_id':a[4],'accepted':a[5]}
+        return {'name':a[0],'description':a[1],'rarity':a[2],'filename':a[3],'maker_id':a[4],'accepted':a[5],'id':id}
+    except IndexError:
+        return False
+
+
+def get_card_by_id_range(id_start:int, id_end:int) -> list[dict] | bool:
+    try:
+        a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE (id) BETWEEN (?) AND (?);", (id_start,id_end)) # type: ignore
+        b = []
+
+        for c in a:
+            b.append( {'name':c[0],'description':c[1],'rarity':c[2],'filename':c[3],'maker_id':c[4],'accepted':c[5], 'id':c[6] })
+
+        return b
     except IndexError:
         return False
 

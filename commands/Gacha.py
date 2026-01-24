@@ -1,4 +1,5 @@
 import sqlite3
+from tracemalloc import start
 import discord
 from discord.ext import commands, tasks
 import Bot
@@ -20,7 +21,29 @@ async def self(ctx : discord.Interaction, id: int): # type: ignore
                 return
 
         await ctx.response.send_message("Card doesn't exist!")
-        
+
+
+@Bot.tree.command(name="gacha-browsecards", description="Look through cards")
+async def self(ctx : discord.Interaction, page:int): # type: ignore
+    if not Permissions.banned(ctx):
+        embed = discord.Embed(title="Card bowser!", description="page #")
+        if page == 1:
+            lalala = gachalib.get_card_by_id_range(1,5)
+        elif page > 1:
+            startpage = (5*(page-1))+1 # FUCKED
+            lalala = gachalib.get_card_by_id_range(startpage,startpage+4)
+        else:
+            await ctx.response.send_message("Do you know your numbers?", ephemeral=True)
+
+        if lalala:
+            for i in lalala: # type: ignore
+                embed.add_field(name="Name (ID)", value=f'{i["name"]} ({i["id"]})', inline=True)
+                embed.add_field(name="Rarity", value=i["rarity"], inline=True)
+                embed.add_field(name="By", value=f'<@{i["maker_id"]}>', inline=True)
+            await ctx.response.send_message(embed=embed)
+        else:
+            await ctx.response.send_message("(There are no cards on this page!)", ephemeral=True)
+
 
 @Bot.tree.command(name="gacha-newcard", description="Submit a new gatcha card!")
 async def self(ctx : discord.Interaction, name: str, description: str, rarity: Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"], image: discord.Attachment): # type: ignore
@@ -89,10 +112,10 @@ async def self(ctx : discord.Interaction, id:int, action: Literal["Approve","Den
                 if not card["accepted"]:
                     if action == "Approve":
                         gachalib.update_card(id, "accepted", "1")
-                        await ctx.response.send_message("Okay!", ephemeral=True)
+                        await ctx.response.send_message(f"Approved card ID {id}!", ephemeral=False)
                     elif action == "Deny":
                         gachalib.delete_card(id)
-                        await ctx.response.send_message("Deleted card", ephemeral=True)
+                        await ctx.response.send_message(f"Deleted card ID {id}", ephemeral=False)
                 else:
                     await ctx.response.send_message("Card was already accepted, use gacha-deletecard", ephemeral=True)
             else:
