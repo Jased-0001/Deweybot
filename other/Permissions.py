@@ -5,7 +5,7 @@ override_users = Bot.DeweyConfig["permission-override"]
 
 #[y.id for y in ctx.user.roles]
 
-def banned(ctx):
+def banned(ctx) -> bool:
     user_roles = [y.id for y in ctx.user.roles] # pyright: ignore[reportAttributeAccessIssue]
     for i in user_roles:
         if i == Bot.DeweyConfig["banned-role"]:
@@ -14,6 +14,7 @@ def banned(ctx):
 
 def is_override(ctx) -> bool:
     return ctx.user.id in override_users
+
 
 #def has_permission(ctx: commands.Context[commands.Bot]):#, allowed: list):
 #    if ctx.user.id in override_users: return True # pyright: ignore[reportAttributeAccessIssue]

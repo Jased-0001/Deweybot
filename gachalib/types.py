@@ -1,0 +1,34 @@
+
+class Card:
+    def __init__(self,
+                 maker_id:int=-1,request_message_id:int=-1,card_id:int=-1,accepted:bool=False,
+                 name:str="", description:str="",rarity:str="",filename:str="") -> None:
+        self.maker_id           = maker_id
+        self.request_message_id = request_message_id
+        self.card_id            = card_id
+        self.accepted           = accepted
+        self.name               = name
+        self.description        = description
+        self.rarity             = rarity
+        self.filename           = filename
+
+        if len(self.name) > 256:
+            raise ValueError("Name can not be more than 256 characters")
+        if len(self.description) > 256:
+            raise ValueError("Name can not be more than 256 characters")
+    
+    def __repr__(self):
+        return (f'{self.__class__.__name__}',
+                f'({self.name} - {self.card_id})')
+    
+
+class Cards_User:
+    def __init__(self,inv_id:int=-1,card_id:int=-1,user_id:int=-1) -> None:
+        self.inv_id   = inv_id
+        self.card_id  = card_id
+        self.user_id  = user_id
+
+    def __repr__(self):
+        return (f'{self.__class__.__name__}',
+                f'({self.inv_id} - {self.card_id})')
+    

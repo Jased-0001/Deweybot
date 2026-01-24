@@ -10,8 +10,9 @@ Actual gacha part (spinny wheel)
 
 Dm card maker about card's status 
 
-TypeError: 'bool' object is not subscriptable
-  File "C:\Users\Jase\Desktop\Deweybot\gachalib\__init__.py", line 23, in delete_card
-      filename = get_card_by_id(id)['filename']
-
 the browse command is certainly fucked in some way
+
+
+
+
+Use decorators for perms/bans
