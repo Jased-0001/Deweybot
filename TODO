@@ -3,16 +3,15 @@ ADMIN:
 
 
 GACHA:
-limit the max size of name, description (commands/Gacha.py gacha-newcard)
 Shiny variants
-Storage inventory
 Actual gacha part (spinny wheel)
-
-Dm card maker about card's status 
-
-the browse command is certainly fucked in some way
+Trading
+sort the cards by id and group the same ones https://discord.com/channels/1142268839636258891/1464010371537965282/1464519937182666854
 
 
-
-
+OTHER:
 Use decorators for perms/bans
+
+
+NOTE:
+common could be 40% and uncommon 30% rare 15% epic 10% legendary 5%?

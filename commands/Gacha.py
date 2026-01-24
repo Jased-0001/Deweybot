@@ -27,23 +27,17 @@ async def self(ctx : discord.Interaction, id: int): # type: ignore
 @Bot.tree.command(name="gacha-browsecards", description="Look through cards")
 async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
     if not Permissions.banned(ctx):
-        embed = discord.Embed(title="Card bowser!", description="page #")
-        if page == 1:
-            success, cards = gachalib.cards.get_card_by_id_range(1,5)
-        elif page > 1:
-            startpage = (5*(page-1))+1 # FUCKED
-            success, cards = gachalib.cards.get_card_by_id_range(startpage,startpage+4)
-        else:
-            await ctx.response.send_message("Do you know your numbers?", ephemeral=True)
+        if page <= 0: page = 1
 
-        if success:
-            for i in cards:
-                embed.add_field(name="Name (ID)", value=f'{i.name} ({i.card_id})', inline=True)
-                embed.add_field(name="Rarity", value=i.rarity, inline=True)
-                embed.add_field(name="By", value=f'<@{i.maker_id}>', inline=True)
-            await ctx.response.send_message(embed=embed)
+        view = gachalib.BrowsePageView()
+        view.page = page
+
+        embed = gachalib.card_browser_embed(page)
+
+        if type(embed) == discord.Embed:
+            await ctx.response.send_message(content="", embed=embed, view=view)
         else:
-            await ctx.response.send_message("(There are no cards on this page!)", ephemeral=True)
+            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
 
 
 @Bot.tree.command(name="gacha-submitcard", description="Submit a new gatcha card!")
@@ -95,19 +89,26 @@ async def self(ctx : discord.Interaction, name: str, description: str, rarity: L
 
 
 
-
-
-
 # Self card management
 #######################################
 
 
-@Bot.tree.command(name="gacha-my-inventory", description="View your inventory!")
-async def self(ctx : discord.Interaction, user: discord.Member = None, id: int = 0): # type: ignore
+@Bot.tree.command(name="gacha-inventory", description="View your inventory!")
+async def self(ctx : discord.Interaction, user: discord.Member = None, page: int = 0): # type: ignore
     if not Permissions.banned(ctx):
-        uid = user.id if user else ctx.user.id
-        await ctx.response.send_message(gachalib.cards_user.get_users_cards(uid))
+        if page <= 0: page = 1
 
+        view = gachalib.InventoryPageView()
+        print(user.id if user else ctx.user.id)
+        view.uid = user.id if user else ctx.user.id
+        view.page = page
+
+        embed = gachalib.card_inventory_embed(view.uid,page)
+
+        if type(embed) == discord.Embed:
+            await ctx.response.send_message(content="", embed=embed, view=view)
+        else:
+            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
 
 
 

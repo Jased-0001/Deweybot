@@ -11,15 +11,9 @@ class Card:
         self.description        = description
         self.rarity             = rarity
         self.filename           = filename
-
-        if len(self.name) > 256:
-            raise ValueError("Name can not be more than 256 characters")
-        if len(self.description) > 256:
-            raise ValueError("Name can not be more than 256 characters")
     
     def __repr__(self):
-        return (f'{self.__class__.__name__}',
-                f'({self.name} - {self.card_id})')
+        return f'{self.__class__.__name__} (name = {self.name} - cardid= {self.card_id})'
     
 
 class Cards_User:
@@ -29,6 +23,5 @@ class Cards_User:
         self.user_id  = user_id
 
     def __repr__(self):
-        return (f'{self.__class__.__name__}',
-                f'({self.inv_id} - {self.card_id})')
+        return f'{self.__class__.__name__} (invid = {self.inv_id} - cardid = {self.card_id})'
     

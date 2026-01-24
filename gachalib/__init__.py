@@ -1,6 +1,7 @@
 import db_lib,Bot
 import gachalib.cards, gachalib.cards_user, gachalib.types
 import discord
+import random
 
 #name, card_description, rarity, filename, title: str = "None", description: str = "None"
 def gacha_embed(title:str, description:str, card:gachalib.types.Card) -> discord.Embed:
@@ -10,6 +11,128 @@ def gacha_embed(title:str, description:str, card:gachalib.types.Card) -> discord
     embed.add_field(name="Rarity!", value=card.rarity)
     embed.set_image(url=Bot.DeweyConfig["httpurl"] + card.filename)
     return embed
+
+def card_browser_embed(page:int=1) -> discord.Embed | str:
+    embed = discord.Embed(title="Card bowser!", description=f"page {page}")
+    if page == 1:
+        success, cards = gachalib.cards.get_card_by_id_range(1,5)
+    elif page > 1:
+        startpage = (5*(page-1))+1
+        success, cards = gachalib.cards.get_card_by_id_range(startpage,startpage+4)
+
+    if success:
+        for i in cards:
+            embed.add_field(name=f'{i.name} (ID: {i.card_id}) | {i.rarity}', value=f'{i.description}', inline=False)
+        if len(embed.fields) > 0:
+            return embed
+    
+    return f"(There are no cards on page {page}!)"
+
+def card_inventory_embed(uid:int, page:int=1) -> discord.Embed | str:
+    embed = discord.Embed(title="Card (inventory) bowser!", description=f"page {page}")
+    if page == 1:
+        success, cards_inv = gachalib.cards_user.get_users_cards_by_id_range(uid,1,5)
+    elif page > 1:
+        startpage = (5*(page-1))+1
+        success, cards_inv = gachalib.cards_user.get_users_cards_by_id_range(uid,startpage,startpage+4)
+        
+
+    if success:
+        cards = []
+        for i in cards_inv:
+            cards.append(gachalib.cards.get_card_by_id(i.card_id)[1])
+
+        for i in cards:
+            embed.add_field(name=f'{i.name} (ID: {i.card_id}) | {i.rarity}', value=f'', inline=False)
+
+        if len(embed.fields) > 0:
+            return embed
+    
+    return f"(There are no cards on page {page}!)"
+
+def random_rarity() -> str:
+    number = random.randint(1,100)
+    
+    if number > 0 and number <= 40:
+        return 'Common'
+    elif number > 40 and number <= 70:
+        return 'Uncommon'
+    elif number > 70 and number <= 85:
+        return 'Rare'
+    elif number > 85 and number <= 95:
+        return 'Epic'
+    elif number > 95 and number <= 100:
+        return 'Legendary'
+    else:
+        return 'Legendary'
+
+
+
+class BrowsePageView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.message = None
+        self.page = 1
+
+    async def getPage(self,interaction:discord.Interaction):
+        embed = card_browser_embed(self.page)
+
+        if type(embed) == discord.Embed:
+            await interaction.response.edit_message(content="", embed=embed)
+        else:
+            await interaction.response.edit_message(content=embed, embed=None)
+
+    @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.secondary, row=0, custom_id="backbtn")
+    async def back_call(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+
+        if self.page <= 0 or self.page - 1 <= 0:
+            button.disabled = True
+        else:
+            button.disabled = False
+            self.page -= 1
+
+        await self.getPage(interaction)
+
+
+    @discord.ui.button(emoji="➡️", style=discord.ButtonStyle.secondary, row=0, custom_id="fwdbtn")
+    async def forward_call(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        self.page += 1
+        await self.getPage(interaction)
+
+
+
+class InventoryPageView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.message = None
+        self.page = 1
+        self.uid = -1
+
+    async def getPage(self,interaction:discord.Interaction):
+        embed = card_inventory_embed(self.uid,self.page)
+
+        if type(embed) == discord.Embed:
+            await interaction.response.edit_message(content="", embed=embed)
+        else:
+            await interaction.response.edit_message(content=embed, embed=None)
+
+    @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.secondary, row=0, custom_id="backbtn")
+    async def back_call(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+
+        if self.page <= 0 or self.page - 1 <= 0:
+            button.disabled = True
+        else:
+            button.disabled = False
+            self.page -= 1
+
+        await self.getPage(interaction)
+
+
+    @discord.ui.button(emoji="➡️", style=discord.ButtonStyle.secondary, row=0, custom_id="fwdbtn")
+    async def forward_call(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        self.page += 1
+        await self.getPage(interaction)
+
 
 
 class RequestView(discord.ui.View):
@@ -27,6 +150,7 @@ class RequestView(discord.ui.View):
             await interaction.response.send_message(f"{interaction.user.mention} approved ID {a[0]} by ID {a[1]}!", ephemeral=False, silent=True)
         else:
             await interaction.response.send_message(f"This card was already accepted", ephemeral=True)
+        self.disable()
 
 
     @discord.ui.button(label="Deny", style=discord.ButtonStyle.secondary, row=0, custom_id="deny_btn")
@@ -35,9 +159,15 @@ class RequestView(discord.ui.View):
 
         if gachalib.cards.delete_card(a[0]):
             await interaction.response.send_message(f"Card DENIED and DELETED!", ephemeral=False)
+            self.disable()
         else:
             await interaction.response.send_message(f"I couldn't find it???", ephemeral=False)
 
     @discord.ui.button(label="BAN FROM DEWEY", style=discord.ButtonStyle.danger, row=1, custom_id="ban_btn")
     async def ban_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         await interaction.response.send_message(f"not implemented", ephemeral=True)
+        self.disable()
+
+    def disable(self):
+        for child in self.children:
+            child.disabled=True # pyright: ignore[reportAttributeAccessIssue]
