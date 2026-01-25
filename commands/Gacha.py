@@ -10,6 +10,17 @@ from gachalib import *
 # General card commands 
 #######################################
 
+@Bot.tree.command(name="gacha-viewcard-fancy", description="View a gacha card! (but cooler!)")
+async def self(ctx : discord.Interaction, id: int): # type: ignore
+    if not Permissions.banned(ctx):
+        success,card = gachalib.cards.get_card_by_id(id)
+        if success:
+            if card.accepted or Permissions.is_override(ctx) or ctx.user.id == a['maker_id']: # type: ignore
+                file = gachalib.fancy_gacha_embed(card=card)
+                await ctx.response.send_message(file=file)
+        else:
+            await ctx.response.send_message("Card doesn't exist!")
+
 @Bot.tree.command(name="gacha-viewcard", description="View a gacha card!")
 async def self(ctx : discord.Interaction, id: int): # type: ignore
     if not Permissions.banned(ctx):

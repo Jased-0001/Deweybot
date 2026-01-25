@@ -1,5 +1,5 @@
 import db_lib,Bot
-import gachalib.cards, gachalib.cards_user, gachalib.types
+import gachalib.cards, gachalib.cards_user, gachalib.types, gachalib.fancy
 import discord
 from random import randint
 from typing import Literal
@@ -7,6 +7,10 @@ from typing import Literal
 Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"]
 
 #name, card_description, rarity, filename, title: str = "None", description: str = "None"
+def fancy_gacha_embed(card:gachalib.types.Card) -> discord.File:
+    file = discord.File(gachalib.fancy.generate_card_img(card), filename="image.png")
+    return file
+
 def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarity:bool=True, show_desc:bool=True, show_name:bool=True) -> discord.Embed:
     embed = discord.Embed(title=title, description=description)
     if show_name:   embed.add_field(name="Name!", value=card.name)
