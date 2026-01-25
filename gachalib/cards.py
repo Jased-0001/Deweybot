@@ -33,16 +33,21 @@ def get_card_by_id_range(id_start:int, id_end:int) -> tuple[bool, list[gachalib.
         return (True, b)
     except IndexError:
         return (False,None) # pyright: ignore[reportReturnType]
+
+def get_cards_by_rarity(rarity:str) -> list:
+    try:
+        return db_lib.read_data(f"SELECT id FROM gacha WHERE (rarity,accepted) = (?,?)", (rarity,True))
+    except:
+        return []
     
 
 def random_card_by_rarity(rarity:str) -> tuple[bool, gachalib.types.Card]:
     try:
-        a = db_lib.read_data(f"SELECT id FROM gacha WHERE (rarity,accepted) = (?,?)", (rarity,True))
+        a = get_cards_by_rarity(rarity)
+        if len(a) < 1:
+            return (False,None)
         success, card = get_card_by_id(a[randint(0,len(a)-1)][0])
-        if success:
-            return(True, card)
-        else:
-            return (False,None) # pyright: ignore[reportReturnType]
+        return(success, card)
     except IndexError:
         return (False,None) # pyright: ignore[reportReturnType]
     

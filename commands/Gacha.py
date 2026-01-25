@@ -148,14 +148,23 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
 @Bot.tree.command(name="gacha-roll", description="Roll for a card!")
 async def self(ctx : discord.Interaction): # type: ignore
     if not Permissions.banned(ctx):
-        success, card = gachalib.cards.random_card_by_rarity(gachalib.random_rarity())
+        rarity = gachalib.random_rarity()
+        success, card = gachalib.cards.random_card_by_rarity(rarity)
 
-        gachalib.cards_user.give_user_card(ctx.user.id, card.card_id)
+        if success:
+            gachalib.cards_user.give_user_card(ctx.user.id, card.card_id)
 
-        await ctx.response.send_message(
-            embed=gachalib.gacha_embed(card=card, title="Gacha roll!", description=f"You rolled a{"n" if card.rarity == "Epic" else ""} {card.rarity} {card.name}! ({card.card_id})",
-                                       show_rarity=False, show_name=False)
-            )
+            await ctx.response.send_message(embed=gachalib.gacha_embed(
+                card=card,
+                title="Gacha roll!",
+                description=f"You rolled a{"n" if card.rarity == "Epic" or card.rarity == "Uncommon" else ""} {card.rarity} {card.name}! ({card.card_id})",
+                show_rarity=False, show_name=False
+            ))
+        else:
+            await ctx.response.send_message(embed=discord.Embed(
+                title="Gacha roll!",
+                description=f"You rolled... but... i didn't like it! (no {card.rarity} cards found)"
+            ))
 
 
 # Admin commands

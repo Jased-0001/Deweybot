@@ -56,18 +56,19 @@ def card_inventory_embed(uid:int, page:int=1) -> discord.Embed | str:
 def random_rarity() -> str:
     number = randint(1,100)
     
-    if number > 0 and number <= 35:
+    # If you remove the lower bounds, every roll will succeed if there's at least 1 card, but it may throw off balancing
+    if number > 0 and number <= 35 and len(cards.get_cards_by_rarity("Common")) > 0:
         return 'Common'
-    elif number > 35 and number <= 60:
+    elif number > 35 and number <= 60 and len(cards.get_cards_by_rarity("Uncommon")) > 0:
         return 'Uncommon'
-    elif number > 60 and number <= 80:
+    elif number > 60 and number <= 80 and len(cards.get_cards_by_rarity("Rare")) > 0:
         return 'Rare'
-    elif number > 80 and number <= 95:
+    elif number > 80 and number <= 95 and len(cards.get_cards_by_rarity("Epic")) > 0:
         return 'Epic'
-    elif number > 95 and number <= 100:
+    elif number > 95 and number <= 100 and len(cards.get_cards_by_rarity("Legendary")) > 0:
         return 'Legendary'
     else:
-        return 'Legendary'
+        return '???' # Maybe add some fucked up card
     
 
 
