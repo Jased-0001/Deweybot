@@ -6,12 +6,24 @@ import db_lib
 from random import randint
 import os
 
+import gachalib.cards
 import gachalib.types
 
 
 # Getting cards
 ######################################
+def get_cards() -> tuple[bool, list[gachalib.types.Card]]:
+    try:
+        a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha", ())
+        b = []
 
+        for c in a:
+            b.append(gachalib.types.Card(name=c[0],description=c[1],rarity=c[2],filename=c[3],maker_id=c[4],accepted=c[5],card_id=c[6]))
+
+        return (True, b)
+    except IndexError:
+        return (False, None) # pyright: ignore[reportReturnType]
+    
 def get_card_by_id(card_id:int) -> tuple[bool, gachalib.types.Card]:
     try:
         a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted FROM gacha WHERE (id) = (?)", (card_id,))[0]
@@ -22,7 +34,7 @@ def get_card_by_id(card_id:int) -> tuple[bool, gachalib.types.Card]:
 
 def get_card_by_id_range(id_start:int, id_end:int) -> tuple[bool, list[gachalib.types.Card]]:
     try:
-        a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE (id);", ())[id_start-1:id_end]
+        a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha;", ())[id_start-1:id_end]
         b = []
 
         for c in a:
@@ -34,24 +46,40 @@ def get_card_by_id_range(id_start:int, id_end:int) -> tuple[bool, list[gachalib.
     except IndexError:
         return (False,None) # pyright: ignore[reportReturnType]
 
-def get_cards_by_rarity(rarity:str) -> list:
-    try:
-        return db_lib.read_data(f"SELECT id FROM gacha WHERE (rarity,accepted) = (?,?)", (rarity,True))
-    except:
-        return []
-    
+
+# other
+######################################
 
 def random_card_by_rarity(rarity:str) -> tuple[bool, gachalib.types.Card]:
     try:
-        a = get_cards_by_rarity(rarity)
-        if len(a) < 1:
-            return (False,None)
+        a = db_lib.read_data(f"SELECT id FROM gacha WHERE (rarity,accepted) = (?,?)", (rarity,True))
         success, card = get_card_by_id(a[randint(0,len(a)-1)][0])
-        return(success, card)
+        if success:
+            return(True, card)
+        else:
+            return (False,None) # pyright: ignore[reportReturnType]
     except IndexError:
         return (False,None) # pyright: ignore[reportReturnType]
     
-    
+
+def group_like_cards(a:list[gachalib.types.Card]) -> list[tuple[gachalib.types.Card, int]]:
+    b = {}
+
+    for i in a:
+        if str(i.card_id) in b:
+            b[str(i.card_id)] += 1
+        else:
+            b[str(i.card_id)] = 1
+
+    c = []
+
+    for card_id,count in b.items():
+        success, card = gachalib.cards.get_card_by_id(card_id)
+        if success:
+            c.append((card, count))
+
+    return c
+
 
 # Making, deleting, editing cards
 ######################################

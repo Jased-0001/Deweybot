@@ -25,3 +25,12 @@ class Cards_User:
     def __repr__(self):
         return f'{self.__class__.__name__} (invid = {self.inv_id} - cardid = {self.card_id})'
     
+
+class Cards_Timeout:
+    def __init__(self,inv_id:int=-1,last_use:int=-1) -> None:
+        self.user_id   = inv_id
+        self.last_use  = last_use
+
+    def __repr__(self):
+        return f'{self.__class__.__name__} (uid = {self.user_id} - lastuse = {self.last_use})'
+    

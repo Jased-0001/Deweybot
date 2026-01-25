@@ -10,6 +10,7 @@ from gachalib import *
 # General card commands 
 #######################################
 
+
 @Bot.tree.command(name="gacha-viewcard", description="View a gacha card!")
 async def self(ctx : discord.Interaction, id: int): # type: ignore
     if not Permissions.banned(ctx):
@@ -31,7 +32,7 @@ async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
         view = gachalib.BrowsePageView()
         view.page = page
 
-        embed = gachalib.card_browser_embed(page)
+        embed = gachalib.card_browser_embed(view.cards, page)
 
         if type(embed) == discord.Embed:
             await ctx.response.send_message(content="", embed=embed, view=view)
@@ -132,39 +133,23 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
 
-        view = gachalib.InventoryPageView()
-        print(user.id if user else ctx.user.id)
-        view.uid = user.id if user else ctx.user.id
+        view = gachalib.InventoryPageView(user.id if user else ctx.user.id)
         view.page = page
-
-        embed = gachalib.card_inventory_embed(view.uid,page)
-
-        if type(embed) == discord.Embed:
-            await ctx.response.send_message(content="", embed=embed, view=view)
-        else:
-            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
+            
+        await ctx.response.send_message(embed=gachalib.card_inventory_embed(view.uid,view.cards,view.page), view=view) # pyright: ignore[reportArgumentType]
 
 
 @Bot.tree.command(name="gacha-roll", description="Roll for a card!")
 async def self(ctx : discord.Interaction): # type: ignore
     if not Permissions.banned(ctx):
-        rarity = gachalib.random_rarity()
-        success, card = gachalib.cards.random_card_by_rarity(rarity)
+        success, card = gachalib.cards.random_card_by_rarity(gachalib.random_rarity())
 
-        if success:
-            gachalib.cards_user.give_user_card(ctx.user.id, card.card_id)
+        gachalib.cards_user.give_user_card(ctx.user.id, card.card_id)
 
-            await ctx.response.send_message(embed=gachalib.gacha_embed(
-                card=card,
-                title="Gacha roll!",
-                description=f"You rolled a{"n" if card.rarity == "Epic" or card.rarity == "Uncommon" else ""} {card.rarity} {card.name}! ({card.card_id})",
-                show_rarity=False, show_name=False
-            ))
-        else:
-            await ctx.response.send_message(embed=discord.Embed(
-                title="Gacha roll!",
-                description=f"You rolled... but... i didn't like it! (no {rarity} cards found)"
-            ))
+        await ctx.response.send_message(
+            embed=gachalib.gacha_embed(card=card, title="Gacha roll!", description=f"You rolled a{"n" if card.rarity == "Epic" else ""} {card.rarity} {card.name}! ({card.card_id})",
+                                       show_rarity=False, show_name=False)
+            )
 
 
 # Admin commands

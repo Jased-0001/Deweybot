@@ -1,8 +1,10 @@
+from commands import Gacha
 import db_lib,Bot
 import gachalib.cards, gachalib.cards_user, gachalib.types
 import discord
 from random import randint
 from typing import Literal
+import math
 
 Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"]
 
@@ -15,72 +17,73 @@ def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarit
     embed.set_image(url=Bot.DeweyConfig["httpurl"] + card.filename)
     return embed
 
-def card_browser_embed(page:int=1) -> discord.Embed | str:
-    embed = discord.Embed(title="Card bowser!", description=f"page {page}")
-    if page == 1:
-        success, cards = gachalib.cards.get_card_by_id_range(1,5)
-    elif page > 1:
-        startpage = (5*(page-1))+1
-        success, cards = gachalib.cards.get_card_by_id_range(startpage,startpage+4)
+def card_browser_embed(cards:list[gachalib.types.Card], page:int=1) -> discord.Embed | str:
+    startpage = (5*(page-1))+1
 
-    if success:
-        for i in cards:
-            embed.add_field(name=f'{i.name} (ID: {i.card_id}) | {i.rarity}', value=f'{i.description}', inline=False)
-        if len(embed.fields) > 0:
-            return embed
+    if page == 1:
+        cards_a = cards[0:5]
+    elif page > 1:
+        cards_a = cards[startpage-1:startpage+5]
+
+    embed = discord.Embed(title="Card bowser!", description=f"page {page}/{math.ceil(len(cards)/5)}")
+
+    for i in cards_a:
+        embed.add_field(name=f'{i.name} (ID: {i.card_id}) | {i.rarity}', value=f'{i.description}', inline=False)
+    if len(embed.fields) > 0:
+        return embed
     
     return f"(There are no cards on page {page}!)"
 
-def card_inventory_embed(uid:int, page:int=1) -> discord.Embed | str:
-    embed = discord.Embed(title="Card (inventory) bowser!", description=f"page {page}")
+def card_inventory_embed(uid:int, cards:list[gachalib.types.Card], page:int) -> discord.Embed | str:
+    card_grouped = gachalib.cards.group_like_cards(cards)
+
+    startpage = (5*(page-1))+1
+
     if page == 1:
-        success, cards_inv = gachalib.cards_user.get_users_cards_by_id_range(uid,1,5)
+        cards_a = card_grouped[0:5]
     elif page > 1:
-        startpage = (5*(page-1))+1
-        success, cards_inv = gachalib.cards_user.get_users_cards_by_id_range(uid,startpage,startpage+4)
-        
+        cards_a = card_grouped[startpage-1:startpage+5]
 
-    if success:
-        cards = []
-        for i in cards_inv:
-            cards.append(gachalib.cards.get_card_by_id(i.card_id)[1])
+    embed = discord.Embed(title="Card (inventory) bowser!", description=f"page {page}/{math.ceil(len(card_grouped)/5)}")
+    
+    for i in cards_a:
+        print(cards_a)
+        print(i)
+        embed.add_field(name=f'{i[0].name} (ID: {i[0].card_id}) | {i[0].rarity}  x{i[1]}', value=f'', inline=False)
 
-        for i in cards:
-            embed.add_field(name=f'{i.name} (ID: {i.card_id}) | {i.rarity}', value=f'', inline=False)
-
-        if len(embed.fields) > 0:
-            return embed
+    if len(embed.fields) > 0:
+        return embed
     
     return f"(There are no cards on page {page}!)"
 
 def random_rarity() -> str:
     number = randint(1,100)
     
-    # If you remove the lower bounds, every roll will succeed if there's at least 1 card, but it may throw off balancing
-    if number > 0 and number <= 35 and len(cards.get_cards_by_rarity("Common")) > 0:
+    if number > 0 and number <= 35:
         return 'Common'
-    elif number > 35 and number <= 60 and len(cards.get_cards_by_rarity("Uncommon")) > 0:
+    elif number > 35 and number <= 60:
         return 'Uncommon'
-    elif number > 60 and number <= 80 and len(cards.get_cards_by_rarity("Rare")) > 0:
+    elif number > 60 and number <= 80:
         return 'Rare'
-    elif number > 80 and number <= 95 and len(cards.get_cards_by_rarity("Epic")) > 0:
+    elif number > 80 and number <= 95:
         return 'Epic'
-    elif number > 95 and number <= 100 and len(cards.get_cards_by_rarity("Legendary")) > 0:
+    elif number > 95 and number <= 100:
         return 'Legendary'
     else:
-        return '???' # Maybe add some fucked up card
+        return 'Legendary'
     
 
-
+#[id_start-1:id_end]
 
 class BrowsePageView(discord.ui.View):
     def __init__(self):
         super().__init__()
         self.message = None
         self.page = 1
+        _, self.cards = gachalib.cards.get_cards()
 
     async def getPage(self,interaction:discord.Interaction):
-        embed = card_browser_embed(self.page)
+        embed = card_browser_embed(self.cards,self.page)
 
         if type(embed) == discord.Embed:
             await interaction.response.edit_message(content="", embed=embed)
@@ -107,14 +110,16 @@ class BrowsePageView(discord.ui.View):
 
 
 class InventoryPageView(discord.ui.View):
-    def __init__(self):
+    def __init__(self,uid:int):
         super().__init__()
         self.message = None
         self.page = 1
-        self.uid = -1
+        self.uid = uid
+        _, self.cards = gachalib.cards_user.get_users_cards(self.uid)
+        self.cards = gachalib.cards_user.sort_userlist_cards(self.cards)
 
     async def getPage(self,interaction:discord.Interaction):
-        embed = card_inventory_embed(self.uid,self.page)
+        embed = card_inventory_embed(self.uid,self.cards,self.page) # pyright: ignore[reportArgumentType]
 
         if type(embed) == discord.Embed:
             await interaction.response.edit_message(content="", embed=embed)
