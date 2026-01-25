@@ -1,14 +1,17 @@
 import db_lib,Bot
 import gachalib.cards, gachalib.cards_user, gachalib.types
 import discord
-import random
+from random import randint
+from typing import Literal
+
+Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"]
 
 #name, card_description, rarity, filename, title: str = "None", description: str = "None"
-def gacha_embed(title:str, description:str, card:gachalib.types.Card) -> discord.Embed:
+def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarity:bool=True, show_desc:bool=True, show_name:bool=True) -> discord.Embed:
     embed = discord.Embed(title=title, description=description)
-    embed.add_field(name="Name!", value=card.name)
-    embed.add_field(name="Description!", value=card.description)
-    embed.add_field(name="Rarity!", value=card.rarity)
+    if show_name:   embed.add_field(name="Name!", value=card.name)
+    if show_desc:   embed.add_field(name="Description!", value=card.description)
+    if show_rarity: embed.add_field(name="Rarity!", value=card.rarity)
     embed.set_image(url=Bot.DeweyConfig["httpurl"] + card.filename)
     return embed
 
@@ -51,20 +54,21 @@ def card_inventory_embed(uid:int, page:int=1) -> discord.Embed | str:
     return f"(There are no cards on page {page}!)"
 
 def random_rarity() -> str:
-    number = random.randint(1,100)
+    number = randint(1,100)
     
-    if number > 0 and number <= 40:
+    if number > 0 and number <= 35:
         return 'Common'
-    elif number > 40 and number <= 70:
+    elif number > 35 and number <= 60:
         return 'Uncommon'
-    elif number > 70 and number <= 85:
+    elif number > 60 and number <= 80:
         return 'Rare'
-    elif number > 85 and number <= 95:
+    elif number > 80 and number <= 95:
         return 'Epic'
     elif number > 95 and number <= 100:
         return 'Legendary'
     else:
         return 'Legendary'
+    
 
 
 
@@ -142,8 +146,12 @@ class RequestView(discord.ui.View):
 
     @discord.ui.button(label="Approve", style=discord.ButtonStyle.success, row=0, custom_id="approve_btn")
     async def approve_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        a = db_lib.read_data(f"SELECT id, maker_id, accepted FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
+        a = db_lib.read_data(f"SELECT id, maker_id, accepted, rarity FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
         #print("I believe this is id ", a[0])
+
+        if a[3] == "None":
+            await interaction.response.send_message("Please set a rarity first! /z-gacha-admin-setrarity")
+            return
 
         if not a[2]:
             gachalib.cards.update_card(a[0], "accepted", "1")

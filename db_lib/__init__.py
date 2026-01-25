@@ -42,3 +42,7 @@ def close_connection(exception):
     global database
     if database is not None:
         database.close()
+
+
+def easy_getdata(values:list,where:list):
+    return

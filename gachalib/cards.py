@@ -3,6 +3,7 @@ things to deal with the actual cards
 """
 import gachalib
 import db_lib
+from random import randint
 import os
 
 import gachalib.types
@@ -21,7 +22,7 @@ def get_card_by_id(card_id:int) -> tuple[bool, gachalib.types.Card]:
 
 def get_card_by_id_range(id_start:int, id_end:int) -> tuple[bool, list[gachalib.types.Card]]:
     try:
-        a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE (id) BETWEEN (?) AND (?);", (id_start,id_end))
+        a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE (id);", ())[id_start-1:id_end]
         b = []
 
         for c in a:
@@ -32,6 +33,19 @@ def get_card_by_id_range(id_start:int, id_end:int) -> tuple[bool, list[gachalib.
         return (True, b)
     except IndexError:
         return (False,None) # pyright: ignore[reportReturnType]
+    
+
+def random_card_by_rarity(rarity:str) -> tuple[bool, gachalib.types.Card]:
+    try:
+        a = db_lib.read_data(f"SELECT id FROM gacha WHERE (rarity,accepted) = (?,?)", (rarity,True))
+        success, card = get_card_by_id(a[randint(0,len(a)-1)][0])
+        if success:
+            return(True, card)
+        else:
+            return (False,None) # pyright: ignore[reportReturnType]
+    except IndexError:
+        return (False,None) # pyright: ignore[reportReturnType]
+    
     
 
 # Making, deleting, editing cards

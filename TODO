@@ -3,14 +3,16 @@ ADMIN:
 
 
 GACHA:
-Shiny variants
-Actual gacha part (spinny wheel)
+Evil variants (0.1%, inverted image, prefixed with "EVIL")
+Make gacha wheel more flashy
 Trading
 sort the cards by id and group the same ones https://discord.com/channels/1142268839636258891/1464010371537965282/1464519937182666854
+timeout for gacha
 
 
 OTHER:
 Use decorators for perms/bans
+Database easy edit and read functions
 
 
 NOTE:
