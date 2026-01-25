@@ -163,7 +163,7 @@ async def self(ctx : discord.Interaction): # type: ignore
         else:
             await ctx.response.send_message(embed=discord.Embed(
                 title="Gacha roll!",
-                description=f"You rolled... but... i didn't like it! (no {card.rarity} cards found)"
+                description=f"You rolled... but... i didn't like it! (no {rarity} cards found)"
             ))
 
 
