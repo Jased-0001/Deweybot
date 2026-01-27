@@ -166,6 +166,23 @@ async def self(ctx : discord.Interaction): # type: ignore
             )
 
 
+# Trading
+#######################################
+
+@Bot.tree.command(name="gacha-trade", description="Trade with someone (wip)")
+async def self(ctx : discord.Interaction, user:discord.Member): # type: ignore
+    if not Permissions.banned(ctx):
+        trade = gachalib.types.Trade(user1=ctx.user, user2=user)
+        embed = gachalib.trade.trade_embed(trade)
+        view = gachalib.trade.TradeView(trade)
+        await ctx.response.send_message(embed=embed, view=view)
+
+@Bot.tree.command(name="gacha-give-card", description="Give someone a card")
+async def self(ctx : discord.Interaction, inv_id:int, user:discord.Member): # type: ignore
+    test = gachalib.cards_user.change_card_owner(user.id, inv_id)
+    await ctx.response.send_message(test)
+
+
 # Admin commands
 #######################################
 

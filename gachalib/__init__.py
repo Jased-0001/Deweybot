@@ -1,6 +1,6 @@
 from commands import Gacha
 import db_lib,Bot
-import gachalib.cards, gachalib.cards_user, gachalib.gacha_timeout, gachalib.types
+import gachalib.cards, gachalib.cards_user, gachalib.gacha_timeout, gachalib.types, gachalib.trade
 import discord
 from random import randint
 from typing import Literal

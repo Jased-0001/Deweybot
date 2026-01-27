@@ -1,3 +1,4 @@
+import discord
 
 class Card:
     def __init__(self,
@@ -34,3 +35,12 @@ class Cards_Timeout:
     def __repr__(self):
         return f'{self.__class__.__name__} (uid = {self.user_id} - lastuse = {self.last_use})'
     
+class Trade:
+    def __init__(self,user1:discord.Member=[],user2:discord.Member=[],user1_cards:list=[],user2_cards=[]) -> None:
+        self.user1       = user1
+        self.user1_cards = user1_cards
+        self.user2       = user2
+        self.user2_cards = user2_cards
+
+    def __repr__(self):
+        return f'{self.__class__.__name__} (user1id = {self.user1.id} - user2id = {self.user2.id} - user1cards = {self.user2_cards} - user2cards = {self.user2_cards})'
