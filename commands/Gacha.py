@@ -136,8 +136,13 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
 
         view = gachalib.BrowserView(True, user.id if user else ctx.user.id)
         view.page = page
-            
-        await ctx.response.send_message(embed=gachalib.card_inventory_embed(view.uid,view.cards,view.page), view=view) # pyright: ignore[reportArgumentType]
+        
+        embed = gachalib.card_inventory_embed(view.uid,view.cards,view.page)
+
+        if type(embed) == discord.Embed:
+            await ctx.response.send_message(content="", embed=embed, view=view)
+        else:
+            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
 
 
 @Bot.tree.command(name="gacha-roll", description="Roll for a card!")
