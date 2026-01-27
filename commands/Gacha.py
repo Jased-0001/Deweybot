@@ -1,3 +1,4 @@
+from socket import timeout
 import sqlite3
 import discord
 from discord.ext import commands, tasks
@@ -41,7 +42,7 @@ async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
 
 
 @Bot.tree.command(name="gacha-submitcard", description="Submit a new gatcha card!")
-async def self(ctx : discord.Interaction, name: str, description: str, image: discord.Attachment): # type: ignore
+async def self(ctx : discord.Interaction, name: str, description: str, image: discord.Attachment, additional_info:str=""): # type: ignore
     if not Permissions.banned(ctx):
         if Bot.DeweyConfig["review"][0] == "dm":
             approval_channel = await Bot.client.fetch_user(Bot.DeweyConfig["review"][1])
@@ -74,7 +75,7 @@ async def self(ctx : discord.Interaction, name: str, description: str, image: di
             title="gacha request!!", description=f"New request for a gacha card from <@{ctx.user.id}> (id = {next_id})"
             )
         message_view = gachalib.RequestView()
-        message_view.message = await approval_channel.send(embed=embed,view=message_view) # type: ignore
+        message_view.message = await approval_channel.send(f"```{additional_info}```" if additional_info else "", embed=embed,view=message_view) # type: ignore
 
         try:
             gachalib.cards.register_new_card(ctx.user.id,message_view.message.id,next_id,name,description,"None",filename) # type: ignore
@@ -99,7 +100,7 @@ async def self(ctx : discord.Interaction, id: int, name: str = "", description: 
 
         success, card = gachalib.cards.get_card_by_id(id)
 
-        if success and card.maker_id == ctx.user.id:
+        if success and (card.maker_id == ctx.user.id or Permissions.is_override(ctx)):
             changed_anything = False
             if name != "" and name != card.name:
                 gachalib.cards.update_card(id,"name",name)
@@ -142,13 +143,23 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
 @Bot.tree.command(name="gacha-roll", description="Roll for a card!")
 async def self(ctx : discord.Interaction): # type: ignore
     if not Permissions.banned(ctx):
-        success, card = gachalib.cards.random_card_by_rarity(gachalib.random_rarity())
+        timestamp = gachalib.gacha_timeout.get_timestamp()
+        last_use = gachalib.gacha_timeout.get_user_timeout(ctx.user.id).last_use
+        time_out = 3600 # 1 hour (seconds)
+        if (timestamp - last_use) > (time_out) or last_use == -1:
+            _, card = gachalib.cards.random_card_by_rarity(gachalib.random_rarity())
 
-        gachalib.cards_user.give_user_card(ctx.user.id, card.card_id)
+            gachalib.cards_user.give_user_card(ctx.user.id, card.card_id)
 
-        await ctx.response.send_message(
-            embed=gachalib.gacha_embed(card=card, title="Gacha roll!", description=f"You rolled a{"n" if card.rarity == "Epic" else ""} {card.rarity} {card.name}! ({card.card_id})",
-                                       show_rarity=False, show_name=False)
+            await ctx.response.send_message(
+                embed=gachalib.gacha_embed(card=card, title="Gacha roll!", description=f"You rolled a{"n" if card.rarity == "Epic" else ""} {card.rarity} {card.name}! ({card.card_id})",
+                                        show_rarity=False, show_name=False)
+                )
+            
+            gachalib.gacha_timeout.set_user_timeout(ctx.user.id,gachalib.gacha_timeout.get_timestamp())
+        else:
+            await ctx.response.send_message(
+                f"Aw! You're in Dewey Timeout! Try again <t:{last_use+time_out}:R>"
             )
 
 
@@ -172,13 +183,19 @@ async def self(ctx : discord.Interaction, id:int, action: gachalib.Literal["Appr
                 if not card.accepted:
                     if action == "Approve":
                         if card.rarity == "None":
-                            await ctx.response.send_message("Please set a rarity first! /z-gacha-admin-setrarity")
+                            await ctx.response.send_message("Please set a rarity first! /z-gacha-admin-setrarity", ephemeral=True)
                         else:
                             gachalib.cards.update_card(id, "accepted", "1")
-                            await ctx.response.send_message(f"Approved card ID {id}!", ephemeral=False)
+                            await ctx.response.send_message(f"Approved card ID {id}!", ephemeral=True)
+
+                            userchannel = await gachalib.get_card_maker_channel(card.maker_id)
+                            await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been ACCEPTED!!! GOOD JOB!!!")
                     elif action == "Deny":
                         gachalib.cards.delete_card(id)
-                        await ctx.response.send_message(f"Deleted card ID {id}", ephemeral=False)
+                        await ctx.response.send_message(f"Deleted card ID {id}", ephemeral=True)
+                            
+                        userchannel = await gachalib.get_card_maker_channel(card.maker_id)
+                        await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been denied. Sorry for your loss.")
                 else:
                     await ctx.response.send_message("Card was already accepted, use gacha-deletecard", ephemeral=True)
             else:
@@ -200,6 +217,6 @@ async def self(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities): # t
             success,card = gachalib.cards.get_card_by_id(id)
             if success:
                 gachalib.cards.update_card(id, "rarity", rarity)
-                await ctx.response.send_message(f"Card is now {rarity}", ephemeral=False)
+                await ctx.response.send_message(f"Card is now {rarity}", ephemeral=True)
             else:
                 await ctx.response.send_message("Does not exist", ephemeral=True)

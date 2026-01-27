@@ -1,6 +1,6 @@
 from commands import Gacha
 import db_lib,Bot
-import gachalib.cards, gachalib.cards_user, gachalib.types
+import gachalib.cards, gachalib.cards_user, gachalib.gacha_timeout, gachalib.types
 import discord
 from random import randint
 from typing import Literal
@@ -47,14 +47,15 @@ def card_inventory_embed(uid:int, cards:list[gachalib.types.Card], page:int) -> 
     embed = discord.Embed(title="Card (inventory) bowser!", description=f"page {page}/{math.ceil(len(card_grouped)/5)}")
     
     for i in cards_a:
-        print(cards_a)
-        print(i)
         embed.add_field(name=f'{i[0].name} (ID: {i[0].card_id}) | {i[0].rarity}  x{i[1]}', value=f'', inline=False)
 
     if len(embed.fields) > 0:
         return embed
     
     return f"(There are no cards on page {page}!)"
+
+async def get_card_maker_channel(id:int) -> discord.User:
+    return await Bot.client.fetch_user(id)
 
 def random_rarity() -> str:
     number = randint(1,100)
@@ -152,7 +153,7 @@ class RequestView(discord.ui.View):
 
     @discord.ui.button(label="Approve", style=discord.ButtonStyle.success, row=0, custom_id="approve_btn")
     async def approve_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        a = db_lib.read_data(f"SELECT id, maker_id, accepted, rarity FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
+        a = db_lib.read_data(f"SELECT id, maker_id, accepted, rarity, name FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
         #print("I believe this is id ", a[0])
 
         if a[3] == "None":
@@ -162,6 +163,8 @@ class RequestView(discord.ui.View):
         if not a[2]:
             gachalib.cards.update_card(a[0], "accepted", "1")
             await interaction.response.send_message(f"{interaction.user.mention} approved ID {a[0]} by ID {a[1]}!", ephemeral=False, silent=True)
+            userchannel = await get_card_maker_channel(a[1])
+            await userchannel.send(f"Your card \"{a[4]}\" ({a[0]}) has been ACCEPTED!!! GOOD JOB!!!")
         else:
             await interaction.response.send_message(f"This card was already accepted", ephemeral=True)
         self.disable()
@@ -169,7 +172,10 @@ class RequestView(discord.ui.View):
 
     @discord.ui.button(label="Deny", style=discord.ButtonStyle.secondary, row=0, custom_id="deny_btn")
     async def deny_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        a = db_lib.read_data(f"SELECT id FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
+        a = db_lib.read_data(f"SELECT id,maker_id,name FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
+
+        userchannel = await get_card_maker_channel(a[1])
+        await userchannel.send(f"Your card \"{a[2]}\" ({a[0]}) has been denied. Sorry for your loss.")
 
         if gachalib.cards.delete_card(a[0]):
             await interaction.response.send_message(f"Card DENIED and DELETED!", ephemeral=False)

@@ -27,8 +27,8 @@ class Cards_User:
     
 
 class Cards_Timeout:
-    def __init__(self,inv_id:int=-1,last_use:int=-1) -> None:
-        self.user_id   = inv_id
+    def __init__(self,user_id:int=-1,last_use:int=-1) -> None:
+        self.user_id   = user_id
         self.last_use  = last_use
 
     def __repr__(self):
