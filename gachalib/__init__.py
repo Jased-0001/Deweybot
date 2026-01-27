@@ -76,51 +76,26 @@ def random_rarity() -> str:
 
 #[id_start-1:id_end]
 
-class BrowsePageView(discord.ui.View):
-    def __init__(self):
+class BrowserView(discord.ui.View):
+    def __init__(self,inventory:bool,uid:int=0):
         super().__init__()
         self.message = None
         self.page = 1
-        _, self.cards = gachalib.cards.get_cards()
 
-    async def getPage(self,interaction:discord.Interaction):
-        embed = card_browser_embed(self.cards,self.page)
-
-        if type(embed) == discord.Embed:
-            await interaction.response.edit_message(content="", embed=embed)
-        else:
-            await interaction.response.edit_message(content=embed, embed=None)
-
-    @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.secondary, row=0, custom_id="backbtn")
-    async def back_call(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-
-        if self.page <= 0 or self.page - 1 <= 0:
-            button.disabled = True
-        else:
-            button.disabled = False
-            self.page -= 1
-
-        await self.getPage(interaction)
-
-
-    @discord.ui.button(emoji="➡️", style=discord.ButtonStyle.secondary, row=0, custom_id="fwdbtn")
-    async def forward_call(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        self.page += 1
-        await self.getPage(interaction)
-
-
-
-class InventoryPageView(discord.ui.View):
-    def __init__(self,uid:int):
-        super().__init__()
-        self.message = None
-        self.page = 1
+        self.isInventory = inventory
         self.uid = uid
-        _, self.cards = gachalib.cards_user.get_users_cards(self.uid)
-        self.cards = gachalib.cards_user.sort_userlist_cards(self.cards)
+
+        if self.isInventory:
+            _, self.cards = gachalib.cards_user.get_users_cards(self.uid)
+            self.cards = gachalib.cards_user.sort_userlist_cards(self.cards)
+        else:
+            _, self.cards = gachalib.cards.get_cards()
 
     async def getPage(self,interaction:discord.Interaction):
-        embed = card_inventory_embed(self.uid,self.cards,self.page) # pyright: ignore[reportArgumentType]
+        if self.isInventory:
+            embed = card_inventory_embed(self.uid,self.cards,self.page) # pyright: ignore[reportArgumentType]
+        else:
+            embed = card_browser_embed(self.cards,self.page) # pyright: ignore[reportArgumentType]
 
         if type(embed) == discord.Embed:
             await interaction.response.edit_message(content="", embed=embed)

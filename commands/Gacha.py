@@ -30,10 +30,10 @@ async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
 
-        view = gachalib.BrowsePageView()
+        view = gachalib.BrowserView(False)
         view.page = page
 
-        embed = gachalib.card_browser_embed(view.cards, page)
+        embed = gachalib.card_browser_embed(view.cards, page) # pyright: ignore[reportArgumentType]
 
         if type(embed) == discord.Embed:
             await ctx.response.send_message(content="", embed=embed, view=view)
@@ -134,7 +134,7 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
 
-        view = gachalib.InventoryPageView(user.id if user else ctx.user.id)
+        view = gachalib.BrowserView(True, user.id if user else ctx.user.id)
         view.page = page
             
         await ctx.response.send_message(embed=gachalib.card_inventory_embed(view.uid,view.cards,view.page), view=view) # pyright: ignore[reportArgumentType]
