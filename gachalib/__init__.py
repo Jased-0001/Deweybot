@@ -166,3 +166,19 @@ class RequestView(discord.ui.View):
     def disable(self):
         for child in self.children:
             child.disabled=True # pyright: ignore[reportAttributeAccessIssue]
+
+class PackView(discord.ui.View):
+    def __init__(self,cards:list[gachalib.types.Card]):
+        super().__init__()
+        self.message = None
+        self.cards = cards
+
+        for i in range(len(cards)):
+            button = discord.ui.Button(label=f"Card #{i+1}", style=discord.ButtonStyle.blurple, custom_id=f"{i}")
+
+            button.callback = self.btn_callback
+            self.add_item(button)
+    
+    async def btn_callback(self, interaction: discord.Interaction) -> None:
+        card = self.cards[int(interaction.data["custom_id"])]  # pyright: ignore[reportOptionalSubscript, reportGeneralTypeIssues]
+        await interaction.response.send_message(embed=gacha_embed(card=card, title="gacha card", description=f"ID {card.card_id}{' !DRAFT!' if not card.accepted else ''}"), ephemeral=True)

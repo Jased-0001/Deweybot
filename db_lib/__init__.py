@@ -1,5 +1,4 @@
 import sqlite3
-from typing import Any
 
 database = None
 database_path = "./dewey.db"
@@ -35,14 +34,10 @@ def write_data(statement: str, data: tuple):
     get_db().cursor().execute(statement, data)
     get_db().commit()
 
-def read_data(statement: str, parameters: tuple) -> list[Any]:
+def read_data(statement: str, parameters: tuple) -> list:
     return get_db().cursor().execute(statement, parameters).fetchall()
 
 def close_connection(exception):
     global database
     if database is not None:
         database.close()
-
-
-def easy_getdata(values:list,where:list):
-    return
