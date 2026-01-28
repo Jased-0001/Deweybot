@@ -15,6 +15,8 @@ class Card:
     
     def __repr__(self):
         return f'{self.__class__.__name__} (name = {self.name} - cardid= {self.card_id})'
+    def __eq__(self, other):
+        return self.card_id == other.card_id
     
 
 class Cards_User:
@@ -25,6 +27,8 @@ class Cards_User:
 
     def __repr__(self):
         return f'{self.__class__.__name__} (invid = {self.inv_id} - cardid = {self.card_id})'
+    def __eq__(self, other):
+        return self.inv_id == other.inv_id
     
 
 class Cards_Timeout:
@@ -36,11 +40,12 @@ class Cards_Timeout:
         return f'{self.__class__.__name__} (uid = {self.user_id} - lastuse = {self.last_use})'
     
 class Trade:
-    def __init__(self,user1:discord.Member=[],user2:discord.Member=[],user1_cards:list=[],user2_cards=[]) -> None:
+    def __init__(self,message:discord.Message=[],user1:discord.Member=[],user2:discord.Member=[],user1_cards:list=[],user2_cards=[]) -> None:
+        self.message  = message
         self.user1       = user1
         self.user1_cards = user1_cards
         self.user2       = user2
         self.user2_cards = user2_cards
 
     def __repr__(self):
-        return f'{self.__class__.__name__} (user1id = {self.user1.id} - user2id = {self.user2.id} - user1cards = {self.user2_cards} - user2cards = {self.user2_cards})'
+        return f'{self.__class__.__name__} (message = {self.message} - user1id = {self.user1.id} - user2id = {self.user2.id} - user1cards = {self.user2_cards} - user2cards = {self.user2_cards})'

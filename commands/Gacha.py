@@ -180,7 +180,8 @@ async def self(ctx : discord.Interaction, user:discord.Member): # type: ignore
         trade = gachalib.types.Trade(user1=ctx.user, user2=user)
         embed = gachalib.trade.trade_embed(trade)
         view = gachalib.trade.TradeView(trade)
-        await ctx.response.send_message(embed=embed, view=view)
+        msg = await ctx.response.send_message(embed=embed, view=view)
+        trade.message = await ctx.channel.fetch_message(msg.message_id)
 
 @Bot.tree.command(name="gacha-give-card", description="Give someone a card")
 async def self(ctx : discord.Interaction, inv_id:int, user:discord.Member): # type: ignore
