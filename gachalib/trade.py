@@ -3,6 +3,52 @@ import gachalib.cards, gachalib.cards_user, gachalib.types
 import discord
 import re
 
+async def do_trade(trade: gachalib.types.Trade, interaction: discord.Interaction):
+    for a in trade.user1_cards:
+        gachalib.cards_user.change_card_owner(trade.user2.id, a.inv_id)
+    for b in trade.user2_cards:
+        gachalib.cards_user.change_card_owner(trade.user1.id, b.inv_id)
+    await trade.accept_message.delete()
+    await trade.message.delete()
+    embed = discord.Embed(
+        title="Trade complete!",
+        color=0x008447
+    )
+    build_embed(embed, trade)
+    await interaction.response.send_message(embed=embed)
+
+async def check_user(trade: gachalib.types.Trade, interaction: discord.Interaction, user: discord.User=None):
+    if user and interaction.user.id != user.id:
+        await interaction.response.send_message("You can't do this!!", ephemeral=True)
+        return False
+    if interaction.user.id == trade.user1.id or interaction.user.id == trade.user2.id:
+        return True
+    await interaction.response.send_message("You can't interact with this trade", ephemeral=True)
+    return False
+
+def build_embed(embed: discord.Embed, trade: gachalib.types.Trade):
+    card_grouped1 = gachalib.cards.group_like_cards(trade.user1_cards)
+    card_grouped2 = gachalib.cards.group_like_cards(trade.user2_cards)
+
+    field1 = ""
+    for a in card_grouped1:
+        field1 += f"> {a[1]} × `{a[0].name}` ({a[0].rarity})\n"
+    if len(field1) < 1:
+        field1 = "> [...]"
+
+    field2 = ""
+    for b in card_grouped2:
+        field2 += f"> {b[1]} × `{b[0].name}` ({b[0].rarity})\n"
+    if len(field2) < 1:
+        field2 = "> [...]"
+
+    embed.add_field(name=f"= {trade.user1.display_name} {'='*(40-len(trade.user1.display_name))}\n", value=field1, inline=False)
+    embed.add_field(name=f"= {trade.user2.display_name} {'='*(40-len(trade.user2.display_name))}\n", value=field2, inline=False)
+
+#########################
+#     Add Trade UI      #
+#########################
+
 class TradeAddModal(discord.ui.Modal):
     def __init__(self, trade: gachalib.types.Trade) -> None:
         super().__init__(title="Add card to trade")
@@ -31,8 +77,12 @@ class TradeAddModal(discord.ui.Modal):
 
         t_cards.extend(a_cards)
         await interaction.response.defer()
+        await unaccept_trade(self.trade)
         await self.trade.message.edit(embed=trade_embed(self.trade), view=TradeView(self.trade))
 
+#########################
+#    Remove card UI     #
+#########################
 
 # Would have used a modal, but discord.py hasn't added support for it yet (afaik)
 class Select(discord.ui.Select):
@@ -54,12 +104,13 @@ class Select(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         await self.embed_interact.delete_original_response()
         await interaction.response.defer()
-        sel_id = re.search("(?<=^\[)\d+(?=\])", self.values[0]).group()
+        sel_id = re.search("(?<=^\[)\d+(?=])", self.values[0]).group()
 
         n_cards = list(self.t_cards)
         for card in n_cards:
             if card.card_id == int(sel_id):
                 self.t_cards.remove(card)
+        await unaccept_trade(self.trade)
         await self.trade.message.edit(embed=trade_embed(self.trade), view=TradeView(self.trade))
 
 class TradeRemoveView(discord.ui.View):
@@ -67,7 +118,91 @@ class TradeRemoveView(discord.ui.View):
         super().__init__()
         self.add_item(Select(trade, embed_interact))
 
+#########################
+#    Trade request UI   #
+#########################
 
+class TradeRequestView(discord.ui.View):
+    def __init__(self, trade: gachalib.types.Trade):
+        self.trade = trade
+        super().__init__()
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.success, row=0, custom_id="accept_btn")
+    async def add_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if await check_user(self.trade, interaction, self.trade.user2):
+            embed = trade_embed(self.trade)
+            view = TradeView(self.trade)
+            msg = await interaction.response.send_message(embed=embed, view=view)
+            self.trade.message = await interaction.channel.fetch_message(msg.message_id)
+            await interaction.message.delete()
+
+    @discord.ui.button(label="Decline", style=discord.ButtonStyle.danger, row=0, custom_id="decline_btn")
+    async def remove_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if await check_user(self.trade, interaction):
+            await interaction.response.defer()
+            await interaction.message.delete()
+
+def trade_request_embed(trade: gachalib.types.Trade) -> discord.Embed | str:
+    embed = discord.Embed(
+        title="Trade request",
+        color=0x5865f2,
+        description=f"{trade.user1.mention} sent {trade.user2.mention} a trade request!"
+    )
+
+    return embed
+
+#########################
+#       Accept UI       #
+#########################
+
+async def accept_trade(trade: gachalib.types.Trade, interaction: discord.Interaction):
+    if trade.accepted_user and trade.accepted_user.id != interaction.user.id:
+        await do_trade(trade, interaction)
+    elif trade.accept_message:
+        await interaction.response.defer()
+    else:
+        trade.accepted_user = interaction.user
+        embed = trade_accept_embed(trade)
+        view = TradeAcceptView(trade)
+        msg = await interaction.response.send_message(embed=embed, view=view)
+        trade.accept_message = await interaction.channel.fetch_message(msg.message_id)
+
+async def unaccept_trade(trade: gachalib.types.Trade):
+    if trade.accept_message:
+        await trade.accept_message.delete()
+        trade.accept_message = None
+        trade.accepted_user = None
+
+class TradeAcceptView(discord.ui.View):
+    def __init__(self, trade: gachalib.types.Trade):
+        self.trade = trade
+
+        super().__init__()
+
+    @discord.ui.button(label="Accept", style=discord.ButtonStyle.success, row=0, custom_id="accept_btn")
+    async def add_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if await check_user(self.trade, interaction):
+            await accept_trade(self.trade, interaction)
+
+    @discord.ui.button(label="Decline", style=discord.ButtonStyle.danger, row=0, custom_id="decline_btn")
+    async def remove_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if await check_user(self.trade, interaction):
+            await interaction.response.defer()
+            unaccept_trade(self.trade)
+
+def trade_accept_embed(trade: gachalib.types.Trade) -> discord.Embed | str:
+    embed = discord.Embed(
+        title="Accept trade?",
+        color=0x008447,
+        description=f"{trade.accepted_user.mention} would like to agree to this trade!"
+    )
+    build_embed(embed, trade)
+
+    return embed
+
+#########################
+#     Main Trade UI     #
+#########################
 
 class TradeView(discord.ui.View):
     def __init__(self, trade: gachalib.types.Trade):
@@ -75,20 +210,14 @@ class TradeView(discord.ui.View):
         self.trade = trade
         self.message = None
 
-    async def checkUser(self, interaction):
-        if interaction.user.id == self.trade.user1.id or interaction.user.id == self.trade.user2.id:
-            return True
-        await interaction.response.send_message("You can't interact with this trade", ephemeral=True)
-        return False
-
     @discord.ui.button(label="Add card", style=discord.ButtonStyle.primary, row=0, custom_id="add_btn")
     async def add_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        if await self.checkUser(interaction):
+        if await check_user(self.trade, interaction):
             await interaction.response.send_modal(TradeAddModal(trade=self.trade))
 
     @discord.ui.button(label="Remove card", style=discord.ButtonStyle.danger, row=0, custom_id="remove_btn")
     async def remove_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        if await self.checkUser(interaction):
+        if await check_user(self.trade, interaction):
             t_cards = self.trade.user1_cards
             if interaction.user.id == self.trade.user2.id:
                 t_cards = self.trade.user2_cards
@@ -99,33 +228,15 @@ class TradeView(discord.ui.View):
 
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.success, row=0, custom_id="accept_btn")
     async def accept_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        if await self.checkUser(interaction):
-            await interaction.response.send_message(f"not implemented", ephemeral=True)
-            self.disable()
+        if await check_user(self.trade, interaction):
+            await accept_trade(self.trade, interaction)
 
     def disable(self):
         for child in self.children:
             child.disabled=True
 
 def trade_embed(trade: gachalib.types.Trade) -> discord.Embed | str:
-    card_grouped1 = gachalib.cards.group_like_cards(trade.user1_cards)
-    card_grouped2 = gachalib.cards.group_like_cards(trade.user2_cards)
-
-    # Display cards
-    field1 = ""
-    for a in card_grouped1:
-        field1 += f"> {a[1]} × `{a[0].name}` ({a[0].rarity})\n"
-    if len(field1) < 1:
-        field1 = "> "
-
-    field2 = ""
-    for b in card_grouped2:
-        field2 += f"> {b[1]} × `{b[0]}` ({b[0].rarity})\n"
-    if len(field2) < 1:
-        field2 = "> "
-
     embed = discord.Embed(title="⚠️ TRADE OFFER ⚠️", color=0xffcb4e)
-    embed.add_field(name=f"= {trade.user1.display_name} {'='*(40-len(trade.user1.display_name))}\n", value=field1, inline=False)
-    embed.add_field(name=f"= {trade.user2.display_name} {'='*(40-len(trade.user2.display_name))}\n", value=field2, inline=False)
+    build_embed(embed, trade)
 
     return embed

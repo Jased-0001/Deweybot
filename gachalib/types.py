@@ -1,4 +1,5 @@
 import discord
+from dataclasses import dataclass, field
 
 class Card:
     def __init__(self,
@@ -39,13 +40,15 @@ class Cards_Timeout:
     def __repr__(self):
         return f'{self.__class__.__name__} (uid = {self.user_id} - lastuse = {self.last_use})'
     
+@dataclass
 class Trade:
-    def __init__(self,message:discord.Message=[],user1:discord.Member=[],user2:discord.Member=[],user1_cards:list=[],user2_cards=[]) -> None:
-        self.message  = message
-        self.user1       = user1
-        self.user1_cards = user1_cards
-        self.user2       = user2
-        self.user2_cards = user2_cards
+    message: discord.Message | None = None
+    user1: discord.Member | None = None
+    user2: discord.Member | None = None
+    user1_cards: list[Cards_User] = field(default_factory=list)
+    user2_cards: list[Cards_User] = field(default_factory=list)
+    accept_message: discord.Message | None = None
+    accepted_user: discord.Member | None = None
 
     def __repr__(self):
-        return f'{self.__class__.__name__} (message = {self.message} - user1id = {self.user1.id} - user2id = {self.user2.id} - user1cards = {self.user2_cards} - user2cards = {self.user2_cards})'
+        return f'{self.__class__.__name__} (user1id = {self.user1.id} - user2id = {self.user2.id} - user1cards = {self.user2_cards} - user2cards = {self.user2_cards})'
