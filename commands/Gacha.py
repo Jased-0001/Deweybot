@@ -40,8 +40,10 @@ async def self(ctx : discord.Interaction, id: int, show:bool=False): # type: ign
                 await ctx.response.send_message(
                     embed=gachalib.gacha_embed(card=card, title="gacha card", description=f"ID {id}{' !DRAFT!' if not card.accepted else ''}"), ephemeral=not show
                 )
+            else:
+                await ctx.response.send_message("YOU DON'T OWN THIS CARD YOU PIRATE",ephemeral=True)
         else:
-            await ctx.response.send_message("Card doesn't exist!")
+            await ctx.response.send_message("Card doesn't exist!",ephemeral=True)
 
 
 @Bot.tree.command(name="gacha-browsecards", description="Look through cards")
