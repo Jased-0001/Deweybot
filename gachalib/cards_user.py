@@ -58,3 +58,11 @@ def change_card_owner(user_id:int,inv_id:int) -> gachalib.types.Cards_User: # ?
         return True
     except:
         return False
+    
+
+def ownsCard(id:int,uid:int) -> bool:
+    a = db_lib.read_data(f"SELECT id FROM gacha_cards WHERE (user_id,card_id) = (?,?);", (uid,id))
+    if len(a) == 0:
+        return False
+    else:
+        return True

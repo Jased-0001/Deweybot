@@ -12,14 +12,33 @@ from gachalib import *
 #######################################
 
 
+@Bot.tree.command(name="gacha-help", description="What is a gacha?")
+async def self(ctx : discord.Interaction): # type: ignore
+    if not Permissions.banned(ctx):
+        embed = discord.Embed(title="Dewey Gacha!",description="""Gacha cards are a collection of different characters on cards that you get randomly from packs. Like pokemon but without playing with them.
+
+### *How do I play?*
+Use the `/gatcha-roll` command! You get 3 cards, 2 of them will be common or uncommon, and one of them can be Rare, Epic, or even Legendary
+                              
+### *How do I view my cards?*
+Use `/gacha-inventory` to view your inventory as a whole. Use the ID to see your full card, and the page buttons to scroll through all your cards.
+
+### *How do I submit my own card?*
+The `/gacha-submitcard` command allows you to submit a card for approval. You give your card a name, a description, and a picture. You can add a note for the reviewer on how rare the card is or provide context on a card.
+""")
+        
+        await ctx.response.send_message(embed=embed,ephemeral=True)
+
+
+
 @Bot.tree.command(name="gacha-viewcard", description="View a gacha card!")
-async def self(ctx : discord.Interaction, id: int): # type: ignore
+async def self(ctx : discord.Interaction, id: int, show:bool=False): # type: ignore
     if not Permissions.banned(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
-            if card.accepted or Permissions.is_override(ctx) or ctx.user.id == a['maker_id']: # type: ignore
+            if gachalib.cards_user.ownsCard(id=card.card_id,uid=ctx.user.id) or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
                 await ctx.response.send_message(
-                    embed=gachalib.gacha_embed(card=card, title="gacha card", description=f"ID {id}{' !DRAFT!' if not card.accepted else ''}") # type: ignore
+                    embed=gachalib.gacha_embed(card=card, title="gacha card", description=f"ID {id}{' !DRAFT!' if not card.accepted else ''}"), ephemeral=not show
                 )
         else:
             await ctx.response.send_message("Card doesn't exist!")
@@ -57,7 +76,7 @@ async def self(ctx : discord.Interaction, name: str, description: str, image: di
         else:
             next_id = a[len(a)-1][0] + 1
         
-        if image.content_type.split("/")[0] != "image": # type: ignore
+        if image.content_type.split("/")[0] != "image": # pyright: ignore[reportOptionalMemberAccess]
             await ctx.response.send_message(
                 f"Your \"IMAGE\" was not an image. I think. Try again with a REAL image.", ephemeral=True,
             )
@@ -77,7 +96,7 @@ async def self(ctx : discord.Interaction, name: str, description: str, image: di
             title="gacha request!!", description=f"New request for a gacha card from <@{ctx.user.id}> (id = {next_id})"
             )
         message_view = gachalib.RequestView()
-        message_view.message = await approval_channel.send(f"```{additional_info}```" if additional_info else "", embed=embed,view=message_view) # type: ignore
+        message_view.message = await approval_channel.send(f"```{additional_info}```" if additional_info else "", embed=embed,view=message_view) # pyright: ignore[reportAttributeAccessIssue]
 
         gachalib.cards.update_card(next_id,"request_message_id", message_view.message.id) # pyright: ignore[reportAttributeAccessIssue]
         
@@ -116,7 +135,7 @@ async def self(ctx : discord.Interaction, id: int, name: str = "", description: 
                 title="gacha EDIT request!!", description=f"New EDIT request for a gacha card from <@{ctx.user.id}> (id = {id})"
                 )
                 message_view = gachalib.RequestView()
-                message_view.message = await approval_channel.send(embed=embed,view=message_view) # type: ignore
+                message_view.message = await approval_channel.send(embed=embed,view=message_view) # pyright: ignore[reportAttributeAccessIssue]
                 gachalib.cards.update_card(id,"request_message_id",message_view.message.id) # pyright: ignore[reportAttributeAccessIssue]
         else:
             await ctx.response.send_message("Card does not exist or you don't own it!")
@@ -247,7 +266,7 @@ async def self(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities): # t
         await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
 
 @Bot.tree.command(name="z-gacha-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
-async def self(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities): # type: ignore
+async def self(ctx : discord.Interaction): # type: ignore
     if Permissions.is_override(ctx):
         
         view = gachalib.BrowserView(True,manual=True)
@@ -255,6 +274,7 @@ async def self(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities): # t
         view.cards = cards
         view.page = 1
         view.isInventory = True
+        view.uid = -1
         
         embed = gachalib.card_inventory_embed(-1,view.cards,view.page) # pyright: ignore[reportArgumentType]
 
