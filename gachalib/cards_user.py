@@ -30,7 +30,7 @@ def get_users_cards_by_id_range(user_id:int, id_start:int,id_end:int) -> tuple:
     except IndexError:
         return (False,)
 
-def get_users_cards_by_card_id(user_id:int, card_id:int) -> tuple(bool, list[gachalib.types.Cards_User]):
+def get_users_cards_by_card_id(user_id:int, card_id:int) -> tuple[bool, list[gachalib.types.Cards_User]]:
     try:
         a = db_lib.read_data(f"SELECT id,card_id FROM gacha_cards WHERE (user_id, card_id) = (?,?)", (user_id, card_id))
         b = []
@@ -40,7 +40,7 @@ def get_users_cards_by_card_id(user_id:int, card_id:int) -> tuple(bool, list[gac
         
         return (True, b)
     except IndexError:
-        return (False,)
+        return (False,) # pyright: ignore[reportReturnType]
     
 def give_user_card(user_id:int,card_id:int) -> gachalib.types.Cards_User:
     a = db_lib.read_data(f"SELECT id FROM gacha_cards;", ())
@@ -52,7 +52,7 @@ def give_user_card(user_id:int,card_id:int) -> gachalib.types.Cards_User:
     db_lib.write_data("INSERT INTO gacha_cards (id,card_id,user_id) VALUES (?,?,?)", (inv_id,card_id,user_id))
     return gachalib.types.Cards_User(inv_id=inv_id,card_id=card_id,user_id=user_id)
 
-def change_card_owner(user_id:int,inv_id:int) -> gachalib.types.Cards_User:
+def change_card_owner(user_id:int,inv_id:int) -> gachalib.types.Cards_User: # ?
     try:
         db_lib.write_data("UPDATE gacha_cards SET user_id = ? WHERE id = ?", (user_id, inv_id))
         return True

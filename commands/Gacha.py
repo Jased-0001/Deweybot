@@ -70,19 +70,15 @@ async def self(ctx : discord.Interaction, name: str, description: str, image: di
         with open(f"gachalib/images/{filename}", "wb") as f:
             await image.save(f)
 
+        gachalib.cards.register_new_card(ctx.user.id,message_view.message.id,next_id,name,description,"None",filename) # type: ignore
+
         embed = gachalib.gacha_embed(
             card=gachalib.types.Card(name=name, description=description,rarity="None",filename=filename),
             title="gacha request!!", description=f"New request for a gacha card from <@{ctx.user.id}> (id = {next_id})"
             )
         message_view = gachalib.RequestView()
         message_view.message = await approval_channel.send(f"```{additional_info}```" if additional_info else "", embed=embed,view=message_view) # type: ignore
-
-        try:
-            gachalib.cards.register_new_card(ctx.user.id,message_view.message.id,next_id,name,description,"None",filename) # type: ignore
-        except sqlite3.OperationalError as e:
-            await message_view.message.reply("FALSE ALARM I ERROR " + str(e)) # type: ignore
-            raise e
-        
+    
         
         await ctx.response.send_message(
             f"Dewey submitted your gacha card for approval!!! (ID of {next_id})", ephemeral=True,
@@ -133,11 +129,11 @@ async def self(ctx : discord.Interaction, id: int, name: str = "", description: 
 async def self(ctx : discord.Interaction, user: discord.Member = None, page: int = 0): # type: ignore
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
-
+        
         view = gachalib.BrowserView(True, user.id if user else ctx.user.id)
         view.page = page
         
-        embed = gachalib.card_inventory_embed(view.uid,view.cards,view.page)
+        embed = gachalib.card_inventory_embed(view.uid,view.cards,view.page) # pyright: ignore[reportArgumentType]
 
         if type(embed) == discord.Embed:
             await ctx.response.send_message(content="", embed=embed, view=view)
@@ -174,13 +170,13 @@ async def self(ctx : discord.Interaction): # type: ignore
 # Trading
 #######################################
 
-@Bot.tree.command(name="gacha-trade", description="Trade with someone (wip)")
+@Bot.tree.command(name="gacha-trade", description="Trade with someone (Really fucking sketchy, ping if i break!)")
 async def self(ctx : discord.Interaction, user:discord.Member): # type: ignore
     if not Permissions.banned(ctx) and ctx.user.id != user.id:
-        trade = gachalib.types.Trade(user1=ctx.user, user2=user)
+        trade = gachalib.types.Trade(user1=ctx.user, user2=user) # pyright: ignore[reportArgumentType]
         embed = gachalib.trade.trade_request_embed(trade)
         view = gachalib.trade.TradeRequestView(trade)
-        await ctx.response.send_message(embed=embed, view=view)
+        await ctx.response.send_message(embed=embed, view=view) # pyright: ignore[reportArgumentType]
 
 @Bot.tree.command(name="gacha-send-card", description="Give someone a card")
 async def self(ctx : discord.Interaction, inv_id:int, user:discord.Member): # type: ignore

@@ -8,15 +8,9 @@ import gif
 async def self(ctx : discord.Interaction, text: str):
     if not Permissions.banned(ctx):
         await ctx.response.defer()
-        try:
-            image_file = discord.File(gif.gen(text),filename=f"{text.replace(" ", "_")}.gif")
-            await ctx.followup.send(file=image_file)
-
-        except Exception as e:
-            await ctx.followup.send(
-                "Aw blast (or whatever dewey would say, i havent watched the show) i had an error", ephemeral=True
-            )
-            raise e
+        
+        image_file = discord.File(gif.gen(text),filename=f"{text.replace(" ", "_")}.gif")
+        await ctx.followup.send(file=image_file)
     else:
         await ctx.response.send_message(
             f"You will be destroyed for your crimes.", ephemeral=True

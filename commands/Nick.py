@@ -22,9 +22,6 @@ async def self(ctx : discord.Interaction, user: discord.Member, nickname: str):
                     str(e), ephemeral=True
                 )
             else:
-                await ctx.response.send_message(
-                    "Aw blast (or whatever dewey would say, i havent watched the show) i had an error", ephemeral=True
-                )
                 raise e
     else:
         await ctx.response.send_message(

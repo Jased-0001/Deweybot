@@ -51,4 +51,4 @@ class Trade:
     accepted_user: discord.Member | None = None
 
     def __repr__(self):
-        return f'{self.__class__.__name__} (user1id = {self.user1.id} - user2id = {self.user2.id} - user1cards = {self.user2_cards} - user2cards = {self.user2_cards})'
+        return f'{self.__class__.__name__} (user1id = {self.user1.id} - user2id = {self.user2.id} - user1cards = {self.user2_cards} - user2cards = {self.user2_cards})' # pyright: ignore[reportOptionalMemberAccess]
