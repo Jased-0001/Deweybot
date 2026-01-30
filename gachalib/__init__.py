@@ -77,19 +77,20 @@ def random_rarity() -> str:
 #[id_start-1:id_end]
 
 class BrowserView(discord.ui.View):
-    def __init__(self,inventory:bool,uid:int=0):
+    def __init__(self,inventory:bool,uid:int=0,manual:bool=False):
         super().__init__()
-        self.message = None
-        self.page = 1
+        if not manual:
+            self.message = None
+            self.page = 1
 
-        self.isInventory = inventory
-        self.uid = uid
-
-        if self.isInventory:
-            _, self.cards = gachalib.cards_user.get_users_cards(self.uid)
-            self.cards = gachalib.cards_user.sort_userlist_cards(self.cards)
-        else:
-            _, self.cards = gachalib.cards.get_cards()
+            self.isInventory = inventory
+            self.uid = uid
+            
+            if self.isInventory:
+                _, self.cards = gachalib.cards_user.get_users_cards(self.uid)
+                self.cards = gachalib.cards_user.sort_userlist_cards(self.cards)
+            else:
+                _, self.cards = gachalib.cards.get_cards()
 
     async def getPage(self,interaction:discord.Interaction):
         if self.isInventory:

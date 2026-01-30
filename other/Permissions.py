@@ -1,16 +1,20 @@
 from discord.ext import commands
+import discord
 import Bot
 
 override_users = Bot.DeweyConfig["permission-override"]
 
 #[y.id for y in ctx.user.roles]
 
-def banned(ctx) -> bool:
-    user_roles = [y.id for y in ctx.user.roles] # pyright: ignore[reportAttributeAccessIssue]
-    for i in user_roles:
-        if i == Bot.DeweyConfig["banned-role"]:
-            return True
-    return False
+def banned(ctx: discord.Interaction) -> bool:
+    if isinstance(ctx.channel, discord.channel.DMChannel):
+        return True
+    else:
+        user_roles = [y.id for y in ctx.user.roles] # pyright: ignore[reportAttributeAccessIssue]
+        for i in user_roles:
+            if i == Bot.DeweyConfig["banned-role"]:
+                return True
+        return False
 
 def is_override(ctx) -> bool:
     return ctx.user.id in override_users

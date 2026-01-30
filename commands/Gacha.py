@@ -41,7 +41,7 @@ async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
             await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
 
 
-@Bot.tree.command(name="gacha-submitcard", description="Submit a new gatcha card!")
+@Bot.tree.command(name="gacha-submitcard", description="Submit a new gacha card!")
 async def self(ctx : discord.Interaction, name: str, description: str, image: discord.Attachment, additional_info:str=""): # type: ignore
     if not Permissions.banned(ctx):
         if Bot.DeweyConfig["review"][0] == "dm":
@@ -67,10 +67,10 @@ async def self(ctx : discord.Interaction, name: str, description: str, image: di
         extension = extension[len(extension)-1]
 
         filename = f'CARD-{next_id}.{extension}'
-        with open(f"gachalib/images/{filename}", "wb") as f:
+        with open(f"{Bot.DeweyConfig["image-save-path"]}/{filename}", "wb") as f:
             await image.save(f)
 
-        gachalib.cards.register_new_card(ctx.user.id,message_view.message.id,next_id,name,description,"None",filename) # type: ignore
+        gachalib.cards.register_new_card(ctx.user.id,-1,next_id,name,description,"None",filename)
 
         embed = gachalib.gacha_embed(
             card=gachalib.types.Card(name=name, description=description,rarity="None",filename=filename),
@@ -78,7 +78,8 @@ async def self(ctx : discord.Interaction, name: str, description: str, image: di
             )
         message_view = gachalib.RequestView()
         message_view.message = await approval_channel.send(f"```{additional_info}```" if additional_info else "", embed=embed,view=message_view) # type: ignore
-    
+
+        gachalib.cards.update_card(next_id,"request_message_id", message_view.message.id) # pyright: ignore[reportAttributeAccessIssue]
         
         await ctx.response.send_message(
             f"Dewey submitted your gacha card for approval!!! (ID of {next_id})", ephemeral=True,
@@ -197,47 +198,69 @@ async def self(ctx : discord.Interaction, id:int): # type: ignore
 
 @Bot.tree.command(name="z-gacha-admin-approvecard", description="!MOD ONLY! Force an action on a card (use when buttons don't work)")
 async def self(ctx : discord.Interaction, id:int, action: gachalib.Literal["Approve","Deny"]): # type: ignore
-    if not Permissions.banned(ctx):
-        if Permissions.is_override(ctx):
-            success,card = gachalib.cards.get_card_by_id(id)
-            if success:
-                if not card.accepted:
-                    if action == "Approve":
-                        if card.rarity == "None":
-                            await ctx.response.send_message("Please set a rarity first! /z-gacha-admin-setrarity", ephemeral=True)
-                        else:
-                            gachalib.cards.update_card(id, "accepted", "1")
-                            await ctx.response.send_message(f"Approved card ID {id}!", ephemeral=True)
+    if Permissions.is_override(ctx):
+        success,card = gachalib.cards.get_card_by_id(id)
+        if success:
+            if not card.accepted:
+                if action == "Approve":
+                    if card.rarity == "None":
+                        await ctx.response.send_message("Please set a rarity first! /z-gacha-admin-setrarity", ephemeral=True)
+                    else:
+                        gachalib.cards.update_card(id, "accepted", "1")
+                        await ctx.response.send_message(f"Approved card ID {id}!", ephemeral=True)
 
-                            userchannel = await gachalib.get_card_maker_channel(card.maker_id)
-                            await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been ACCEPTED!!! GOOD JOB!!!")
-                    elif action == "Deny":
-                        gachalib.cards.delete_card(id)
-                        await ctx.response.send_message(f"Deleted card ID {id}", ephemeral=True)
-                            
                         userchannel = await gachalib.get_card_maker_channel(card.maker_id)
-                        await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been denied. Sorry for your loss.")
-                else:
-                    await ctx.response.send_message("Card was already accepted, use gacha-deletecard", ephemeral=True)
+                        await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been ACCEPTED!!! GOOD JOB!!!")
+                elif action == "Deny":
+                    gachalib.cards.delete_card(id)
+                    await ctx.response.send_message(f"Deleted card ID {id}", ephemeral=True)
+                        
+                    userchannel = await gachalib.get_card_maker_channel(card.maker_id)
+                    await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been denied. Sorry for your loss.")
             else:
-                await ctx.response.send_message("Does not exist", ephemeral=True)
+                await ctx.response.send_message("Card was already accepted, use gacha-deletecard", ephemeral=True)
+        else:
+            await ctx.response.send_message("Does not exist", ephemeral=True)
+    else:
+        await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
 
 
-@Bot.tree.command(name="z-gatcha-admin-givecard", description="!MOD ONLY! Just give someone a card")
+@Bot.tree.command(name="z-gacha-admin-givecard", description="!MOD ONLY! Just give someone a card")
 async def self(ctx : discord.Interaction, id:int, user:discord.Member): # type: ignore
-    if not Permissions.banned(ctx):
-        if Permissions.is_override(ctx):
-            cardid = gachalib.cards_user.give_user_card(user_id=user.id, card_id=id)
-            await ctx.response.send_message(f"Just condensed card {cardid} out of thin air, yo (i control the elements)")
+    if Permissions.is_override(ctx):
+        cardid = gachalib.cards_user.give_user_card(user_id=user.id, card_id=id)
+        await ctx.response.send_message(f"Just condensed card {cardid} out of thin air, yo (i control the elements)")
+    else:
+        await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
 
 
-@Bot.tree.command(name="z-gatcha-admin-setrarity", description="!MOD ONLY! Set the rarity of a card")
+@Bot.tree.command(name="z-gacha-admin-setrarity", description="!MOD ONLY! Set the rarity of a card")
 async def self(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities): # type: ignore
-    if not Permissions.banned(ctx):
-        if Permissions.is_override(ctx):
-            success,card = gachalib.cards.get_card_by_id(id)
-            if success:
-                gachalib.cards.update_card(id, "rarity", rarity)
-                await ctx.response.send_message(f"Card is now {rarity}", ephemeral=True)
-            else:
-                await ctx.response.send_message("Does not exist", ephemeral=True)
+    if Permissions.is_override(ctx):
+        success,card = gachalib.cards.get_card_by_id(id)
+        if success:
+            gachalib.cards.update_card(id, "rarity", rarity)
+            await ctx.response.send_message(f"Card is now {rarity}", ephemeral=True)
+        else:
+            await ctx.response.send_message("Does not exist", ephemeral=True)
+    else:
+        await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
+
+@Bot.tree.command(name="z-gacha-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
+async def self(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities): # type: ignore
+    if Permissions.is_override(ctx):
+        
+        view = gachalib.BrowserView(True,manual=True)
+        _,cards = gachalib.cards.get_unapproved_cards()
+        view.cards = cards
+        view.page = 1
+        view.isInventory = True
+        
+        embed = gachalib.card_inventory_embed(-1,view.cards,view.page) # pyright: ignore[reportArgumentType]
+
+        if type(embed) == discord.Embed:
+            await ctx.response.send_message(content="", embed=embed, view=view)
+        else:
+            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
+    else:
+        await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
