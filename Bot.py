@@ -1,6 +1,8 @@
+from code import interact
 import discord
 #from discord.ext import commands, tasks
 from yaml import load,Loader
+import traceback
 
 with open("dewey.yaml", "r") as f:
     DeweyConfig = load(stream=f, Loader=Loader)
@@ -34,6 +36,14 @@ class botClient(discord.Client):
 
 client = botClient()
 tree = discord.app_commands.CommandTree(client)
+
+@tree.error
+async def on_app_command_error(interaction: discord.Interaction, error):
+    if interaction.response.is_done:
+        await interaction.response.send_message("Ay! I gotted an error! Please ping the owners of me!")
+
+    channel = await client.fetch_channel(DeweyConfig["error-channel"])
+    await channel.send(f"<@322495136108118016> got an report for you boss\n```{traceback.format_exc()}```") # pyright: ignore[reportAttributeAccessIssue]
 
 import commands.Nick
 import commands.Other

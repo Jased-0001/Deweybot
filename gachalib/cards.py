@@ -96,6 +96,30 @@ def group_like_cards(a:list[gachalib.types.Card]) -> list[tuple[gachalib.types.C
     return c
 
 
+async def approve_card(approve:bool, card:gachalib.types.Card) -> tuple[bool, str]: # success, note
+    if not card.accepted:
+        if approve:
+            if card.rarity == "None":
+                return (False, "Please set a rarity first! /z-gacha-admin-setrarity")
+            
+            gachalib.cards.update_card(card.card_id, "accepted", "1")
+            
+            userchannel = await gachalib.get_card_maker_channel(card.maker_id)
+            await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been ACCEPTED!!! GOOD JOB!!!")
+
+            return (True, f"Approved card ID {card.card_id}!")
+        else:
+
+            gachalib.cards.delete_card(card.card_id)
+
+            userchannel = await gachalib.get_card_maker_channel(card.maker_id)
+            await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been denied. Sorry for your loss.")
+            
+            return (True, f"Denied and deleted card ID {card.card_id}")
+    else:
+        return (False, "Card was already accepted, use /z-gacha-admin-deletecard")
+
+
 # Making, deleting, editing cards
 ######################################
 

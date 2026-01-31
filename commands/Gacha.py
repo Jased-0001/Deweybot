@@ -53,10 +53,9 @@ async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
         await ctx.response.send_message("command disabled!", ephemeral=True)
 #        if page <= 0: page = 1
 #
-#        view = gachalib.BrowserView(False)
-#        view.page = page
+#        view = gachalib.BrowserView(False,page=page)
 #
-#        embed = gachalib.card_browser_embed(view.cards, page) # pyright: ignore[reportArgumentType]
+#        embed = gachalib.cardBrowserEmbed(uid=-1, cards=view.cards, page=page,inventory=False) # pyright: ignore[reportArgumentType]
 #
 #        if type(embed) == discord.Embed:
 #            await ctx.response.send_message(content="", embed=embed, view=view)
@@ -154,10 +153,9 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
         
-        view = gachalib.BrowserView(True, user.id if user else ctx.user.id)
-        view.page = page
+        view = gachalib.BrowserView(True, user.id if user else ctx.user.id, page=page)
         
-        embed = gachalib.card_inventory_embed(view.uid,view.cards,view.page) # pyright: ignore[reportArgumentType]
+        embed = gachalib.cardBrowserEmbed(view.uid,view.cards,view.page,True) # pyright: ignore[reportArgumentType]
 
         if type(embed) == discord.Embed:
             await ctx.response.send_message(content="", embed=embed, view=view)
@@ -233,28 +231,12 @@ async def self(ctx : discord.Interaction, id:int): # type: ignore
 
 
 @Bot.tree.command(name="z-gacha-admin-approvecard", description="!MOD ONLY! Force an action on a card (use when buttons don't work)")
-async def self(ctx : discord.Interaction, id:int, action: gachalib.Literal["Approve","Deny"]): # type: ignore
+async def self(ctx : discord.Interaction, id:int, approved: bool): # type: ignore
     if Permissions.is_override(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
-            if not card.accepted:
-                if action == "Approve":
-                    if card.rarity == "None":
-                        await ctx.response.send_message("Please set a rarity first! /z-gacha-admin-setrarity", ephemeral=True)
-                    else:
-                        gachalib.cards.update_card(id, "accepted", "1")
-                        await ctx.response.send_message(f"Approved card ID {id}!", ephemeral=True)
-
-                        userchannel = await gachalib.get_card_maker_channel(card.maker_id)
-                        await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been ACCEPTED!!! GOOD JOB!!!")
-                elif action == "Deny":
-                    gachalib.cards.delete_card(id)
-                    await ctx.response.send_message(f"Deleted card ID {id}", ephemeral=True)
-                        
-                    userchannel = await gachalib.get_card_maker_channel(card.maker_id)
-                    await userchannel.send(f"Your card \"{card.name}\" ({card.card_id}) has been denied. Sorry for your loss.")
-            else:
-                await ctx.response.send_message("Card was already accepted, use gacha-deletecard", ephemeral=True)
+            _, status = await gachalib.cards.approve_card(approved, card)
+            await ctx.response.send_message(status, ephemeral=True)
         else:
             await ctx.response.send_message("Does not exist", ephemeral=True)
     else:
@@ -285,15 +267,11 @@ async def self(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities): # t
 @Bot.tree.command(name="z-gacha-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
 async def self(ctx : discord.Interaction): # type: ignore
     if Permissions.is_override(ctx):
-        
-        view = gachalib.BrowserView(True,manual=True)
+        view = gachalib.BrowserView(inventory=False,manual=True)
         _,cards = gachalib.cards.get_unapproved_cards()
         view.cards = cards
-        view.page = 1
-        view.isInventory = True
-        view.uid = -1
         
-        embed = gachalib.card_inventory_embed(-1,view.cards,view.page) # pyright: ignore[reportArgumentType]
+        embed = gachalib.cardBrowserEmbed(-1,view.cards,view.page,False) # pyright: ignore[reportArgumentType]
 
         if type(embed) == discord.Embed:
             await ctx.response.send_message(content="", embed=embed, view=view)
