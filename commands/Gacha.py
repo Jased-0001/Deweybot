@@ -18,7 +18,7 @@ async def self(ctx : discord.Interaction): # type: ignore
         embed = discord.Embed(title="Dewey Gacha!",description="""Gacha cards are a collection of different characters on cards that you get randomly from packs. Like pokemon but without playing with them.
 
 ### *How do I play?*
-Use the `/gatcha-roll` command! You get 3 cards, 2 of them will be common or uncommon, and one of them can be Rare, Epic, or even Legendary
+Use the `/gacha-roll` command! You get 3 cards, 2 of them will be common or uncommon, and one of them can be Rare, Epic, or even Legendary
                               
 ### *How do I view my cards?*
 Use `/gacha-inventory` to view your inventory as a whole. Use the ID to see your full card, and the page buttons to scroll through all your cards.
@@ -172,8 +172,8 @@ async def self(ctx : discord.Interaction): # type: ignore
         if (timestamp - last_use) > (time_out) or last_use == -1:
             embed = discord.Embed(title="Gacha roll!", description="You rolled 3 cards!")
             cards = [
-                gachalib.cards.random_card_by_rarity(gachalib.random_rarity())[1],
-                gachalib.cards.random_card_by_rarity(gachalib.random_rarity())[1],
+                gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=True))[1],
+                gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=True))[1],
                 gachalib.cards.random_card_by_rarity(gachalib.random_rarity())[1]
             ]
             for i in cards:

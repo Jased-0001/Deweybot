@@ -57,21 +57,26 @@ def card_inventory_embed(uid:int, cards:list[gachalib.types.Card], page:int) -> 
 async def get_card_maker_channel(id:int) -> discord.User:
     return await Bot.client.fetch_user(id)
 
-def random_rarity() -> str:
+def random_rarity(restraint:bool=False) -> str:
     number = randint(1,100)
-    
-    if number > 0 and number <= 35:
-        return 'Common'
-    elif number > 35 and number <= 60:
-        return 'Uncommon'
-    elif number > 60 and number <= 80:
-        return 'Rare'
-    elif number > 80 and number <= 95:
-        return 'Epic'
-    elif number > 95 and number <= 100:
-        return 'Legendary'
+    if restraint:
+        if number < 60:
+            return 'Common'
+        else:
+            return 'Uncommon'
     else:
-        return 'Legendary'
+        if number > 0 and number <= 35:
+            return 'Common'
+        elif number > 35 and number <= 60:
+            return 'Uncommon'
+        elif number > 60 and number <= 80:
+            return 'Rare'
+        elif number > 80 and number <= 95:
+            return 'Epic'
+        elif number > 95 and number <= 100:
+            return 'Legendary'
+        else:
+            return 'Legendary'
     
 
 #[id_start-1:id_end]
