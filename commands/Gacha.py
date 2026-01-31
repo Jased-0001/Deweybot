@@ -47,20 +47,20 @@ async def self(ctx : discord.Interaction, id: int, show:bool=False): # type: ign
             await ctx.response.send_message("Card doesn't exist!",ephemeral=True)
 
 
-@Bot.tree.command(name="gacha-browsecards", description="Look through cards")
-async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
-    if not Permissions.banned(ctx):
-        if page <= 0: page = 1
-
-        view = gachalib.BrowserView(False)
-        view.page = page
-
-        embed = gachalib.card_browser_embed(view.cards, page) # pyright: ignore[reportArgumentType]
-
-        if type(embed) == discord.Embed:
-            await ctx.response.send_message(content="", embed=embed, view=view)
-        else:
-            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
+#@Bot.tree.command(name="gacha-browsecards", description="Look through cards")
+#async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
+#    if not Permissions.banned(ctx):
+#        if page <= 0: page = 1
+#
+#        view = gachalib.BrowserView(False)
+#        view.page = page
+#
+#        embed = gachalib.card_browser_embed(view.cards, page) # pyright: ignore[reportArgumentType]
+#
+#        if type(embed) == discord.Embed:
+#            await ctx.response.send_message(content="", embed=embed, view=view)
+#        else:
+#            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
 
 
 @Bot.tree.command(name="gacha-submitcard", description="Submit a new gacha card!")
