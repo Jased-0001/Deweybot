@@ -7,14 +7,15 @@ override_users = Bot.DeweyConfig["permission-override"]
 #[y.id for y in ctx.user.roles]
 
 def banned(ctx: discord.Interaction) -> bool:
-    if ctx.guild == False:
-        return True
-    else:
-        user_roles = [y.id for y in ctx.user.roles] # pyright: ignore[reportAttributeAccessIssue]
-        for i in user_roles:
-            if i == Bot.DeweyConfig["banned-role"]:
-                return True
-        return False
+    #if ctx.guild == False:
+    #    return True
+    #else:
+    #    user_roles = [y.id for y in ctx.user.roles] # pyright: ignore[reportAttributeAccessIssue]
+    #    for i in user_roles:
+    #        if i == Bot.DeweyConfig["banned-role"]:
+    #            return True
+    #    return False
+    return False
 
 def is_override(ctx) -> bool:
     return ctx.user.id in override_users

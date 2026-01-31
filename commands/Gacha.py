@@ -1,3 +1,4 @@
+from re import A
 from socket import timeout
 import sqlite3
 import discord
@@ -161,6 +162,18 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
             await ctx.response.send_message(content="", embed=embed, view=view)
         else:
             await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
+
+@Bot.tree.command(name="gacha-inventory-completion", description="View your progress in collecing!")
+async def self(ctx : discord.Interaction): # type: ignore
+    if not Permissions.banned(ctx):
+        _,a = gachalib.cards_user.get_users_cards(ctx.user.id)
+        _,b = gachalib.cards.get_cards()
+        cards_had,cards_total = 0,len(b)
+
+        for _ in a:
+            cards_had += 1
+
+        await ctx.response.send_message(f"You have {cards_had}/{cards_total} ({round(cards_had/cards_total,3)}%)")
 
 
 @Bot.tree.command(name="gacha-roll", description="Roll for a card!")
