@@ -47,9 +47,10 @@ async def self(ctx : discord.Interaction, id: int, show:bool=False): # type: ign
             await ctx.response.send_message("Card doesn't exist!",ephemeral=True)
 
 
-#@Bot.tree.command(name="gacha-browsecards", description="Look through cards")
-#async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
-#    if not Permissions.banned(ctx):
+@Bot.tree.command(name="gacha-browsecards", description="Look through cards")
+async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
+    if not Permissions.banned(ctx):
+        await ctx.response.send_message("command disabled!", ephemeral=True)
 #        if page <= 0: page = 1
 #
 #        view = gachalib.BrowserView(False)
@@ -163,6 +164,7 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
         else:
             await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
 
+
 @Bot.tree.command(name="gacha-inventory-completion", description="View your progress in collecing!")
 async def self(ctx : discord.Interaction): # type: ignore
     if not Permissions.banned(ctx):
@@ -173,7 +175,7 @@ async def self(ctx : discord.Interaction): # type: ignore
         for _ in a:
             cards_had += 1
 
-        await ctx.response.send_message(f"You have {cards_had}/{cards_total} ({round(cards_had/cards_total,3)}%)")
+        await ctx.response.send_message(f"You have {cards_had}/{cards_total} ({round((cards_had/cards_total)*100,2)}%)")
 
 
 @Bot.tree.command(name="gacha-roll", description="Roll for a card!")
