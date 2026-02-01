@@ -6,8 +6,36 @@ import discord
 from random import randint
 from typing import Literal
 import math
+import textwrap
+from PIL import Image, ImageDraw, ImageFont, ImageOps
+import io
 
 Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+
+def gacha_crop_image(card: gachalib.types.Card):
+    img = Image.open(f"{Bot.DeweyConfig["image-save-path"]}/{card.filename}")
+    img = ImageOps.contain(img, (350, 350))
+    buffer = io.BytesIO()
+    img.save(buffer, format="png")
+    buffer.seek(0)
+    return discord.File(fp=buffer, filename="image.png")
+
+class GachaView(discord.ui.LayoutView):
+    def __init__(self, card: gachalib.types.Card, image: discord.File):
+        super().__init__()
+        container = discord.ui.Container(
+            discord.ui.TextDisplay(f"# {card.name}"),
+            discord.ui.MediaGallery(
+                discord.MediaGalleryItem(image),
+            ),
+            discord.ui.TextDisplay(f"### {card.rarity}"),
+            discord.ui.TextDisplay(textwrap.fill(card.description, 50)),
+            discord.ui.Separator(),
+            discord.ui.TextDisplay(f"-#{' !DRAFT!' if not card.accepted else ''} ID {card.card_id}, by {Bot.client.get_user(card.maker_id).display_name}"),
+            accent_color=rarityColors[card.rarity]
+        )
+
+        self.add_item(container)
 
 #name, card_description, rarity, filename, title: str = "None", description: str = "None"
 def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarity:bool=True, show_desc:bool=True, show_name:bool=True,color:int=-1) -> discord.Embed:
@@ -177,4 +205,7 @@ class PackView(discord.ui.View):
     
     async def btn_callback(self, interaction: discord.Interaction) -> None:
         card = self.cards[int(interaction.data["custom_id"])]  # pyright: ignore[reportOptionalSubscript, reportGeneralTypeIssues]
-        await interaction.response.send_message(embed=gacha_embed(card=card, title="gacha card", description=f"ID {card.card_id}{' !DRAFT!' if not card.accepted else ''}"), ephemeral=True)
+        image=gacha_crop_image(card)
+        await interaction.response.send_message(
+            view=GachaView(card,image), file=image, ephemeral=True
+        )
