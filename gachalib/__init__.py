@@ -52,6 +52,7 @@ async def get_card_maker_channel(id:int) -> discord.User:
     return await Bot.client.fetch_user(id)
 
 rarityColors = {
+    "None":      0xffffff,
     "Common":    0x1eff00,
     "Uncommon":  0x319236,
     "Rare":      0x0070dd,
