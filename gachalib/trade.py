@@ -63,7 +63,6 @@ async def do_trade(trade: gachalib.types.Trade, interaction: discord.Interaction
     await trade.accept_message.delete() # pyright: ignore[reportOptionalMemberAccess]
     await trade.message.delete() # pyright: ignore[reportOptionalMemberAccess]
     await interaction.response.send_message(view=TradeSucessView(trade))
-    trade = None
 
 #########################
 #     Add Trade UI      #
@@ -153,7 +152,6 @@ class TradeAddRow(discord.ui.ActionRow):
     def __init__(self, page: int, cards: tuple[int, list[gachalib.types.Card]], trade: gachalib.types.Trade, embed_interact: discord.Interaction):
         super().__init__()
         self.page = page
-        self.next = len(cards) > page*2
         self.cards = cards
         self.trade = trade
         self.embed_interact = embed_interact
@@ -165,7 +163,7 @@ class TradeAddRow(discord.ui.ActionRow):
 
     @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary, custom_id="right_btn")
     async def right_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        page = min(self.page+1, math.ceil(len(self.cards)/2))
+        page = min(self.page+1, math.ceil(len(self.cards)/25))
         await interaction.response.edit_message(view=TradeAddView(page, self.trade, self.embed_interact))
 
 class TradeAddNumberSelect(discord.ui.Select):
@@ -260,7 +258,7 @@ class TradeAddView(discord.ui.LayoutView):
 #    Trade request UI   #
 #########################
 
-class TradeRemoveRow(discord.ui.ActionRow):
+class TradeReqestRow(discord.ui.ActionRow):
     def __init__(self, trade: gachalib.types.Trade):
         super().__init__()
         self.trade = trade
@@ -286,7 +284,7 @@ class TradeRequestView(discord.ui.LayoutView):
             discord.ui.TextDisplay("## Trade request"),
             discord.ui.TextDisplay(f"{trade.user1.mention} sent {trade.user2.mention} a trade request!"),
             discord.ui.Separator(),
-            TradeRemoveRow(trade)
+            TradeReqestRow(trade)
         )
         self.add_item(container)
 
@@ -331,6 +329,7 @@ class TradeAcceptRow(discord.ui.ActionRow):
 class TradeAcceptView(discord.ui.LayoutView):
     def __init__(self, trade: gachalib.types.Trade):
         super().__init__(timeout=120)
+        self.trade = trade
 
         container = discord.ui.Container(
             discord.ui.TextDisplay("## Accept trade?"),
@@ -341,8 +340,8 @@ class TradeAcceptView(discord.ui.LayoutView):
         )
         self.add_item(container)
 
-    def on_timeout(self):
-        unaccept_trade()
+    async def on_timeout(self):
+        await unaccept_trade(trade)
 
 #########################
 #     Main Trade UI     #
@@ -375,6 +374,7 @@ class TradeActionRow(discord.ui.ActionRow):
 class TradeView(discord.ui.LayoutView):
     def __init__(self, trade: gachalib.types.Trade):
         super().__init__(timeout=600)
+        self.trade = trade
 
         container = discord.ui.Container(
             discord.ui.TextDisplay("# ⚠️ TRADE OFFER ⚠️"),
@@ -391,5 +391,5 @@ class TradeView(discord.ui.LayoutView):
         self.add_item(TradeActionRow(trade))
 
     async def on_timeout(self):
-        await unaccept_trade()
+        await unaccept_trade(self.trade)
         await self.trade.message.delete()
