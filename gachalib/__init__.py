@@ -10,8 +10,8 @@ import math
 Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"]
 
 #name, card_description, rarity, filename, title: str = "None", description: str = "None"
-def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarity:bool=True, show_desc:bool=True, show_name:bool=True) -> discord.Embed:
-    embed = discord.Embed(title=title, description=description)
+def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarity:bool=True, show_desc:bool=True, show_name:bool=True,color:int=-1) -> discord.Embed:
+    embed = discord.Embed(title=title, description=description,color=rarityColors[card.rarity] if color == -1 else color)
     if show_name:   embed.add_field(name="Name!", value=card.name)
     if show_desc:   embed.add_field(name="Description!", value=card.description)
     if show_rarity: embed.add_field(name="Rarity!", value=card.rarity)
@@ -51,6 +51,13 @@ def cardBrowserEmbed(uid:int, cards:list[gachalib.types.Card], page:int = 1, inv
 async def get_card_maker_channel(id:int) -> discord.User:
     return await Bot.client.fetch_user(id)
 
+rarityColors = {
+    "Common":    0x1eff00,
+    "Uncommon":  0x319236,
+    "Rare":      0x0070dd,
+    "Epic":      0xa335ee,
+    "Legendary": 0xff8000,
+}
 
 def random_rarity(restraint:bool=False) -> str:
     number = randint(1,100)

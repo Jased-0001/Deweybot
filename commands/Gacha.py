@@ -183,12 +183,14 @@ async def self(ctx : discord.Interaction): # type: ignore
         last_use = gachalib.gacha_timeout.get_user_timeout(ctx.user.id).last_use
         time_out = 3600 # 1 hour (seconds)
         if (timestamp - last_use) > (time_out) or last_use == -1:
-            embed = discord.Embed(title="Gacha roll!", description="You rolled 3 cards!")
             cards = [
                 gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=True))[1],
                 gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=True))[1],
                 gachalib.cards.random_card_by_rarity(gachalib.random_rarity())[1]
             ]
+
+            embed = discord.Embed(title="Gacha roll!", description="You rolled 3 cards!", color=gachalib.rarityColors[cards[2].rarity])
+
             for i in cards:
                 gachalib.cards_user.give_user_card(ctx.user.id, i.card_id)
                 embed.add_field(name=f"Pulled '{i.name}' ({i.card_id}, {i.rarity})", value=f"{i.description}")
