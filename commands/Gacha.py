@@ -14,7 +14,7 @@ from gachalib import *
 
 
 @Bot.tree.command(name="gacha-help", description="What is a gacha?")
-async def self(ctx : discord.Interaction): # type: ignore
+async def gacha_help(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         embed = discord.Embed(title="Dewey Gacha!",description="""Gacha cards are a collection of different characters on cards that you get randomly from packs. Like pokemon but without playing with them.
 
@@ -33,7 +33,7 @@ The `/gacha-submitcard` command allows you to submit a card for approval. You gi
 
 
 @Bot.tree.command(name="gacha-viewcard", description="View a gacha card!")
-async def self(ctx : discord.Interaction, id: int, show:bool=False): # type: ignore
+async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
     if not Permissions.banned(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
@@ -50,7 +50,7 @@ async def self(ctx : discord.Interaction, id: int, show:bool=False): # type: ign
 
 
 @Bot.tree.command(name="gacha-browsecards", description="Look through cards")
-async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
+async def gacha_browsecards(ctx : discord.Interaction, page:int = 1):
     if not Permissions.banned(ctx):
         await ctx.response.send_message("command disabled!", ephemeral=True)
 #        if page <= 0: page = 1
@@ -66,7 +66,7 @@ async def self(ctx : discord.Interaction, page:int = 1): # type: ignore
 
 
 @Bot.tree.command(name="gacha-submitcard", description="Submit a new gacha card!")
-async def self(ctx : discord.Interaction, name: str, description: str, image: discord.Attachment, additional_info:str=""): # type: ignore
+async def gacha_submitcard(ctx : discord.Interaction, name: str, description: str, image: discord.Attachment, additional_info:str=""):
     if not Permissions.banned(ctx):
         if Bot.DeweyConfig["review"][0] == "dm":
             approval_channel = await Bot.client.fetch_user(Bot.DeweyConfig["review"][1])
@@ -111,7 +111,7 @@ async def self(ctx : discord.Interaction, name: str, description: str, image: di
 
 
 @Bot.tree.command(name="gacha-editcard", description="Re-submit an edited gacha card (or admin)!")
-async def self(ctx : discord.Interaction, id: int, name: str = "", description: str = ""): # type: ignore
+async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", description: str = ""):
     if not Permissions.banned(ctx):
         if Bot.DeweyConfig["review"][0] == "dm":
             approval_channel = await Bot.client.fetch_user(Bot.DeweyConfig["review"][1])
@@ -151,7 +151,7 @@ async def self(ctx : discord.Interaction, id: int, name: str = "", description: 
 
 
 @Bot.tree.command(name="gacha-inventory", description="View your inventory!")
-async def self(ctx : discord.Interaction, user: discord.Member = None, page: int = 0): # type: ignore
+async def gacha_inventory(ctx : discord.Interaction, user: discord.Member = None, page: int = 0): # pyright: ignore[reportArgumentType]
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
         
@@ -166,7 +166,7 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
 
 
 @Bot.tree.command(name="gacha-inventory-completion", description="View your progress in collecting!")
-async def self(ctx : discord.Interaction): # type: ignore
+async def gacha_inventory_completion(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         _,a = gachalib.cards_user.get_users_cards(ctx.user.id)
         _,b = gachalib.cards.get_cards()
@@ -179,7 +179,7 @@ async def self(ctx : discord.Interaction): # type: ignore
 
 
 @Bot.tree.command(name="gacha-roll", description="Roll for a card!")
-async def self(ctx : discord.Interaction): # type: ignore
+async def gacha_roll(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         timestamp = gachalib.gacha_timeout.get_timestamp()
         last_use = gachalib.gacha_timeout.get_user_timeout(ctx.user.id).last_use
@@ -209,8 +209,8 @@ async def self(ctx : discord.Interaction): # type: ignore
 # Trading
 #######################################
 
-@Bot.tree.command(name="gacha-trade", description="Trade with someone (Really fucking sketchy, ping if i break!) <- this is lies btw")
-async def self(ctx : discord.Interaction, user:discord.Member): # type: ignore
+@Bot.tree.command(name="gacha-trade", description="Trade with someone")
+async def gacha_trade(ctx : discord.Interaction, user:discord.Member):
     if not Permissions.banned(ctx):
         if ctx.user.id == user.id:
             await ctx.response.send_message("you can't send a trade request to yurself, dummy!!", ephemeral=True)
@@ -219,7 +219,7 @@ async def self(ctx : discord.Interaction, user:discord.Member): # type: ignore
         await ctx.response.send_message(view=gachalib.trade.TradeRequestView(trade)) # pyright: ignore[reportArgumentType]
 
 @Bot.tree.command(name="gacha-send-card", description="Give someone a card")
-async def self(ctx : discord.Interaction, inv_id:int, user:discord.Member): # type: ignore
+async def gacha_send_card(ctx : discord.Interaction, inv_id:int, user:discord.Member):
     test = gachalib.cards_user.change_card_owner(user.id, inv_id)
     await ctx.response.send_message(test)
 
@@ -228,7 +228,7 @@ async def self(ctx : discord.Interaction, inv_id:int, user:discord.Member): # ty
 #######################################
 
 @Bot.tree.command(name="z-gacha-admin-deletecard", description="!MOD ONLY! (Ask us!) Delete a card")
-async def self(ctx : discord.Interaction, id:int): # type: ignore
+async def z_gacha_admin_deletecard(ctx : discord.Interaction, id:int):
     if not Permissions.banned(ctx):
         if Permissions.is_override(ctx):
             gachalib.cards.delete_card(id)
@@ -236,7 +236,7 @@ async def self(ctx : discord.Interaction, id:int): # type: ignore
 
 
 @Bot.tree.command(name="z-gacha-admin-approvecard", description="!MOD ONLY! Force an action on a card (use when buttons don't work)")
-async def self(ctx : discord.Interaction, id:int, approved: bool): # type: ignore
+async def z_gacha_admin_approvecard(ctx : discord.Interaction, id:int, approved: bool):
     if Permissions.is_override(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
@@ -249,7 +249,7 @@ async def self(ctx : discord.Interaction, id:int, approved: bool): # type: ignor
 
 
 @Bot.tree.command(name="z-gacha-admin-givecard", description="!MOD ONLY! Just give someone a card")
-async def self(ctx : discord.Interaction, id:int, user:discord.Member): # type: ignore
+async def z_gacha_admin_givecard(ctx : discord.Interaction, id:int, user:discord.Member):
     if Permissions.is_override(ctx):
         cardid = gachalib.cards_user.give_user_card(user_id=user.id, card_id=id)
         await ctx.response.send_message(f"Just condensed card {cardid} out of thin air, yo (i control the elements)")
@@ -258,7 +258,7 @@ async def self(ctx : discord.Interaction, id:int, user:discord.Member): # type: 
 
 
 @Bot.tree.command(name="z-gacha-admin-setrarity", description="!MOD ONLY! Set the rarity of a card")
-async def self(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities): # type: ignore
+async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities):
     if Permissions.is_override(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
@@ -270,7 +270,7 @@ async def self(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities): # t
         await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
 
 @Bot.tree.command(name="z-gacha-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
-async def self(ctx : discord.Interaction): # type: ignore
+async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
     if Permissions.is_override(ctx):
         view = gachalib.BrowserView(inventory=False,manual=True)
         _,cards = gachalib.cards.get_unapproved_cards()

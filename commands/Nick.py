@@ -4,7 +4,7 @@ import Bot
 import other.Permissions as Permissions
 
 @Bot.tree.command(name="nickname", description="Change someone's nickname")
-async def self(ctx : discord.Interaction, user: discord.Member, nickname: str):
+async def nickname(ctx : discord.Interaction, user: discord.Member, nickname: str):
     if not Permissions.banned(ctx):
         try:
             previous = user.nick
