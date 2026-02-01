@@ -205,13 +205,14 @@ async def self(ctx : discord.Interaction): # type: ignore
 # Trading
 #######################################
 
-@Bot.tree.command(name="gacha-trade", description="Trade with someone (Really fucking sketchy, ping if i break!)")
+@Bot.tree.command(name="gacha-trade", description="Trade with someone (Really fucking sketchy, ping if i break!) <- this is lies btw")
 async def self(ctx : discord.Interaction, user:discord.Member): # type: ignore
-    if not Permissions.banned(ctx) and ctx.user.id != user.id:
+    if not Permissions.banned(ctx):
+        if ctx.user.id == user.id:
+            await ctx.response.send_message("you can't send a trade request to yurself, dummy!!", ephemeral=True)
+            return
         trade = gachalib.types.Trade(user1=ctx.user, user2=user) # pyright: ignore[reportArgumentType]
-        embed = gachalib.trade.trade_request_embed(trade)
-        view = gachalib.trade.TradeRequestView(trade)
-        await ctx.response.send_message(embed=embed, view=view) # pyright: ignore[reportArgumentType]
+        await ctx.response.send_message(view=gachalib.trade.TradeRequestView(trade)) # pyright: ignore[reportArgumentType]
 
 @Bot.tree.command(name="gacha-send-card", description="Give someone a card")
 async def self(ctx : discord.Interaction, inv_id:int, user:discord.Member): # type: ignore
