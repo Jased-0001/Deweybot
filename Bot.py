@@ -1,4 +1,3 @@
-from code import interact
 import discord
 #from discord.ext import commands, tasks
 from yaml import load,Loader
@@ -9,7 +8,13 @@ with open("dewey.yaml", "r") as f:
 
 import other.Permissions as Permissions
 import db_lib
+from subprocess import check_output, CalledProcessError
 
+try:
+    version = check_output(["git", "branch", "--show-current"]).strip() + b"-" + check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
+    version = version.decode()
+except CalledProcessError:
+    version = "unknown"
 
 intents = discord.Intents.default()
 
@@ -25,7 +30,7 @@ class botClient(discord.Client):
             await tree.sync()
             self.synced = True
            
-        await self.change_presence(activity=discord.Activity(name="Dewin' it", type=3))
+        await self.change_presence(activity=discord.Activity(name=f"Dewin' it ({version})", type=3))
 
         print(f"Dewey'd as {self.user}")
     async def on_message(self, message: discord.Message):
