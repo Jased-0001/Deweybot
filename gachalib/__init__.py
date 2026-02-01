@@ -10,8 +10,8 @@ import math
 Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"]
 
 #name, card_description, rarity, filename, title: str = "None", description: str = "None"
-def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarity:bool=True, show_desc:bool=True, show_name:bool=True) -> discord.Embed:
-    embed = discord.Embed(title=title, description=description)
+def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarity:bool=True, show_desc:bool=True, show_name:bool=True,color:int=-1) -> discord.Embed:
+    embed = discord.Embed(title=title, description=description,color=rarityColors[card.rarity] if color == -1 else color)
     if show_name:   embed.add_field(name="Name!", value=card.name)
     if show_desc:   embed.add_field(name="Description!", value=card.description)
     if show_rarity: embed.add_field(name="Rarity!", value=card.rarity)
@@ -26,9 +26,9 @@ def cardBrowserEmbed(uid:int, cards:list[gachalib.types.Card], page:int = 1, inv
 
     if inventory:
         if page == 1:
-            cards_a = card_grouped[0:5]
+            cards_a = card_grouped[0:5] # pyright: ignore[reportPossiblyUnboundVariable]
         elif page > 1:
-            cards_a = card_grouped[startpage-1:startpage+5]
+            cards_a = card_grouped[startpage-1:startpage+5] # pyright: ignore[reportPossiblyUnboundVariable]
     else:
         if page == 1:
             cards_a = cards[0:5]
@@ -36,9 +36,9 @@ def cardBrowserEmbed(uid:int, cards:list[gachalib.types.Card], page:int = 1, inv
             cards_a = cards[startpage-1:startpage+5]
 
     embed = discord.Embed(title="Card (inventory) bowser!" if inventory else "Card bowser!",
-                          description=f"page {page}/{math.ceil(len(card_grouped)/5)}" if inventory else f"page {page}/{math.ceil(len(cards)/5)}")
+                          description=f"page {page}/{math.ceil(len(card_grouped)/5)}" if inventory else f"page {page}/{math.ceil(len(cards)/5)}") # pyright: ignore[reportPossiblyUnboundVariable]
     
-    for i in cards_a:
+    for i in cards_a: # pyright: ignore[reportPossiblyUnboundVariable]
         if inventory: embed.add_field(name=f'{i[0].name} (ID: {i[0].card_id}) | {i[0].rarity}  x{i[1]}', value=f'', inline=False) # pyright: ignore[reportIndexIssue]
         else: embed.add_field(name=f'{i.name} (ID: {i.card_id}) | {i.rarity}', value=f'{i.description}', inline=False) # pyright: ignore[reportAttributeAccessIssue]
 
@@ -51,6 +51,14 @@ def cardBrowserEmbed(uid:int, cards:list[gachalib.types.Card], page:int = 1, inv
 async def get_card_maker_channel(id:int) -> discord.User:
     return await Bot.client.fetch_user(id)
 
+rarityColors = {
+    "None":      0xffffff,
+    "Common":    0x1eff00,
+    "Uncommon":  0x319236,
+    "Rare":      0x0070dd,
+    "Epic":      0xa335ee,
+    "Legendary": 0xff8000,
+}
 
 def random_rarity(restraint:bool=False) -> str:
     number = randint(1,100)
