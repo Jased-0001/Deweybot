@@ -31,7 +31,7 @@ class GachaView(discord.ui.LayoutView):
             discord.ui.TextDisplay(f"### {card.rarity}"),
             discord.ui.TextDisplay(textwrap.fill(card.description, 50)),
             discord.ui.Separator(),
-            discord.ui.TextDisplay(f"-#{' !DRAFT!' if not card.accepted else ''} ID {card.card_id}, by {Bot.client.get_user(card.maker_id).display_name}"),
+            discord.ui.TextDisplay(f"-#{' !DRAFT!' if not card.accepted else ''} ID {card.card_id}, by {Bot.client.get_user(card.maker_id).mention}"),
             accent_color=rarityColors[card.rarity]
         )
 

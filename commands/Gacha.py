@@ -40,7 +40,8 @@ async def self(ctx : discord.Interaction, id: int, show:bool=False): # type: ign
             if gachalib.cards_user.ownsCard(id=card.card_id,uid=ctx.user.id) or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
                 image=gacha_crop_image(card)
                 await ctx.response.send_message(
-                    view=GachaView(card, image), file=image, ephemeral=not show
+                    view=GachaView(card, image), file=image, ephemeral=not show,
+                    allowed_mentions=discord.AllowedMentions(users=False)
                 )
             else:
                 await ctx.response.send_message("YOU DON'T OWN THIS CARD YOU PIRATE",ephemeral=True)
