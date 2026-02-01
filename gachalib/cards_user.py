@@ -52,11 +52,11 @@ def give_user_card(user_id:int,card_id:int) -> gachalib.types.Cards_User:
     db_lib.write_data("INSERT INTO gacha_cards (id,card_id,user_id) VALUES (?,?,?)", (inv_id,card_id,user_id))
     return gachalib.types.Cards_User(inv_id=inv_id,card_id=card_id,user_id=user_id)
 
-def change_card_owner(user_id:int,inv_id:int) -> gachalib.types.Cards_User: # ?
+def change_card_owner(user_id:int,inv_id:int) -> bool: # ?
     try:
         db_lib.write_data("UPDATE gacha_cards SET user_id = ? WHERE id = ?", (user_id, inv_id))
         return True
-    except:
+    except IndexError:
         return False
     
 

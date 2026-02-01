@@ -58,7 +58,7 @@ class TradeAddModal(discord.ui.Modal):
         self.add_item(discord.ui.TextInput(label="Ammount"))
 
     async def on_submit(self, interaction: discord.Interaction):
-        cards = gachalib.cards_user.get_users_cards_by_card_id(interaction.user.id, self.children[0].value)[1]
+        cards = gachalib.cards_user.get_users_cards_by_card_id(interaction.user.id, self.children[0].value)[1] # pyright: ignore[reportAttributeAccessIssue]
 
         t_cards = self.trade.user1_cards
         if interaction.user.id == self.trade.user2.id: # pyright: ignore[reportOptionalMemberAccess]
@@ -69,7 +69,7 @@ class TradeAddModal(discord.ui.Modal):
             if card not in t_cards:
                 a_cards.append(card)
 
-        a_cards = a_cards[0:int(self.children[1].value)]
+        a_cards = a_cards[0:int(self.children[1].value)] # pyright: ignore[reportAttributeAccessIssue]
 
         if len(gachalib.cards.group_like_cards(t_cards + a_cards)) > 10: # pyright: ignore[reportArgumentType]
             await interaction.response.send_message("You can only have up to 10 different cards per trade.", ephemeral=True)
@@ -104,7 +104,7 @@ class Select(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         await self.embed_interact.delete_original_response()
         await interaction.response.defer()
-        sel_id = re.search("(?<=^\[)\d+(?=])", self.values[0]).group() # pyright: ignore[reportOptionalMemberAccess]
+        sel_id = re.search("(?<=^\\[)\\d+(?=])", self.values[0]).group() # pyright: ignore[reportOptionalMemberAccess]
 
         n_cards = list(self.t_cards)
         for card in n_cards:
