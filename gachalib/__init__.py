@@ -56,7 +56,7 @@ def cardBrowserEmbed(uid:int, cards:list[gachalib.types.Card], page:int = 1, inv
         if page == 1:
             cards_a = card_grouped[0:5] # pyright: ignore[reportPossiblyUnboundVariable]
         elif page > 1:
-            cards_a = card_grouped[startpage-1:startpage+5] # pyright: ignore[reportPossiblyUnboundVariable]
+            cards_a = card_grouped[startpage:startpage+5] # pyright: ignore[reportPossiblyUnboundVariable]
     else:
         if page == 1:
             cards_a = cards[0:5]

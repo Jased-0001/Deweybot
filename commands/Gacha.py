@@ -165,7 +165,7 @@ async def self(ctx : discord.Interaction, user: discord.Member = None, page: int
             await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
 
 
-@Bot.tree.command(name="gacha-inventory-completion", description="View your progress in collecing!")
+@Bot.tree.command(name="gacha-inventory-completion", description="View your progress in collecting!")
 async def self(ctx : discord.Interaction): # type: ignore
     if not Permissions.banned(ctx):
         _,a = gachalib.cards_user.get_users_cards(ctx.user.id)
