@@ -169,11 +169,12 @@ async def gacha_inventory(ctx : discord.Interaction, user: discord.Member = None
 async def gacha_inventory_completion(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         _,a = gachalib.cards_user.get_users_cards(ctx.user.id)
-        _,b = gachalib.cards.get_cards()
+        _,b = gachalib.cards.get_approved_cards()
         cards_had,cards_total = 0,len(b)
 
-        for _ in a:
-            cards_had += 1
+        for i in a:
+            if gachalib.cards.get_card_by_id(i.card_id)[1].accepted:
+                cards_had += 1
 
         await ctx.response.send_message(f"You have {cards_had}/{cards_total} ({round((cards_had/cards_total)*100,2)}%)")
 

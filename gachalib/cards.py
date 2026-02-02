@@ -23,6 +23,18 @@ def get_cards() -> tuple[bool, list[gachalib.types.Card]]:
         return (True, b)
     except IndexError:
         return (False, None) # pyright: ignore[reportReturnType]
+
+def get_approved_cards() -> tuple[bool, list[gachalib.types.Card]]:
+    try:
+        a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE accepted = True", ())
+        b = []
+
+        for c in a:
+            b.append(gachalib.types.Card(name=c[0],description=c[1],rarity=c[2],filename=c[3],maker_id=c[4],accepted=c[5],card_id=c[6]))
+
+        return (True, b)
+    except IndexError:
+        return (False, None) # pyright: ignore[reportReturnType]
     
 def get_card_by_id(card_id:int) -> tuple[bool, gachalib.types.Card]:
     try:
