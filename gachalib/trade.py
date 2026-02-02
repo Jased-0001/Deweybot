@@ -1,5 +1,5 @@
 import db_lib,Bot
-import gachalib.cards, gachalib.cards_user, gachalib.types
+import gachalib.cards, gachalib.cards_inventory, gachalib.types
 import discord
 import math
 
@@ -24,7 +24,7 @@ def get_user(trade: gachalib.types.Trade, interaction: discord.Interaction):
         user = trade.user2
     return user
 
-def user_cards_text(cards: list[gachalib.types.Cards_User]):
+def user_cards_text(cards: list[gachalib.types.CardsInventory]):
     card_grouped = gachalib.cards.group_like_cards(cards) # pyright: ignore[reportArgumentType]
 
     field = ""
@@ -57,9 +57,9 @@ class TradeSucessView(discord.ui.LayoutView):
 
 async def do_trade(trade: gachalib.types.Trade, interaction: discord.Interaction):
     for a in trade.user1_cards:
-        gachalib.cards_user.change_card_owner(trade.user2.id, a.inv_id) # pyright: ignore[reportOptionalMemberAccess]
+        gachalib.cards_inventory.change_card_owner(trade.user2.id, a.inv_id) # pyright: ignore[reportOptionalMemberAccess]
     for b in trade.user2_cards:
-        gachalib.cards_user.change_card_owner(trade.user1.id, b.inv_id) # pyright: ignore[reportOptionalMemberAccess]
+        gachalib.cards_inventory.change_card_owner(trade.user1.id, b.inv_id) # pyright: ignore[reportOptionalMemberAccess]
     await trade.accept_message.delete() # pyright: ignore[reportOptionalMemberAccess]
     await trade.message.delete() # pyright: ignore[reportOptionalMemberAccess]
     await interaction.response.send_message(view=TradeSucessView(trade))
@@ -69,7 +69,7 @@ async def do_trade(trade: gachalib.types.Trade, interaction: discord.Interaction
 #########################
 
 async def add_cards_to_trade(trade: gachalib.types.Trade, interaction: discord.Interaction, card_id: int, ammount: int):
-    cards = gachalib.cards_user.get_users_cards_by_card_id(interaction.user.id, card_id)[1]
+    cards = gachalib.cards_inventory.get_users_cards_by_card_id(interaction.user.id, card_id)[1]
 
     t_cards = get_user_cards(trade, interaction)
 
@@ -172,7 +172,7 @@ class TradeAddNumberSelect(discord.ui.Select):
         self.page = page
         self.trade = trade
         self.embed_interact = embed_interact
-        cards = gachalib.cards_user.get_users_cards_by_card_id(get_user(trade, embed_interact).id, card_id)[1]
+        cards = gachalib.cards_inventory.get_users_cards_by_card_id(get_user(trade, embed_interact).id, card_id)[1]
 
         options = []
         for i in range(1, min(len(cards)+1, 25)): # pyright: ignore[reportArgumentType]
@@ -231,7 +231,7 @@ class TradeAddID(discord.ui.Button):
 class TradeAddView(discord.ui.LayoutView):
     def __init__(self, page:int, trade: gachalib.types.Trade, embed_interact: discord.Interaction) -> None:
         super().__init__()
-        cards = gachalib.cards_user.get_users_cards(get_user(trade, embed_interact).id)[1]
+        cards = gachalib.cards_inventory.get_users_cards(get_user(trade, embed_interact).id)[1]
         cards = gachalib.cards.group_like_cards(cards)
 
         items = [

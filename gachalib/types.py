@@ -20,7 +20,7 @@ class Card:
         return self.card_id == other.card_id
     
 
-class Cards_User:
+class CardsInventory:
     def __init__(self,inv_id:int=-1,card_id:int=-1,user_id:int=-1) -> None:
         self.inv_id   = inv_id
         self.card_id  = card_id
@@ -32,7 +32,7 @@ class Cards_User:
         return self.inv_id == other.inv_id
     
 
-class Cards_Timeout:
+class GachaUser:
     def __init__(self,user_id:int=-1,last_use:int=-1) -> None:
         self.user_id   = user_id
         self.last_use  = last_use
@@ -45,8 +45,8 @@ class Trade:
     message: discord.Message | None = None
     user1: discord.Member | None = None
     user2: discord.Member | None = None
-    user1_cards: list[Cards_User] = field(default_factory=list)
-    user2_cards: list[Cards_User] = field(default_factory=list)
+    user1_cards: list[CardsInventory] = field(default_factory=list)
+    user2_cards: list[CardsInventory] = field(default_factory=list)
     accept_message: discord.Message | None = None
     accepted_user: discord.Member | None = None
 

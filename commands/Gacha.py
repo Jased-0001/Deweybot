@@ -37,7 +37,7 @@ async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
     if not Permissions.banned(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
-            if gachalib.cards_user.ownsCard(id=card.card_id,uid=ctx.user.id) or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
+            if gachalib.cards_inventory.ownsCard(id=card.card_id,uid=ctx.user.id) or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
                 image=gacha_crop_image(card)
                 await ctx.response.send_message(
                     view=GachaView(card, image), file=image, ephemeral=not show,
@@ -168,7 +168,7 @@ async def gacha_inventory(ctx : discord.Interaction, user: discord.Member = None
 @Bot.tree.command(name="gacha-inventory-completion", description="View your progress in collecting!")
 async def gacha_inventory_completion(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
-        _,a = gachalib.cards_user.get_users_cards(ctx.user.id)
+        _,a = gachalib.cards_inventory.get_users_cards(ctx.user.id)
         _,b = gachalib.cards.get_approved_cards()
         cards_had,cards_total = 0,len(b)
 
@@ -182,8 +182,8 @@ async def gacha_inventory_completion(ctx : discord.Interaction):
 @Bot.tree.command(name="gacha-roll", description="Roll for a card!")
 async def gacha_roll(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
-        timestamp = gachalib.gacha_timeout.get_timestamp()
-        last_use = gachalib.gacha_timeout.get_user_timeout(ctx.user.id).last_use
+        timestamp = gachalib.gacha_user.get_timestamp()
+        last_use = gachalib.gacha_user.get_user_timeout(ctx.user.id).last_use
         time_out = 3600 # 1 hour (seconds)
         if (timestamp - last_use) > (time_out) or last_use == -1:
             cards = [
@@ -192,15 +192,15 @@ async def gacha_roll(ctx : discord.Interaction):
                 gachalib.cards.random_card_by_rarity(gachalib.random_rarity())[1]
             ]
 
-            embed = discord.Embed(title="Gacha roll!", description="You rolled 3 cards!", color=gachalib.rarityColors[rarest_card.rarity])
+            embed = discord.Embed(title="Gacha roll!", description="You rolled 3 cards!", color=gachalib.rarityColors[gachalib.rarest_card(cards).rarity])
 
             for i in cards:
-                gachalib.cards_user.give_user_card(ctx.user.id, i.card_id)
+                gachalib.cards_inventory.give_user_card(ctx.user.id, i.card_id)
                 embed.add_field(name=f"Pulled '{i.name}' ({i.card_id}, {i.rarity})", value=f"{i.description}")
 
             await ctx.response.send_message(embed=embed, view=gachalib.PackView(cards))
             
-            gachalib.gacha_timeout.set_user_timeout(ctx.user.id,gachalib.gacha_timeout.get_timestamp())
+            gachalib.gacha_user.set_user_timeout(ctx.user.id,gachalib.gacha_user.get_timestamp())
         else:
             await ctx.response.send_message(
                 f"Aw! You're in Dewey Timeout! Try again <t:{last_use+time_out}:R>"
@@ -221,7 +221,7 @@ async def gacha_trade(ctx : discord.Interaction, user:discord.Member):
 
 @Bot.tree.command(name="gacha-send-card", description="Give someone a card")
 async def gacha_send_card(ctx : discord.Interaction, inv_id:int, user:discord.Member):
-    test = gachalib.cards_user.change_card_owner(user.id, inv_id)
+    test = gachalib.cards_inventory.change_card_owner(user.id, inv_id)
     await ctx.response.send_message(test)
 
 
@@ -252,7 +252,7 @@ async def z_gacha_admin_approvecard(ctx : discord.Interaction, id:int, approved:
 @Bot.tree.command(name="z-gacha-admin-givecard", description="!MOD ONLY! Just give someone a card")
 async def z_gacha_admin_givecard(ctx : discord.Interaction, id:int, user:discord.Member):
     if Permissions.is_override(ctx):
-        cardid = gachalib.cards_user.give_user_card(user_id=user.id, card_id=id)
+        cardid = gachalib.cards_inventory.give_user_card(user_id=user.id, card_id=id)
         await ctx.response.send_message(f"Just condensed card {cardid} out of thin air, yo (i control the elements)")
     else:
         await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)

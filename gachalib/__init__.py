@@ -1,7 +1,7 @@
 from urllib import response
 from commands import Gacha
 import db_lib,Bot
-import gachalib.cards, gachalib.cards_user, gachalib.gacha_timeout, gachalib.types, gachalib.trade
+import gachalib.cards, gachalib.cards_inventory, gachalib.gacha_user, gachalib.types, gachalib.trade
 import discord
 from random import randint
 from typing import Literal
@@ -97,7 +97,8 @@ rarity_order = {
     "Legendary": 5,
 }
 
-rarest_card = max(cards, key=lambda c: rarity_order[c.rarity])
+def rarest_card(cards:list[gachalib.types.Card]) -> gachalib.types.Card:
+    return max(cards, key=lambda c: rarity_order[c.rarity])
 
 
 def random_rarity(restraint:bool=False) -> str:
@@ -133,8 +134,8 @@ class BrowserView(discord.ui.View):
         
         if not manual:
             if self.isInventory:
-                _, self.cards = gachalib.cards_user.get_users_cards(self.uid)
-                self.cards = gachalib.cards_user.sort_userlist_cards(self.cards)
+                _, self.cards = gachalib.cards_inventory.get_users_cards(self.uid)
+                self.cards = gachalib.cards_inventory.sort_userlist_cards(self.cards)
             else:
                 _, self.cards = gachalib.cards.get_cards()
 
