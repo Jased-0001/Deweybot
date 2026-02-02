@@ -4,6 +4,7 @@ import sqlite3
 import discord
 from discord.ext import commands, tasks
 import Bot
+from gachalib.cards import group_like_cards
 import other.Permissions as Permissions
 import db_lib
 
@@ -170,10 +171,16 @@ async def gacha_inventory_completion(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         _,a = gachalib.cards_inventory.get_users_cards(ctx.user.id)
         _,b = gachalib.cards.get_approved_cards()
+        c = []
         cards_had,cards_total = 0,len(b)
 
         for i in a:
-            if gachalib.cards.get_card_by_id(i.card_id)[1].accepted:
+            c.append(i.tocard()[1])
+
+        c = gachalib.cards.group_like_cards(a=c)
+
+        for i in c:
+            if i[0].accepted:
                 cards_had += 1
 
         await ctx.response.send_message(f"You have {cards_had}/{cards_total} ({round((cards_had/cards_total)*100,2)}%)")

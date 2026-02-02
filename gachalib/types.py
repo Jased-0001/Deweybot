@@ -1,4 +1,5 @@
 import discord
+from gachalib import cards
 from dataclasses import dataclass, field
 
 class Card:
@@ -30,6 +31,9 @@ class CardsInventory:
         return f'{self.__class__.__name__} (invid = {self.inv_id} - cardid = {self.card_id})'
     def __eq__(self, other):
         return self.inv_id == other.inv_id
+    
+    def tocard(self) -> tuple[bool, Card]:
+        return cards.get_card_by_id(card_id=self.card_id)
     
 
 class GachaUser:

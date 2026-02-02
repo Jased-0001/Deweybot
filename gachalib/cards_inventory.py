@@ -8,7 +8,7 @@ import gachalib,gachalib.types
 def sort_userlist_cards(a:list[gachalib.types.CardsInventory]) -> list[gachalib.types.CardsInventory]:
     return sorted(a, key=lambda b: b.card_id)
 
-def get_users_cards(user_id:int) -> tuple:
+def get_users_cards(user_id:int) -> tuple[bool, list[gachalib.types.CardsInventory]]:
     try:
         a = db_lib.read_data(f"SELECT id,card_id FROM gacha_cards WHERE (user_id) = (?)", (user_id,))
         b = []
@@ -18,7 +18,7 @@ def get_users_cards(user_id:int) -> tuple:
 
         return (True,b)
     except IndexError:
-        return (False,)
+        return (False,) # pyright: ignore[reportReturnType]
     
 def get_users_cards_by_id_range(user_id:int, id_start:int,id_end:int) -> tuple:
     try:
