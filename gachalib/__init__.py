@@ -81,12 +81,24 @@ async def get_card_maker_channel(id:int) -> discord.User:
 
 rarityColors = {
     "None":      0xffffff,
-    "Common":    0x1eff00,
-    "Uncommon":  0x319236,
-    "Rare":      0x0070dd,
-    "Epic":      0xa335ee,
-    "Legendary": 0xff8000,
+    "Common":    0x04f9f9,
+    "Uncommon":  0x04f94e,
+    "Rare":      0xf9d104,
+    "Epic":      0xf97f04,
+    "Legendary": 0xf93504,
 }
+
+rarity_order = {
+    "None": 0,
+    "Common": 1,
+    "Uncommon": 2,
+    "Rare": 3,
+    "Epic": 4,
+    "Legendary": 5,
+}
+
+rarest_card = max(cards, key=lambda c: rarity_order[c.rarity])
+
 
 def random_rarity(restraint:bool=False) -> str:
     number = randint(1,100)
