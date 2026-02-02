@@ -192,7 +192,7 @@ async def gacha_roll(ctx : discord.Interaction):
                 gachalib.cards.random_card_by_rarity(gachalib.random_rarity())[1]
             ]
 
-            embed = discord.Embed(title="Gacha roll!", description="You rolled 3 cards!", color=gachalib.rarityColors[cards[2].rarity])
+            embed = discord.Embed(title="Gacha roll!", description="You rolled 3 cards!", color=gachalib.rarityColors[rarest_card.rarity])
 
             for i in cards:
                 gachalib.cards_user.give_user_card(ctx.user.id, i.card_id)
