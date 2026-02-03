@@ -11,6 +11,25 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import io
 
 Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"]
+SortOptions = Literal["ID", "Rarity"]
+
+rarityColors = {
+    "None":      0xffffff,
+    "Common":    0x04f9f9,
+    "Uncommon":  0x04f94e,
+    "Rare":      0xf9d104,
+    "Epic":      0xf97f04,
+    "Legendary": 0xf93504,
+}
+
+rarity_order = {
+    "None": 0,
+    "Common": 1,
+    "Uncommon": 2,
+    "Rare": 3,
+    "Epic": 4,
+    "Legendary": 5,
+}
 
 def gacha_crop_image(card: gachalib.types.Card):
     img = Image.open(f"{Bot.DeweyConfig["image-save-path"]}/{card.filename}")
@@ -79,24 +98,6 @@ def cardBrowserEmbed(uid:int, cards:list[gachalib.types.Card], page:int = 1, inv
 async def get_card_maker_channel(id:int) -> discord.User:
     return await Bot.client.fetch_user(id)
 
-rarityColors = {
-    "None":      0xffffff,
-    "Common":    0x04f9f9,
-    "Uncommon":  0x04f94e,
-    "Rare":      0xf9d104,
-    "Epic":      0xf97f04,
-    "Legendary": 0xf93504,
-}
-
-rarity_order = {
-    "None": 0,
-    "Common": 1,
-    "Uncommon": 2,
-    "Rare": 3,
-    "Epic": 4,
-    "Legendary": 5,
-}
-
 def rarest_card(cards:list[gachalib.types.Card]) -> gachalib.types.Card:
     return max(cards, key=lambda c: rarity_order[c.rarity])
 
@@ -124,7 +125,7 @@ def random_rarity(restraint:bool=False) -> str:
 
 
 class BrowserView(discord.ui.View):
-    def __init__(self,inventory:bool=False,uid:int=0,manual:bool=False,page:int=1):
+    def __init__(self,inventory:bool=False,uid:int=0,cards:list[gachalib.types.Card]=[],page:int=1,sort:SortOptions="ID"):
         super().__init__()
         self.message = None
         self.page = page
@@ -132,20 +133,29 @@ class BrowserView(discord.ui.View):
         self.isInventory = inventory
         self.uid = uid
         
-        if not manual:
+        if len(cards) == 0:
             if self.isInventory:
                 _, self.cards = gachalib.cards_inventory.get_users_cards(self.uid)
-                self.cards = gachalib.cards_inventory.sort_userlist_cards(self.cards)
+                if sort == "ID":
+                    self.cards = gachalib.cards_inventory.sort_cards_by_id(self.cards) # pyright: ignore[reportArgumentType]
+                elif sort == "Rarity":
+                    self.cards = gachalib.cards_inventory.sort_cards_by_rarity(self.cards)  # pyright: ignore[reportArgumentType]
             else:
                 _, self.cards = gachalib.cards.get_cards()
+        else:
+            self.cards = cards
+    
+    def getPage(self):
+        return cardBrowserEmbed(uid=self.uid,cards=self.cards,page=self.page,inventory=self.isInventory) # pyright: ignore[reportArgumentType]
 
-    async def getPage(self,interaction:discord.Interaction):
-        embed = cardBrowserEmbed(self.uid,self.cards,self.page,self.isInventory) # pyright: ignore[reportArgumentType]
+
+    async def updatePage(self,interaction:discord.Interaction):
+        embed = self.getPage()
 
         if type(embed) == discord.Embed:
-            await interaction.response.edit_message(content="", embed=embed)
+            await interaction.response.edit_message(content="", embed=embed, view=self)
         else:
-            await interaction.response.edit_message(content=embed, embed=None)
+            await interaction.response.edit_message(content=embed, embed=None, view=self)
 
     @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.secondary, row=0, custom_id="backbtn")
     async def back_call(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
@@ -156,13 +166,13 @@ class BrowserView(discord.ui.View):
             button.disabled = False
             self.page -= 1
 
-        await self.getPage(interaction)
+        await self.updatePage(interaction)
 
 
     @discord.ui.button(emoji="➡️", style=discord.ButtonStyle.secondary, row=0, custom_id="fwdbtn")
     async def forward_call(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         self.page += 1
-        await self.getPage(interaction)
+        await self.updatePage(interaction)
 
 
 class RequestView(discord.ui.View):

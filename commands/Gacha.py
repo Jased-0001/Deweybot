@@ -152,13 +152,13 @@ async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", des
 
 
 @Bot.tree.command(name="gacha-inventory", description="View your inventory!")
-async def gacha_inventory(ctx : discord.Interaction, user: discord.Member = None, page: int = 0): # pyright: ignore[reportArgumentType]
+async def gacha_inventory(ctx : discord.Interaction, user: discord.Member = None, page: int = 0, sort: Literal["ID", "Rarity"] = "Rarity"): # pyright: ignore[reportArgumentType]
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
+
+        view = gachalib.BrowserView(True, user.id if user else ctx.user.id, page=page,sort=sort)
         
-        view = gachalib.BrowserView(True, user.id if user else ctx.user.id, page=page)
-        
-        embed = gachalib.cardBrowserEmbed(view.uid,view.cards,view.page,True) # pyright: ignore[reportArgumentType]
+        embed = view.getPage()
 
         if type(embed) == discord.Embed:
             await ctx.response.send_message(content="", embed=embed, view=view)
@@ -237,10 +237,11 @@ async def gacha_send_card(ctx : discord.Interaction, inv_id:int, user:discord.Me
 
 @Bot.tree.command(name="z-gacha-admin-deletecard", description="!MOD ONLY! (Ask us!) Delete a card")
 async def z_gacha_admin_deletecard(ctx : discord.Interaction, id:int):
-    if not Permissions.banned(ctx):
-        if Permissions.is_override(ctx):
-            gachalib.cards.delete_card(id)
-            await ctx.response.send_message("Deleted card.", ephemeral=True)
+    if Permissions.is_override(ctx):
+        gachalib.cards.delete_card(id)
+        await ctx.response.send_message("Deleted card.", ephemeral=True)
+    else:
+        await ctx.response.send_message("Yo. You not part of the \"Gang\" (ask for your card to be deleted)", ephemeral=True)
 
 
 @Bot.tree.command(name="z-gacha-admin-approvecard", description="!MOD ONLY! Force an action on a card (use when buttons don't work)")
@@ -280,11 +281,10 @@ async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gach
 @Bot.tree.command(name="z-gacha-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
 async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
     if Permissions.is_override(ctx):
-        view = gachalib.BrowserView(inventory=False,manual=True)
         _,cards = gachalib.cards.get_unapproved_cards()
-        view.cards = cards
+        view = gachalib.BrowserView(inventory=False,cards=cards)
         
-        embed = gachalib.cardBrowserEmbed(-1,view.cards,view.page,False) # pyright: ignore[reportArgumentType]
+        embed = view.getPage()
 
         if type(embed) == discord.Embed:
             await ctx.response.send_message(content="", embed=embed, view=view)

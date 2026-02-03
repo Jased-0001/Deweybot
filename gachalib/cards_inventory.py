@@ -3,10 +3,18 @@ things to deal with users and their cards
 """
 import db_lib
 
+import gachalib.cards
 import gachalib,gachalib.types
 
-def sort_userlist_cards(a:list[gachalib.types.CardsInventory]) -> list[gachalib.types.CardsInventory]:
+def sort_cards_by_id(a:list[gachalib.types.CardsInventory | gachalib.types.Card]) -> list[gachalib.types.CardsInventory | gachalib.types.Card]:
     return sorted(a, key=lambda b: b.card_id)
+
+def sort_cards_by_rarity(a:list[gachalib.types.CardsInventory | gachalib.types.Card]) -> list[gachalib.types.CardsInventory | gachalib.types.Card]:
+    if type(a) == gachalib.types.Card:
+        return sorted(a, key=lambda b: gachalib.rarity_order[a.rarity])
+    else:
+        #didn't test this
+        return sorted(a, key=lambda b: gachalib.rarity_order[gachalib.cards.get_card_by_id(card_id=b.card_id)[1].rarity])
 
 def get_users_cards(user_id:int) -> tuple[bool, list[gachalib.types.CardsInventory]]:
     try:
