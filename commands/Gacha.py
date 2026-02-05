@@ -203,7 +203,9 @@ async def gacha_roll(ctx : discord.Interaction):
 
             for i in cards:
                 gachalib.cards_inventory.give_user_card(ctx.user.id, i.card_id)
-                embed.add_field(name=f"Pulled '{i.name}' ({i.card_id}, {i.rarity})", value=f"{i.description}")
+                user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(ctx.user.id, i.card_id)
+                numText = "[New]" if len(user_cards[1]) < 2 else f"[{len(user_cards[1])}x]"
+                embed.add_field(name=f"{numText} {i.name}\n({i.rarity})", value=f"{i.description}\n{i.card_id}")
 
             await ctx.response.send_message(embed=embed, view=gachalib.PackView(cards))
             
