@@ -84,7 +84,7 @@ def random_card_by_rarity(rarity:str) -> tuple[bool, gachalib.types.Card]:
     try:
         a = db_lib.read_data(f"SELECT id FROM gacha WHERE (rarity,accepted) = (?,?)", (rarity,True))
         card_id = a[randint(0,len(a)-1)][0]
-        card_id = card_id * -1 if randint(1, 5) == 1 else card_id
+        card_id = card_id * -1 if randint(1, 25) == 1 else card_id
         success, card = get_card_by_id(card_id)
         if success:
             return(True, card)
