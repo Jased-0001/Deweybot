@@ -53,7 +53,7 @@ class botClient(discord.Client):
             for i in message.reactions:
                 reactors = [discord.Object(id=user.id) async for user in i.users()]
                 snowflake = discord.Object(id=reactionpayload.user_id)
-
+                
                 if i.emoji == "✅" and reactionpayload.emoji.name == "❌":
                     if snowflake in reactors:
                         await message.remove_reaction(i.emoji, snowflake)
@@ -62,6 +62,12 @@ class botClient(discord.Client):
                         await message.remove_reaction(i.emoji, snowflake)
         
         return
+    
+    async def on_error(self, event, error):
+        print(event)
+        print(error)
+        channel = await client.fetch_channel(DeweyConfig["error-channel"])
+        await channel.send(f"<@322495136108118016> got an report for you boss (event {event})\n```{traceback.format_exc()}```") # pyright: ignore[reportAttributeAccessIssue]
 
 
 client = botClient()
@@ -74,6 +80,7 @@ async def on_app_command_error(interaction: discord.Interaction, error):
     
     await interaction.response.send_message("Ay! I gotted an error! Please ping the owners of me!")
 
+    
 import commands.Nick
 import commands.Other
 import commands.Gacha
