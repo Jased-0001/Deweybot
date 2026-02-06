@@ -7,7 +7,7 @@ from random import randint
 from typing import Literal
 import math
 import textwrap
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageOps
 import io
 
 Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"]
@@ -31,23 +31,27 @@ rarity_order = {
     "Legendary": 5,
 }
 
-def gacha_crop_image(card: gachalib.types.Card):
+def gacha_crop_image(card: gachalib.types.Card, evil: bool=False):
     img = Image.open(f"{Bot.DeweyConfig["image-save-path"]}/{card.filename}")
     img = ImageOps.contain(img, (350, 350))
+
+    if evil:
+        img = ImageOps.invert(img.convert("RGB"))
+
     buffer = io.BytesIO()
     img.save(buffer, format="png")
     buffer.seek(0)
     return discord.File(fp=buffer, filename="image.png")
 
 class GachaView(discord.ui.LayoutView):
-    def __init__(self, card: gachalib.types.Card, image: discord.File):
+    def __init__(self, card: gachalib.types.Card, image: discord.File, evil: bool=False):
         super().__init__()
         container = discord.ui.Container(
-            discord.ui.TextDisplay(f"# {card.name}"),
+            discord.ui.TextDisplay(f"#{' EVIL' if evil else ''} {card.name}"),
             discord.ui.MediaGallery(
                 discord.MediaGalleryItem(image),
             ),
-            discord.ui.TextDisplay(f"### {card.rarity}"),
+            discord.ui.TextDisplay(f"### {card.rarity}{' evil' if evil else ''}"),
             discord.ui.TextDisplay(textwrap.fill(card.description, 50)),
             discord.ui.Separator(),
             discord.ui.TextDisplay(f"-#{' !DRAFT!' if not card.accepted else ''} ID {card.card_id}, by <@{card.maker_id}>"),

@@ -38,10 +38,11 @@ async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
     if not Permissions.banned(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
-            if gachalib.cards_inventory.ownsCard(id=card.card_id,uid=ctx.user.id) or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
-                image=gacha_crop_image(card)
+            has_card = gachalib.cards_inventory.ownsCard(id=card.card_id,uid=ctx.user.id,get_evil=True)
+            if has_card[0] or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
+                image=gacha_crop_image(card, has_card[1])
                 await ctx.response.send_message(
-                    view=GachaView(card, image), file=image, ephemeral=not show,
+                    view=GachaView(card, image, has_card[1]), file=image, ephemeral=not show,
                     allowed_mentions=discord.AllowedMentions(users=False)
                 )
             else:
@@ -202,10 +203,13 @@ async def gacha_roll(ctx : discord.Interaction):
             embed = discord.Embed(title="Gacha roll!", description="You rolled 3 cards!", color=gachalib.rarityColors[gachalib.rarest_card(cards).rarity])
 
             for i in cards:
-                gachalib.cards_inventory.give_user_card(ctx.user.id, i.card_id)
-                user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(ctx.user.id, i.card_id)
+                gachalib.cards_inventory.give_user_card(ctx.user.id, i.card_id, i.evil)
+                user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(user_id=ctx.user.id, card_id=i.card_id, evil=i.evil)
                 numText = "[New]" if len(user_cards[1]) < 2 else f"[{len(user_cards[1])}x]"
-                embed.add_field(name=f"{numText} {i.name}\n({i.rarity})", value=f"{i.description}\n-# ID: {i.card_id}")
+                embed.add_field(
+                    name=f"{numText} {'EVIL ' if i.evil else ''}{i.name}\n({i.rarity}{' evil' if i.evil else ''})",
+                    value=f"{i.description}\n-# ID: {i.card_id}"
+                )
 
             await ctx.response.send_message(embed=embed, view=gachalib.PackView(cards))
             

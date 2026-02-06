@@ -68,8 +68,8 @@ async def do_trade(trade: gachalib.types.Trade, interaction: discord.Interaction
 #     Add Trade UI      #
 #########################
 
-async def add_cards_to_trade(trade: gachalib.types.Trade, interaction: discord.Interaction, card_id: int, ammount: int):
-    cards = gachalib.cards_inventory.get_users_cards_by_card_id(interaction.user.id, card_id)[1]
+async def add_cards_to_trade(trade: gachalib.types.Trade, interaction: discord.Interaction, card_id: int, ammount: int, evil: bool):
+    cards = gachalib.cards_inventory.get_users_cards_by_card_id(interaction.user.id, card_id, evil)[1]
 
     t_cards = get_user_cards(trade, interaction)
 
@@ -145,7 +145,7 @@ class TradeRemoveView(discord.ui.LayoutView):
         self.add_item(container)
 
 #########################
-#    Accept card UI2    #
+#     Add card UI2      #
 #########################
 
 class TradeAddRow(discord.ui.ActionRow):
@@ -167,13 +167,13 @@ class TradeAddRow(discord.ui.ActionRow):
         await interaction.response.edit_message(view=TradeAddView(page, self.trade, self.embed_interact))
 
 class TradeAddNumberSelect(discord.ui.Select):
-    def __init__(self, card_id: int, page:int, trade: gachalib.types.Trade, embed_interact: discord.Interaction):
+    def __init__(self, card_id: int, evil:bool, page:int, trade: gachalib.types.Trade, embed_interact: discord.Interaction):
         self.card_id = card_id
         self.page = page
         self.trade = trade
         self.embed_interact = embed_interact
-        cards = gachalib.cards_inventory.get_users_cards_by_card_id(get_user(trade, embed_interact).id, card_id)[1]
-
+        self.evil = evil
+        cards = gachalib.cards_inventory.get_users_cards_by_card_id(user_id=get_user(trade, embed_interact).id, card_id=card_id, evil=evil)[1]
         options = []
         for i in range(1, min(len(cards)+1, 25)): # pyright: ignore[reportArgumentType]
             options.append(discord.SelectOption(
@@ -183,20 +183,27 @@ class TradeAddNumberSelect(discord.ui.Select):
         super().__init__(placeholder="Select number of cards to add",max_values=1,min_values=1,options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        await add_cards_to_trade(self.trade, interaction, self.card_id, int(self.values[0]))
+        await add_cards_to_trade(self.trade, interaction, self.card_id, int(self.values[0]), self.evil)
         await interaction.delete_original_response()
 
 class TradeAddNumber(discord.ui.LayoutView):
     def __init__(self, card_id: int, page:int, trade: gachalib.types.Trade, embed_interact: discord.Interaction) -> None:
         super().__init__()
-        card = gachalib.cards.get_card_by_id(card_id)[1]
+        evil = card_id[-1] == "e"
+        if evil:
+            card_id = card_id[0:-1]
+            card = gachalib.cards.get_card_by_id(card_id)[1]
+            card.name = "EVIL " + card.name
+            card.rarity = card.rarity + " evil"
+        else:
+            card = gachalib.cards.get_card_by_id(card_id)[1]
 
         container = discord.ui.Container(
             discord.ui.TextDisplay("## Choose ammount"),
             discord.ui.TextDisplay(f"How many {card.name}s would you like to add?"),
             discord.ui.Separator(),
             discord.ui.ActionRow(
-                TradeAddNumberSelect(card_id, page, trade, embed_interact)
+                TradeAddNumberSelect(card_id, evil, page, trade, embed_interact)
             ),  
         )
         self.add_item(container)
@@ -211,13 +218,13 @@ class TradeAddSelect(discord.ui.Select):
         for card in cards: # pyright: ignore[reportArgumentType]
             options.append(discord.SelectOption(
                 label=f"[{card[1]}x] {card[0].name} ({card[0].rarity})\n",
-                value=card[0].card_id
+                value=card[0].card_id + ("e" if card[0].rarity[-4:] == "evil" else "")
             ))
 
         super().__init__(placeholder="Select a card to add",max_values=1,min_values=1,options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(view=TradeAddNumber(int(self.values[0]), self.page, self.trade, self.embed_interact))
+        await interaction.response.edit_message(view=TradeAddNumber(self.values[0], self.page, self.trade, self.embed_interact))
 
 class TradeAddID(discord.ui.Button):
     def __init__(self, trade: gachalib.types.Trade) -> None:

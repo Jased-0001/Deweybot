@@ -22,13 +22,14 @@ class Card:
     
 
 class CardsInventory:
-    def __init__(self,inv_id:int=-1,card_id:int=-1,user_id:int=-1) -> None:
+    def __init__(self,inv_id:int=-1,card_id:int=-1,user_id:int=-1,evil:bool=False) -> None:
         self.inv_id   = inv_id
         self.card_id  = card_id
         self.user_id  = user_id
+        self.evil     = evil
 
     def __repr__(self):
-        return f'{self.__class__.__name__} (invid = {self.inv_id} - cardid = {self.card_id})'
+        return f'{self.__class__.__name__} (invid = {self.inv_id} - cardid = {self.card_id} - evil = {self.evil})'
     def __eq__(self, other):
         return self.inv_id == other.inv_id
     

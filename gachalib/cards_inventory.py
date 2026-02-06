@@ -18,11 +18,11 @@ def sort_cards_by_rarity(a:list[gachalib.types.CardsInventory | gachalib.types.C
 
 def get_users_cards(user_id:int) -> tuple[bool, list[gachalib.types.CardsInventory]]:
     try:
-        a = db_lib.read_data(f"SELECT id,card_id FROM gacha_cards WHERE (user_id) = (?)", (user_id,))
+        a = db_lib.read_data(f"SELECT id,card_id,evil FROM gacha_cards WHERE (user_id) = (?)", (user_id,))
         b = []
 
         for c in a:
-            b.append( gachalib.types.CardsInventory(inv_id=c[0],card_id=c[1],user_id=user_id) )
+            b.append( gachalib.types.CardsInventory(inv_id=c[0],card_id=c[1],user_id=user_id,evil=c[2]) )
 
         return (True,b)
     except IndexError:
@@ -38,26 +38,26 @@ def get_users_cards_by_id_range(user_id:int, id_start:int,id_end:int) -> tuple:
     except IndexError:
         return (False,)
 
-def get_users_cards_by_card_id(user_id:int, card_id:int) -> tuple[bool, list[gachalib.types.CardsInventory]]:
+def get_users_cards_by_card_id(user_id:int, card_id:int, evil:bool=False) -> tuple[bool, list[gachalib.types.CardsInventory]]:
     try:
-        a = db_lib.read_data(f"SELECT id,card_id FROM gacha_cards WHERE (user_id, card_id) = (?,?)", (user_id, card_id))
+        a = db_lib.read_data(f"SELECT id,card_id,evil FROM gacha_cards WHERE (user_id, card_id, evil) = (?,?,?)", (user_id, card_id, evil))
         b = []
 
         for c in a:
-            b.append( gachalib.types.CardsInventory(inv_id=c[0],card_id=c[1],user_id=user_id) )
+            b.append( gachalib.types.CardsInventory(inv_id=c[0],card_id=c[1],user_id=user_id,evil=c[2]) )
         
         return (True, b)
     except IndexError:
         return (False,) # pyright: ignore[reportReturnType]
     
-def give_user_card(user_id:int,card_id:int) -> gachalib.types.CardsInventory:
+def give_user_card(user_id:int,card_id:int,evil:bool) -> gachalib.types.CardsInventory:
     a = db_lib.read_data(f"SELECT id FROM gacha_cards;", ())
     if len(a) == 0:
         inv_id = 1
     else:
         inv_id = a[len(a)-1][0] + 1
 
-    db_lib.write_data("INSERT INTO gacha_cards (id,card_id,user_id) VALUES (?,?,?)", (inv_id,card_id,user_id))
+    db_lib.write_data("INSERT INTO gacha_cards (id,card_id,user_id,evil) VALUES (?,?,?,?)", (inv_id,card_id,user_id,evil))
     return gachalib.types.CardsInventory(inv_id=inv_id,card_id=card_id,user_id=user_id)
 
 def change_card_owner(user_id:int,inv_id:int) -> bool: # ?
@@ -68,9 +68,13 @@ def change_card_owner(user_id:int,inv_id:int) -> bool: # ?
         return False
     
 
-def ownsCard(id:int,uid:int) -> bool:
-    a = db_lib.read_data(f"SELECT id FROM gacha_cards WHERE (user_id,card_id) = (?,?);", (uid,id))
-    if len(a) == 0:
-        return False
-    else:
-        return True
+def ownsCard(id:int,uid:int,get_evil:bool=False) -> bool | tuple(bool, bool):
+    a = db_lib.read_data(f"SELECT id, evil FROM gacha_cards WHERE (user_id,card_id,evil) = (?,?,?);", (uid,id,get_evil))
+    found = not len(a) == 0
+    if get_evil:
+        if not found:
+            return (False, False)
+        if any(b[1] for b in a):
+            return (True, True)
+        return (True, False)
+    return found
