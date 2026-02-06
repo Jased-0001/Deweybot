@@ -28,7 +28,7 @@ class CardsInventory:
         self.user_id  = user_id
 
     def __repr__(self):
-        return f'{self.__class__.__name__} (invid = {self.inv_id} - cardid = {self.card_id} - evil = {self.evil})'
+        return f'{self.__class__.__name__} (invid = {self.inv_id} - cardid = {self.card_id})'
     def __eq__(self, other):
         return self.inv_id == other.inv_id
     

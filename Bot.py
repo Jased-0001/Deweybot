@@ -1,3 +1,4 @@
+import io
 import discord
 #from discord.ext import commands, tasks
 from discord import Reaction, emoji
@@ -64,10 +65,12 @@ class botClient(discord.Client):
         return
     
     async def on_error(self, event, error):
-        print(event)
-        print(error)
         channel = await client.fetch_channel(DeweyConfig["error-channel"])
-        await channel.send(f"<@322495136108118016> got an report for you boss (event {event})\n```{traceback.format_exc()}```") # pyright: ignore[reportAttributeAccessIssue]
+        buffer = io.BytesIO()
+        buffer.write(traceback.format_exc().encode())
+        buffer.seek(0)
+        await channel.send(f"<@322495136108118016> got an report for you boss (event {event})\n",file=discord.File(fp=buffer,filename="error.txt")) # pyright: ignore[reportAttributeAccessIssue]
+        buffer.close()
 
 
 client = botClient()
@@ -76,7 +79,11 @@ tree = discord.app_commands.CommandTree(client)
 @tree.error
 async def on_app_command_error(interaction: discord.Interaction, error):
     channel = await client.fetch_channel(DeweyConfig["error-channel"])
-    await channel.send(f"<@322495136108118016> got an report for you boss\n```{traceback.format_exc()}```") # pyright: ignore[reportAttributeAccessIssue]
+    buffer = io.BytesIO()
+    buffer.write(traceback.format_exc().encode())
+    buffer.seek(0)
+    await channel.send(f"<@322495136108118016> got an report for you boss\n",file=discord.File(fp=buffer,filename="error.txt")) # pyright: ignore[reportAttributeAccessIssue]
+    buffer.close()
     
     await interaction.response.send_message("Ay! I gotted an error! Please ping the owners of me!")
 
