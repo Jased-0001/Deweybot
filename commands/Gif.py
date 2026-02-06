@@ -9,7 +9,7 @@ async def house(ctx : discord.Interaction, text: str):
     if not Permissions.banned(ctx):
         await ctx.response.defer()
         
-        image_file = discord.File(gif.gen(text),filename=f"{text.replace(" ", "_")}.gif")
+        image_file = discord.File(gif.gen(text),filename=f"{text.replace(" ", "_")[0:32]}.gif")
         await ctx.followup.send(file=image_file)
     else:
         await ctx.response.send_message(
