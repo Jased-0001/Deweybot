@@ -1,6 +1,6 @@
 import discord
 #from discord.ext import commands, tasks
-from discord import emoji
+from discord import Reaction, emoji
 from discord import reaction
 from yaml import load,Loader
 import traceback
@@ -38,11 +38,30 @@ class botClient(discord.Client):
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
             return
-        if message.channel.id == DeweyConfig["suggestions-channel"]:
+        if message.channel.id == DeweyConfig["suggestions-channel"] and not message.content.startswith("!"):
             await message.add_reaction("✅")
             await message.add_reaction("❌")
         return
         #print(message.author.name + " - " + message.content)
+    async def on_raw_reaction_add(self, reactionpayload: discord.RawReactionActionEvent):
+        # remove conflicting vote reactions
+        if reactionpayload.channel_id == DeweyConfig["suggestions-channel"]:
+            if not reactionpayload.emoji.name in ["✅","❌"]: return
+            if reactionpayload.user_id == self.user.id: return # pyright: ignore[reportOptionalMemberAccess]
+            message = await client.get_channel(reactionpayload.channel_id).fetch_message(reactionpayload.message_id) # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+
+            for i in message.reactions:
+                reactors = [discord.Object(id=user.id) async for user in i.users()]
+                snowflake = discord.Object(id=reactionpayload.user_id)
+
+                if i.emoji == "✅" and reactionpayload.emoji.name == "❌":
+                    if snowflake in reactors:
+                        await message.remove_reaction(i.emoji, snowflake)
+                elif i.emoji == "❌" and reactionpayload.emoji.name == "✅":
+                    if snowflake in reactors:
+                        await message.remove_reaction(i.emoji, snowflake)
+        
+        return
 
 
 client = botClient()
