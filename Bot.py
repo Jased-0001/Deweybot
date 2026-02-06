@@ -1,5 +1,7 @@
 import discord
 #from discord.ext import commands, tasks
+from discord import emoji
+from discord import reaction
 from yaml import load,Loader
 import traceback
 
@@ -36,6 +38,10 @@ class botClient(discord.Client):
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
             return
+        if message.channel.id == DeweyConfig["suggestions-channel"]:
+            await message.add_reaction("✅")
+            await message.add_reaction("❌")
+        return
         #print(message.author.name + " - " + message.content)
 
 
