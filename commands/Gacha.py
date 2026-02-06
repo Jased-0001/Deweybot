@@ -1,10 +1,6 @@
-from re import A
-from socket import timeout
-import sqlite3
 import discord
 from discord.ext import commands, tasks
 import Bot
-from gachalib.cards import group_like_cards
 import other.Permissions as Permissions
 import db_lib
 
@@ -13,8 +9,9 @@ from gachalib import *
 # General card commands 
 #######################################
 
+gacha_group = discord.app_commands.Group(name="gacha", description="Dewey GACHA!!!")
 
-@Bot.tree.command(name="gacha-help", description="What is a gacha?")
+@gacha_group.command(name="help", description="What is a gacha?")
 async def gacha_help(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         embed = discord.Embed(title="Dewey Gacha!",description="""Gacha cards are a collection of different characters on cards that you get randomly from packs. Like pokemon but without playing with them.
@@ -33,7 +30,7 @@ The `/gacha-submitcard` command allows you to submit a card for approval. You gi
 
 
 
-@Bot.tree.command(name="gacha-viewcard", description="View a gacha card!")
+@gacha_group.command(name="viewcard", description="View a gacha card!")
 async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
     if not Permissions.banned(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
@@ -50,7 +47,7 @@ async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
             await ctx.response.send_message("Card doesn't exist!",ephemeral=True)
 
 
-@Bot.tree.command(name="gacha-browsecards", description="Look through cards")
+@gacha_group.command(name="browsecards", description="Look through cards")
 async def gacha_browsecards(ctx : discord.Interaction, page:int = 1):
     if not Permissions.banned(ctx):
         await ctx.response.send_message("command disabled!", ephemeral=True)
@@ -66,7 +63,7 @@ async def gacha_browsecards(ctx : discord.Interaction, page:int = 1):
 #            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
 
 
-@Bot.tree.command(name="gacha-submitcard", description="Submit a new gacha card!")
+@gacha_group.command(name="submitcard", description="Submit a new gacha card!")
 async def gacha_submitcard(ctx : discord.Interaction, name: str, description: str, image: discord.Attachment, additional_info:str=""):
     if not Permissions.banned(ctx):
         if Bot.DeweyConfig["review"][0] == "dm":
@@ -111,7 +108,7 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
         )
 
 
-@Bot.tree.command(name="gacha-editcard", description="Re-submit an edited gacha card (or admin)!")
+@gacha_group.command(name="editcard", description="Re-submit an edited gacha card (or admin)!")
 async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", description: str = ""):
     if not Permissions.banned(ctx):
         if Bot.DeweyConfig["review"][0] == "dm":
@@ -151,7 +148,7 @@ async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", des
 #######################################
 
 
-@Bot.tree.command(name="gacha-inventory", description="View your inventory!")
+@gacha_group.command(name="inventory", description="View your inventory!")
 async def gacha_inventory(ctx : discord.Interaction, user: discord.Member = None, page: int = 0, sort: Literal["ID", "Rarity"] = "Rarity"): # pyright: ignore[reportArgumentType]
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
@@ -166,7 +163,7 @@ async def gacha_inventory(ctx : discord.Interaction, user: discord.Member = None
             await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
 
 
-@Bot.tree.command(name="gacha-inventory-completion", description="View your progress in collecting!")
+@gacha_group.command(name="inventory-completion", description="View your progress in collecting!")
 async def gacha_inventory_completion(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         _,a = gachalib.cards_inventory.get_users_cards(ctx.user.id)
@@ -186,7 +183,7 @@ async def gacha_inventory_completion(ctx : discord.Interaction):
         await ctx.response.send_message(f"You have {cards_had}/{cards_total} ({round((cards_had/cards_total)*100,2)}%)")
 
 
-@Bot.tree.command(name="gacha-roll", description="Roll for a card!")
+@gacha_group.command(name="roll", description="Roll for a card!")
 async def gacha_roll(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         timestamp = gachalib.gacha_user.get_timestamp()
@@ -219,7 +216,7 @@ async def gacha_roll(ctx : discord.Interaction):
 # Trading
 #######################################
 
-@Bot.tree.command(name="gacha-trade", description="Trade with someone")
+@gacha_group.command(name="trade", description="Trade with someone")
 async def gacha_trade(ctx : discord.Interaction, user:discord.Member):
     if not Permissions.banned(ctx):
         if ctx.user.id == user.id:
@@ -228,7 +225,7 @@ async def gacha_trade(ctx : discord.Interaction, user:discord.Member):
         trade = gachalib.types.Trade(user1=ctx.user, user2=user) # pyright: ignore[reportArgumentType]
         await ctx.response.send_message(view=gachalib.trade.TradeRequestView(trade)) # pyright: ignore[reportArgumentType]
 
-@Bot.tree.command(name="gacha-send-card", description="Give someone a card")
+@gacha_group.command(name="send-card", description="Give someone a card")
 async def gacha_send_card(ctx : discord.Interaction, inv_id:int, user:discord.Member):
     test = gachalib.cards_inventory.change_card_owner(user.id, inv_id)
     await ctx.response.send_message(test)
@@ -237,7 +234,7 @@ async def gacha_send_card(ctx : discord.Interaction, inv_id:int, user:discord.Me
 # Admin commands
 #######################################
 
-@Bot.tree.command(name="z-gacha-admin-deletecard", description="!MOD ONLY! (Ask us!) Delete a card")
+@gacha_group.command(name="z-admin-deletecard", description="!MOD ONLY! (Ask us!) Delete a card")
 async def z_gacha_admin_deletecard(ctx : discord.Interaction, id:int):
     if Permissions.is_override(ctx):
         gachalib.cards.delete_card(id)
@@ -246,7 +243,7 @@ async def z_gacha_admin_deletecard(ctx : discord.Interaction, id:int):
         await ctx.response.send_message("Yo. You not part of the \"Gang\" (ask for your card to be deleted)", ephemeral=True)
 
 
-@Bot.tree.command(name="z-gacha-admin-approvecard", description="!MOD ONLY! Force an action on a card (use when buttons don't work)")
+@gacha_group.command(name="z-admin-approvecard", description="!MOD ONLY! Force an action on a card (use when buttons don't work)")
 async def z_gacha_admin_approvecard(ctx : discord.Interaction, id:int, approved: bool):
     if Permissions.is_override(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
@@ -259,7 +256,7 @@ async def z_gacha_admin_approvecard(ctx : discord.Interaction, id:int, approved:
         await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
 
 
-@Bot.tree.command(name="z-gacha-admin-givecard", description="!MOD ONLY! Just give someone a card")
+@gacha_group.command(name="z-admin-givecard", description="!MOD ONLY! Just give someone a card")
 async def z_gacha_admin_givecard(ctx : discord.Interaction, id:int, user:discord.Member):
     if Permissions.is_override(ctx):
         cardid = gachalib.cards_inventory.give_user_card(user_id=user.id, card_id=id)
@@ -268,7 +265,7 @@ async def z_gacha_admin_givecard(ctx : discord.Interaction, id:int, user:discord
         await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
 
 
-@Bot.tree.command(name="z-gacha-admin-setrarity", description="!MOD ONLY! Set the rarity of a card")
+@gacha_group.command(name="z-admin-setrarity", description="!MOD ONLY! Set the rarity of a card")
 async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gachalib.Rarities):
     if Permissions.is_override(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
@@ -280,7 +277,7 @@ async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gach
     else:
         await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
 
-@Bot.tree.command(name="z-gacha-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
+@gacha_group.command(name="z-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
 async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
     if Permissions.is_override(ctx):
         _,cards = gachalib.cards.get_unapproved_cards()
@@ -294,3 +291,5 @@ async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
             await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
     else:
         await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
+
+Bot.tree.add_command(gacha_group)
