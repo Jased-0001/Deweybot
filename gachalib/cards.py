@@ -9,6 +9,8 @@ import os
 import gachalib.cards
 import gachalib.types
 
+def evilify(card):
+    return ("EVIL " + card[0], card[1], card[2] + " evil", card[3], card[4], card[5], card[6] * -1)
 
 # Getting cards
 ######################################
@@ -38,8 +40,9 @@ def get_approved_cards() -> tuple[bool, list[gachalib.types.Card]]:
     
 def get_card_by_id(card_id:int) -> tuple[bool, gachalib.types.Card]:
     try:
-        a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted FROM gacha WHERE (id) = (?)", (card_id,))[0]
-        return (True, gachalib.types.Card(name=a[0],description=a[1],rarity=a[2],filename=a[3],maker_id=a[4],accepted=a[5],card_id=card_id))
+        a = db_lib.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE (id) = (?)", (abs(int(card_id)),))[0]
+        a = evilify(a) if int(card_id) < 0 else a
+        return (True, gachalib.types.Card(name=a[0],description=a[1],rarity=a[2],filename=a[3],maker_id=a[4],accepted=a[5],card_id=a[6]))
     except IndexError:
         return (False, None) # pyright: ignore[reportReturnType]
 
@@ -77,12 +80,12 @@ def get_unapproved_cards() -> tuple[bool, list[gachalib.types.Card]]:
 # other
 ######################################
 
-def random_card_by_rarity(rarity:str,evil_chance:bool=True) -> tuple[bool, gachalib.types.Card]:
+def random_card_by_rarity(rarity:str) -> tuple[bool, gachalib.types.Card]:
     try:
         a = db_lib.read_data(f"SELECT id FROM gacha WHERE (rarity,accepted) = (?,?)", (rarity,True))
-        success, card = get_card_by_id(a[randint(0,len(a)-1)][0])
-        if evil_chance:
-            card.evil = randint(1, 25) == 10
+        card_id = a[randint(0,len(a)-1)][0]
+        card_id = card_id * -1 if randint(1, 5) == 1 else card_id
+        success, card = get_card_by_id(card_id)
         if success:
             return(True, card)
         else:
@@ -91,27 +94,19 @@ def random_card_by_rarity(rarity:str,evil_chance:bool=True) -> tuple[bool, gacha
         return (False,None) # pyright: ignore[reportReturnType]
     
 
-def group_like_cards(a:list[gachalib.types.CardsInventory]) -> list[tuple[gachalib.types.Card, int]]:
+def group_like_cards(a:list[gachalib.types.Card]) -> list[tuple[gachalib.types.Card, int]]:
     b = {}
 
     for i in a:
-        iid = str(i.card_id) + ("e" if i.evil else "")
-        print(i.evil)
-        if iid in b:
-            b[iid] += 1
+        if str(i.card_id) in b:
+            b[str(i.card_id)] += 1
         else:
-            b[iid] = 1
+            b[str(i.card_id)] = 1
 
     c = []
 
     for card_id,count in b.items():
-        if card_id[-1] == "e":
-            card_id = card_id[0:-1]
-            success, card = gachalib.cards.get_card_by_id(card_id)
-            card.name = "EVIL " + card.name
-            card.rarity = card.rarity + " evil"
-        else:
-            success, card = gachalib.cards.get_card_by_id(card_id)
+        success, card = gachalib.cards.get_card_by_id(card_id)
         if success:
             c.append((card, count))
 

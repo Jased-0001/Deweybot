@@ -26,7 +26,6 @@ class CardsInventory:
         self.inv_id   = inv_id
         self.card_id  = card_id
         self.user_id  = user_id
-        self.evil     = evil
 
     def __repr__(self):
         return f'{self.__class__.__name__} (invid = {self.inv_id} - cardid = {self.card_id} - evil = {self.evil})'

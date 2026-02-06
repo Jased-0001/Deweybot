@@ -11,7 +11,7 @@ def init_db():
               "CREATE TABLE gacha_user \
 (user_id int(19), last_use int(20));",
               "CREATE TABLE gacha_cards \
-(id int(20), card_id int(5), user_id int(19), evil bool(1));",] 
+(id int(20), card_id int(5), user_id int(19));",] 
     for i in tables:
         try:
             database.cursor().execute(i)
