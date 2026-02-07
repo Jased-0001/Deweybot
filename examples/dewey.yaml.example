@@ -1,8 +1,24 @@
+# Bot misc
 token: 
+error-channel: # channel to log errors to
+
 banned-role: 
 permission-override: []
+
+# Gacha settings
+gacha_enabled: 
 review: ["",] # [type, id] Set type to "channel" or "dm" and id to a channel id or user id 
 imageurl: # URL where uploaded images are saved 
 image-save-path: # where image should go
-error-channel: # channel to log errors to
+
+# suggestions
+suggestions_enabled: 
 suggestions-channel: # suggestions channel
+
+# deweycoins
+deweycoins_enabled: 
+
+# others
+nick_enabled: 
+gif_enabled: 
+kfad_enabled: 

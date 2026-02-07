@@ -39,14 +39,14 @@ class botClient(discord.Client):
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
             return
-        if message.channel.id == DeweyConfig["suggestions-channel"] and not message.content.startswith("!"):
+        if message.channel.id == DeweyConfig["suggestions-channel"] and not message.content.startswith("!") and DeweyConfig["suggestions-enabled"]:
             await message.add_reaction("✅")
             await message.add_reaction("❌")
         return
         #print(message.author.name + " - " + message.content)
     async def on_raw_reaction_add(self, reactionpayload: discord.RawReactionActionEvent):
         # remove conflicting vote reactions
-        if reactionpayload.channel_id == DeweyConfig["suggestions-channel"]:
+        if reactionpayload.channel_id == DeweyConfig["suggestions-channel"] and DeweyConfig["suggestions-enabled"]:
             if not reactionpayload.emoji.name in ["✅","❌"]: return
             if reactionpayload.user_id == self.user.id: return # pyright: ignore[reportOptionalMemberAccess]
             message = await client.get_channel(reactionpayload.channel_id).fetch_message(reactionpayload.message_id) # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
@@ -87,11 +87,12 @@ async def on_app_command_error(interaction: discord.Interaction, error):
     
     await interaction.response.send_message("Ay! I gotted an error! Please ping the owners of me!")
 
-    
-import commands.Nick
+if DeweyConfig["nick-enabled"]: import commands.Nick
+if DeweyConfig["gacha-enabled"]: import commands.Gacha
+if DeweyConfig["gif-enabled"]: import commands.Gif
+if DeweyConfig["kfad-enabled"]: import commands.KFAD
+if DeweyConfig["deweycoins-enabled"]: import commands.Bank
 import commands.Other
-import commands.Gacha
-import commands.Gif
 
 # RUN
 

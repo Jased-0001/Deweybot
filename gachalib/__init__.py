@@ -64,7 +64,7 @@ def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarit
     if show_name:   embed.add_field(name="Name!", value=card.name)
     if show_desc:   embed.add_field(name="Description!", value=card.description)
     if show_rarity: embed.add_field(name="Rarity!", value=card.rarity)
-    embed.set_image(url=Bot.DeweyConfig["httpurl"] + card.filename)
+    embed.set_image(url=Bot.DeweyConfig["imageurl"] + card.filename)
     return embed
 
 
