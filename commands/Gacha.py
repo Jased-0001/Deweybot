@@ -151,6 +151,8 @@ async def gacha_stats(ctx : discord.Interaction):
         embed.add_field(name="Total Cards", value=len(gachalib.cards.get_cards()[1]))
         embed.add_field(name="Total issued cards", value=len(gachalib.cards_inventory.get_all_issued()))
         embed.add_field(name="Total held cards (waiting)", value=len(gachalib.cards.get_unapproved_cards()[1]))
+        embed.add_field(name="How many cards **YOU** have (excl. evil)", value=len(gachalib.cards_inventory.get_users_cards(user_id=ctx.user.id,include_evil=False)[1]))
+        embed.add_field(name="How many cards **YOU** have (incl. evil)", value=len(gachalib.cards_inventory.get_users_cards(user_id=ctx.user.id,include_evil=True)[1]))
 
         await ctx.response.send_message(embed=embed)
 
@@ -181,7 +183,7 @@ async def gacha_inventory_completion(ctx : discord.Interaction):
         _,a = gachalib.cards_inventory.get_users_cards(ctx.user.id)
         _,b = gachalib.cards.get_approved_cards()
         c = []
-        cards_had,cards_total = 0,len(b)
+        cards_had,evil_cards_had,cards_total = 0,0,len(b)
 
         for i in a:
             c.append(i.tocard()[1])
@@ -190,9 +192,13 @@ async def gacha_inventory_completion(ctx : discord.Interaction):
 
         for i in c:
             if i[0].accepted:
-                cards_had += 1
+                if i[0].card_id < 0:
+                    evil_cards_had += 1
+                else:
+                    cards_had += 1
 
-        await ctx.response.send_message(f"You have {cards_had}/{cards_total} ({round((cards_had/cards_total)*100,2)}%)")
+        await ctx.response.send_message(f"You have {cards_had}/{cards_total} ({round((cards_had/cards_total)*100,2)}%)\n\
+Evil cards: {evil_cards_had}/{cards_total} ({round((evil_cards_had/cards_total)*100,2)}%)")
 
 
 @gacha_group.command(name="roll", description="Roll for a card!")
