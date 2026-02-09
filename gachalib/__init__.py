@@ -16,11 +16,11 @@ SortOptions = Literal["ID", "Rarity"]
 
 rarityColors = {
     "None":      0xffffff, "None evil":      0xffffff,
-    "Common":    0x04f9f9, "Common evil":    0x04f9f9,
-    "Uncommon":  0x04f94e, "Uncommon evil":  0x04f94e,
-    "Rare":      0xf9d104, "Rare evil":      0xf9d104,
-    "Epic":      0xf97f04, "Epic evil":      0xf97f04,
-    "Legendary": 0xf93504, "Legendary evil": 0xf93504,
+    "Common":    0x04f9f9, "Common evil":    0xfb0606,
+    "Uncommon":  0x04f94e, "Uncommon evil":  0xfb06b1,
+    "Rare":      0xf9d104, "Rare evil":      0x062efb,
+    "Epic":      0xf97f04, "Epic evil":      0x0680fb,
+    "Legendary": 0xf93504, "Legendary evil": 0x06cafb,
 }
 
 rarity_order = {
