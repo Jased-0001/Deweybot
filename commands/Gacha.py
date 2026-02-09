@@ -144,6 +144,18 @@ async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", des
             await ctx.response.send_message("Card does not exist or you don't own it!")
 
 
+@gacha_group.command(name="stats", description="card stats")
+async def gacha_stats(ctx : discord.Interaction):
+    if not Permissions.banned(ctx):
+        embed = discord.Embed(title="Statistics", description="WIP, i was just curious abpuit these :) stats :)")
+        embed.add_field(name="Total Cards", value=len(gachalib.cards.get_cards()[1]))
+        embed.add_field(name="Total issued cards", value=len(gachalib.cards_inventory.get_all_issued()))
+        embed.add_field(name="Total held cards (waiting)", value=len(gachalib.cards.get_unapproved_cards()[1]))
+
+        await ctx.response.send_message(embed=embed)
+
+
+
 # Self card management
 #######################################
 

@@ -74,3 +74,15 @@ def ownsCard(id:int,uid:int) -> bool:
         return False
     else:
         return True
+    
+def get_all_issued() -> list[gachalib.types.CardsInventory]:
+    try:
+        a = db_lib.read_data(f"SELECT id,card_id,user_id FROM gacha_cards", parameters=())
+        b = []
+
+        for c in a:
+            b.append( gachalib.types.CardsInventory(inv_id=c[0],card_id=c[1],user_id=c[2]) )
+        
+        return b
+    except IndexError:
+        return []
