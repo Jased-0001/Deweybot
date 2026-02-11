@@ -1,3 +1,4 @@
+import io
 import discord
 from discord.ext import commands, tasks
 import Bot
@@ -37,7 +38,11 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
 
     for uid,messagecount in unique_authors.items():
         if messagecount >= message_requirement:
-            qualifiers.append(await guild.fetch_member(uid)) # pyright: ignore[reportOptionalMemberAccess]
+            user = guild.get_member(uid)
+            if user == None:
+                user = await guild.fetch_member(uid)
+
+            qualifiers.append(user)
 
     return (qualifiers, unique_authors) # pyright: ignore[reportReturnType]
 
@@ -94,6 +99,9 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         for uid,count in abcdefghijklmnopqrstuvwxyz.items(): # pyright: ignore[reportAttributeAccessIssue]
             loser = await ctx.guild.fetch_member(uid) # pyright: ignore[reportOptionalMemberAccess]
             string += loser.name + ": " + str(count) + "\n" # pyright: ignore[reportOptionalMemberAccess]
-        await ctx.followup.send(content=f"Qualifiers:\n{string}")
+        buffer = io.BytesIO()
+        buffer.write(string.encode())
+        buffer.seek(0)
+        await ctx.followup.send(content=f"Qualifiers",file=discord.File(fp=buffer,filename="abc.txt"))
 
 Bot.tree.add_command(gfad_group)
