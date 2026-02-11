@@ -10,7 +10,7 @@ import datetime,random
 
 gfad_group = discord.app_commands.Group(name="gfad", description="God for a day")
 
-async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime, guild:discord.Guild) -> tuple[list[discord.Member], list[dict[int,int]]]:
+async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime, guild:discord.Guild,getmembers:bool) -> tuple[list[discord.Member], list[dict[int,int]]]:
     unique_authors = {}
     not_allowed = []
     qualifiers = []
@@ -36,13 +36,14 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
                 else:
                     not_allowed.append(message.author.id)
 
-    for uid,messagecount in unique_authors.items():
-        if messagecount >= message_requirement:
-            user = guild.get_member(uid)
-            if user == None:
-                user = await guild.fetch_member(uid)
+    if getmembers:
+        for uid,messagecount in unique_authors.items():
+            if messagecount >= message_requirement:
+                user = guild.get_member(uid)
+                if user == None:
+                    user = await guild.fetch_member(uid)
 
-            qualifiers.append(user)
+                qualifiers.append(user)
 
     return (qualifiers, unique_authors) # pyright: ignore[reportReturnType]
 
@@ -62,7 +63,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
         
         await ctx.response.defer(ephemeral=False)
 
-        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild) # pyright: ignore[reportArgumentType]
+        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True) # pyright: ignore[reportArgumentType]
         
 
         if len(qualifiers) == 0:
@@ -89,14 +90,19 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         
         await ctx.response.defer(ephemeral=False)
 
-        _,abcdefghijklmnopqrstuvwxyz = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild) # pyright: ignore[reportArgumentType]
-        
+        _,abcdefghijklmnopqrstuvwxyz = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False) # pyright: ignore[reportArgumentType]
+        lalala = {}
 
         if len(abcdefghijklmnopqrstuvwxyz) == 0:
             await ctx.followup.send(content=f"(Nobody qualifies)", ephemeral=False)
             return
+        
+        for uid,messagecount in abcdefghijklmnopqrstuvwxyz.items():
+            if messagecount >= message_requirement:
+                lalala[str(uid)] = messagecount
+
         string = ""
-        for uid,count in abcdefghijklmnopqrstuvwxyz.items(): # pyright: ignore[reportAttributeAccessIssue]
+        for uid,count in lalala.items(): # pyright: ignore[reportAttributeAccessIssue]
             loser = await ctx.guild.fetch_member(uid) # pyright: ignore[reportOptionalMemberAccess]
             string += loser.name + ": " + str(count) + "\n" # pyright: ignore[reportOptionalMemberAccess]
         buffer = io.BytesIO()
