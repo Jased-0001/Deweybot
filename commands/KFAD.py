@@ -21,16 +21,19 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
         if not message.author.id in not_allowed:
             if message.author.bot: not_allowed.append(message.author.id)
             else: 
-                users_roles = [y.id for y in message.author.roles] # pyright: ignore[reportAttributeAccessIssue]
-                for i in Bot.DeweyConfig["kfad-disallowed-roles"]:
-                    if i in users_roles:
-                        not_allowed.append(message.author.id)
+                if type(message.author) == discord.Member:
+                    users_roles = [y.id for y in message.author.roles]
+                    for i in Bot.DeweyConfig["kfad-disallowed-roles"]:
+                        if i in users_roles:
+                            not_allowed.append(message.author.id)
 
-                if not message.author.id in not_allowed:
-                    if str(message.author.id) in unique_authors:
-                        unique_authors[str(message.author.id)] += 1
-                    else:
-                        unique_authors[str(message.author.id)] = 1
+                    if not message.author.id in not_allowed:
+                        if str(message.author.id) in unique_authors:
+                            unique_authors[str(message.author.id)] += 1
+                        else:
+                            unique_authors[str(message.author.id)] = 1
+                else:
+                    not_allowed.append(message.author.id)
 
     for uid,messagecount in unique_authors.items():
         if messagecount >= message_requirement:
