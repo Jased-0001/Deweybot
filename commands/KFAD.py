@@ -30,7 +30,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
         not_allowed = []
         qualifiers = []
 
-        async for message in ctx.channel.history(limit=None, before=range_end, after=range_start): # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue] # 
+        async for message in Bot.client.fetch_channel(Bot.DeweyConfig["kfad-general"]).history(limit=None, before=range_end, after=range_start): # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue] # 
             #just get unique users first
             if not message.author.id in not_allowed:
                 if message.author.bot: not_allowed.append(message.author.id)

@@ -16,9 +16,15 @@ suggestions_enabled:
 suggestions-channel: # suggestions channel
 
 # deweycoins
-deweycoins_enabled: 
+deweycoins-enabled: 
+
+# gfad
+kfad-enabled: 
+kfad-disallowed-roles: 
+kfad-must-have:  # messages
+kfad-role: 
+kfad-general: 
 
 # others
-nick_enabled: 
-gif_enabled: 
-kfad_enabled: 
+nick-enabled: 
+gif-enabled: 
