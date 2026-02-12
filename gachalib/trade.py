@@ -41,7 +41,7 @@ def user_cards_text(cards: list[gachalib.types.CardsInventory]):
 
 class TradeSucessView(discord.ui.LayoutView):
     def __init__(self, trade: gachalib.types.Trade):
-        super().__init__()
+        super().__init__(timeout=None)
 
         container = discord.ui.Container(
             discord.ui.TextDisplay("## Successful trade!"),
@@ -134,7 +134,7 @@ class TradeRemoveSelect(discord.ui.Select):
 
 class TradeRemoveView(discord.ui.LayoutView):
     def __init__(self, trade: gachalib.types.Trade, embed_interact: discord.Interaction) -> None:
-        super().__init__()
+        super().__init__(timeout=None)
         container = discord.ui.Container(
             discord.ui.TextDisplay("## Remove cards from trade"),
             discord.ui.TextDisplay("Select a card to remove from the trade offer"),
@@ -188,7 +188,7 @@ class TradeAddNumberSelect(discord.ui.Select):
 
 class TradeAddNumber(discord.ui.LayoutView):
     def __init__(self, card_id: int, page:int, trade: gachalib.types.Trade, embed_interact: discord.Interaction) -> None:
-        super().__init__()
+        super().__init__(timeout=None)
         card = gachalib.cards.get_card_by_id(card_id)[1]
 
         container = discord.ui.Container(
@@ -230,7 +230,7 @@ class TradeAddID(discord.ui.Button):
 
 class TradeAddView(discord.ui.LayoutView):
     def __init__(self, page:int, trade: gachalib.types.Trade, embed_interact: discord.Interaction) -> None:
-        super().__init__()
+        super().__init__(timeout=None)
         cards = gachalib.cards_inventory.get_users_cards(get_user(trade, embed_interact).id)[1]
         cards = gachalib.cards.group_like_cards(cards)
 
@@ -278,7 +278,7 @@ class TradeReqestRow(discord.ui.ActionRow):
 
 class TradeRequestView(discord.ui.LayoutView):
     def __init__(self, trade: gachalib.types.Trade):
-        super().__init__(timeout=600)
+        super().__init__(timeout=None)
 
         container = discord.ui.Container(
             discord.ui.TextDisplay("## Trade request"),
@@ -328,7 +328,7 @@ class TradeAcceptRow(discord.ui.ActionRow):
 
 class TradeAcceptView(discord.ui.LayoutView):
     def __init__(self, trade: gachalib.types.Trade):
-        super().__init__(timeout=120)
+        super().__init__(timeout=None)
         self.trade = trade
 
         container = discord.ui.Container(
@@ -373,7 +373,7 @@ class TradeActionRow(discord.ui.ActionRow):
 
 class TradeView(discord.ui.LayoutView):
     def __init__(self, trade: gachalib.types.Trade):
-        super().__init__(timeout=600)
+        super().__init__(timeout=None)
         self.trade = trade
 
         container = discord.ui.Container(

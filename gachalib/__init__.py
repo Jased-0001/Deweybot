@@ -43,7 +43,7 @@ def gacha_crop_image(card: gachalib.types.Card):
 
 class GachaView(discord.ui.LayoutView):
     def __init__(self, card: gachalib.types.Card, image: discord.File):
-        super().__init__()
+        super().__init__(timeout=None)
         container = discord.ui.Container(
             discord.ui.TextDisplay(f"# {card.name}"),
             discord.ui.MediaGallery(
@@ -128,7 +128,7 @@ def random_rarity(restraint:bool=False) -> str:
 
 class BrowserView(discord.ui.View):
     def __init__(self,inventory:bool=False,uid:int=0,cards:list[gachalib.types.Card]=[],page:int=1,sort:SortOptions="ID"):
-        super().__init__()
+        super().__init__(timeout=None)
         self.message = None
         self.page = page
 
@@ -179,7 +179,7 @@ class BrowserView(discord.ui.View):
 
 class RequestView(discord.ui.View):
     def __init__(self):
-        super().__init__()
+        super().__init__(timeout=None)
         self.message = None
 
     @discord.ui.button(label="Approve", style=discord.ButtonStyle.success, row=0, custom_id="approve_btn")
@@ -218,7 +218,7 @@ class RequestView(discord.ui.View):
 
 class PackView(discord.ui.View):
     def __init__(self,cards:list[gachalib.types.Card]):
-        super().__init__()
+        super().__init__(timeout=None)
         self.message = None
         self.cards = cards
 
