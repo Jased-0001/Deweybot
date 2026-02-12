@@ -21,7 +21,7 @@ gacha_database = db_lib.setup_db(name="gacha", tables=
 if not gacha_database:
     raise Exception("Fuck!")
 
-Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"
+Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary",
     "Common evil", "Uncommon evil", "Rare evil", "Epic evil", "Legendary evil"]
 SortOptions = Literal["ID", "Rarity"]
 
