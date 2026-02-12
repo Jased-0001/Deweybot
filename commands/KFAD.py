@@ -64,7 +64,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
         await ctx.response.defer(ephemeral=False)
 
         qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True) # pyright: ignore[reportArgumentType]
-        
+        print(qualifiers)
 
         if len(qualifiers) == 0:
             await ctx.followup.send(content=f"(There aren't enough people who qualify)", silent=True, ephemeral=False)
@@ -77,7 +77,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
 
         await pick.add_roles(role,reason="god got a day!!!!") # pyright: ignore[reportArgumentType]
 
-        await ctx.followup.send(content=f"{pick.mention} is the God for the Day!", silent=True, ephemeral=False)
+        await ctx.followup.send(content=f"{pick.display_name} is the God for the Day!", silent=True, ephemeral=False)
 
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
