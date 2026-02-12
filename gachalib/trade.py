@@ -1,4 +1,4 @@
-import db_lib,Bot
+import Bot
 import gachalib.cards, gachalib.cards_inventory, gachalib.types
 import discord
 import math

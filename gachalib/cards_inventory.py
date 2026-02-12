@@ -1,8 +1,6 @@
 """
 things to deal with users and their cards
 """
-import db_lib
-
 import gachalib.cards
 import gachalib,gachalib.types
 
@@ -18,7 +16,7 @@ def sort_cards_by_rarity(a:list[gachalib.types.CardsInventory | gachalib.types.C
 
 def get_users_cards(user_id:int,include_evil:bool=True) -> tuple[bool, list[gachalib.types.CardsInventory]]:
     try:
-        a = db_lib.read_data(f"SELECT id,card_id FROM gacha_cards WHERE (user_id) = (?)", (user_id,))
+        a = gachalib.gacha_database.read_data(f"SELECT id,card_id FROM gacha_cards WHERE (user_id) = (?)", (user_id,)) # pyright: ignore[reportOptionalMemberAccess]
         b = []
 
         for c in a:
@@ -41,7 +39,7 @@ def get_users_cards_by_id_range(user_id:int, id_start:int,id_end:int,include_evi
 
 def get_users_cards_by_card_id(user_id:int, card_id:int) -> tuple[bool, list[gachalib.types.CardsInventory]]:
     try:
-        a = db_lib.read_data(f"SELECT id,card_id FROM gacha_cards WHERE (user_id, card_id) = (?,?)", (user_id, card_id))
+        a = gachalib.gacha_database.read_data(f"SELECT id,card_id FROM gacha_cards WHERE (user_id, card_id) = (?,?)", (user_id, card_id)) # pyright: ignore[reportOptionalMemberAccess]
         b = []
 
         for c in a:
@@ -52,25 +50,25 @@ def get_users_cards_by_card_id(user_id:int, card_id:int) -> tuple[bool, list[gac
         return (False,) # pyright: ignore[reportReturnType]
     
 def give_user_card(user_id:int,card_id:int) -> gachalib.types.CardsInventory:
-    a = db_lib.read_data(f"SELECT id FROM gacha_cards;", ())
+    a = gachalib.gacha_database.read_data(f"SELECT id FROM gacha_cards;", ()) # pyright: ignore[reportOptionalMemberAccess]
     if len(a) == 0:
         inv_id = 1
     else:
         inv_id = a[len(a)-1][0] + 1
 
-    db_lib.write_data("INSERT INTO gacha_cards (id,card_id,user_id) VALUES (?,?,?)", (inv_id,card_id,user_id))
+    gachalib.gacha_database.write_data("INSERT INTO gacha_cards (id,card_id,user_id) VALUES (?,?,?)", (inv_id,card_id,user_id)) # pyright: ignore[reportOptionalMemberAccess]
     return gachalib.types.CardsInventory(inv_id=inv_id,card_id=card_id,user_id=user_id)
 
 def change_card_owner(user_id:int,inv_id:int) -> bool: # ?
     try:
-        db_lib.write_data("UPDATE gacha_cards SET user_id = ? WHERE id = ?", (user_id, inv_id))
+        gachalib.gacha_database.write_data("UPDATE gacha_cards SET user_id = ? WHERE id = ?", (user_id, inv_id)) # pyright: ignore[reportOptionalMemberAccess]
         return True
     except IndexError:
         return False
     
 
 def ownsCard(id:int,uid:int) -> bool:
-    a = db_lib.read_data(f"SELECT id FROM gacha_cards WHERE (user_id,card_id) = (?,?);", (uid,id))
+    a = gachalib.gacha_database.read_data(f"SELECT id FROM gacha_cards WHERE (user_id,card_id) = (?,?);", (uid,id)) # pyright: ignore[reportOptionalMemberAccess]
     if len(a) == 0:
         return False
     else:
@@ -78,7 +76,7 @@ def ownsCard(id:int,uid:int) -> bool:
     
 def get_all_issued() -> list[gachalib.types.CardsInventory]:
     try:
-        a = db_lib.read_data(f"SELECT id,card_id,user_id FROM gacha_cards", parameters=())
+        a = gachalib.gacha_database.read_data(f"SELECT id,card_id,user_id FROM gacha_cards", parameters=()) # pyright: ignore[reportOptionalMemberAccess]
         b = []
 
         for c in a:

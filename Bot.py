@@ -1,8 +1,6 @@
 import io
 import discord
 #from discord.ext import commands, tasks
-from discord import Reaction, emoji
-from discord import reaction
 from yaml import load,Loader
 import traceback
 
@@ -10,8 +8,8 @@ with open("dewey.yaml", "r") as f:
     DeweyConfig = load(stream=f, Loader=Loader)
 
 import other.Permissions as Permissions
-import db_lib
 from subprocess import check_output, CalledProcessError
+
 
 try:
     version = check_output(["git", "branch", "--show-current"]).strip() + b"-" + check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
@@ -19,9 +17,7 @@ try:
 except CalledProcessError:
     version = "unknown"
 
-intents = discord.Intents.default()
-
-db_lib.init_db()
+intents = discord.Intents.all()
 
 class botClient(discord.Client):
     def __init__(self):
@@ -36,6 +32,7 @@ class botClient(discord.Client):
         await self.change_presence(activity=discord.Activity(name=f"Dewin' it ({version})", type=3))
 
         print(f"Dewey'd as {self.user}")
+
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
             return
@@ -85,7 +82,7 @@ async def on_app_command_error(interaction: discord.Interaction, error):
     await channel.send(f"<@322495136108118016> got an report for you boss\n",file=discord.File(fp=buffer,filename="error.txt")) # pyright: ignore[reportAttributeAccessIssue]
     buffer.close()
     
-    await interaction.response.send_message("Ay! I gotted an error! Please ping the owners of me!")
+    await interaction.followup.send(content="Ay! I gotted an error! Please ping the owners of me!")
 
 if DeweyConfig["nick-enabled"]: import commands.Nick
 if DeweyConfig["gacha-enabled"]: import commands.Gacha

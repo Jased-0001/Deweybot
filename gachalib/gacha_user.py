@@ -1,9 +1,9 @@
-import gachalib, gachalib.types, db_lib
+import gachalib, gachalib.types
 
 from time import time
 
 def get_user_timeout(user_id:int) -> gachalib.types.GachaUser:
-    a = db_lib.read_data(f"SELECT last_use FROM gacha_user WHERE (user_id) = (?)", (user_id,))
+    a = gachalib.gacha_database.read_data(f"SELECT last_use FROM gacha_user WHERE (user_id) = (?)", (user_id,))
 
     if len(a) == 0:
         return gachalib.types.GachaUser(user_id=user_id,last_use=-1)
@@ -13,9 +13,9 @@ def get_user_timeout(user_id:int) -> gachalib.types.GachaUser:
 
 def set_user_timeout(user_id:int,unix_time:int) -> gachalib.types.GachaUser: #also update
     if get_user_timeout(user_id=user_id).last_use == -1:
-        db_lib.write_data("INSERT INTO gacha_user (user_id,last_use) VALUES (?,?)", (user_id,unix_time))
+        gachalib.gacha_database.write_data("INSERT INTO gacha_user (user_id,last_use) VALUES (?,?)", (user_id,unix_time))
     else:
-        db_lib.write_data("UPDATE gacha_user SET last_use=? WHERE user_id=?", (unix_time,user_id))
+        gachalib.gacha_database.write_data("UPDATE gacha_user SET last_use=? WHERE user_id=?", (unix_time,user_id))
         
     return gachalib.types.GachaUser(user_id=user_id,last_use=unix_time)
 

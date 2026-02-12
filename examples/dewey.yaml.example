@@ -5,6 +5,9 @@ error-channel: # channel to log errors to
 banned-role: 
 permission-override: []
 
+# Db settings
+gacha-sqlite-path:
+
 # Gacha settings
 gacha_enabled: 
 review: ["",] # [type, id] Set type to "channel" or "dm" and id to a channel id or user id 

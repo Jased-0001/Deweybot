@@ -10,6 +10,17 @@ import textwrap
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import io
 
+gacha_database = db_lib.setup_db(name="gacha", tables=
+                                 ["CREATE TABLE gacha \
+(maker_id int(19), request_message_id int(20), id int(5), accepted bool(1), name varchar(256), description varchar(256), rarity varchar(256), filename varchar(256));",
+              "CREATE TABLE gacha_user \
+(user_id int(19), last_use int(20));",
+              "CREATE TABLE gacha_cards \
+(id int(20), card_id int(5), user_id int(19));",], file=Bot.DeweyConfig["gacha-sqlite-path"])
+
+if not gacha_database:
+    raise Exception("Fuck!")
+
 Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"
     "Common evil", "Uncommon evil", "Rare evil", "Epic evil", "Legendary evil"]
 SortOptions = Literal["ID", "Rarity"]
@@ -184,7 +195,7 @@ class RequestView(discord.ui.View):
 
     @discord.ui.button(label="Approve", style=discord.ButtonStyle.success, row=0, custom_id="approve_btn")
     async def approve_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        a = db_lib.read_data(f"SELECT id FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
+        a = gacha_database.read_data(f"SELECT id FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
         #print("I believe this is id ", a[0])
 
         _, card = gachalib.cards.get_card_by_id(a[0])
@@ -197,7 +208,7 @@ class RequestView(discord.ui.View):
 
     @discord.ui.button(label="Deny", style=discord.ButtonStyle.secondary, row=0, custom_id="deny_btn")
     async def deny_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        a = db_lib.read_data(f"SELECT id FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
+        a = gacha_database.read_data(f"SELECT id FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0] # pyright: ignore[reportOptionalMemberAccess]
 
         _, card = gachalib.cards.get_card_by_id(a[0])
         _, status = await gachalib.cards.approve_card(False, card)

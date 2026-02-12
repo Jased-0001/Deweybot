@@ -1,43 +1,73 @@
 import sqlite3
 
-database = None
-database_path = "./dewey.db"
+OpenDatabases = {}
 
-def init_db():
-    global database
-    database = sqlite3.connect(database_path)
-    tables = ["CREATE TABLE gacha \
-(maker_id int(19), request_message_id int(20), id int(5), accepted bool(1), name varchar(256), description varchar(256), rarity varchar(256), filename varchar(256));",
-              "CREATE TABLE gacha_user \
-(user_id int(19), last_use int(20));",
-              "CREATE TABLE gacha_cards \
-(id int(20), card_id int(5), user_id int(19));",] 
-    for i in tables:
-        try:
-            database.cursor().execute(i)
-        except sqlite3.OperationalError as e:
-            msg = str(e)
-            if msg.startswith("table ") and msg.endswith(" already exists"):
-                print(f" [SQL] {msg}")
-            else:
-                raise e
+class Database:
+    def __init__(self,ident: str, database_path: str, tables: list[str] | None = None, connect: bool = True) -> None:
+        self.ident = ident
+        self.database_path = database_path
+        self.tables = tables
+
+        self.database = None
+        self.cursor = None
+
+        if connect: 
+            self.connect()
+        if tables:
+            self.setup_tables(tables=tables)
+
+        print(f" [SQL] opened db '{self.database_path}' ({"connected" if connect else "not connected"})")
     
-    database.commit()
+    def connect(self) -> None:
+        if self.database is None:
+            self.database = sqlite3.connect(self.database_path)
+            self.cursor = self.database.cursor()
 
-def get_db() -> sqlite3.Connection:
-    global database
-    if database is None:
-        database = sqlite3.connect(database_path)
-    return database
+    def setup_tables(self, tables:list[str]) -> None:
+        if self.database and self.cursor:
+            for i in tables:
+                try:
+                    self.cursor.execute(i)
+                except sqlite3.OperationalError as e:
+                    msg = str(e)
+                    if msg.startswith("table ") and msg.endswith(" already exists"):
+                        print(f" [SQL] {msg}")
+                    else:
+                        raise e
+            
+            self.database.commit()
+        else:
+            raise Exception("database was not connected")
+    
+    def write_data(self, statement: str, data: tuple) -> None:
+        if self.database and self.cursor:
+            self.cursor.execute(statement, data)
+            self.database.commit()
+        else:
+            raise Exception("database was not connected")
+    
+    def read_data(self, statement: str, parameters: tuple) -> list:
+        if self.database and self.cursor:
+            return self.cursor.execute(statement, parameters).fetchall()
+        else:
+            raise Exception("database was not connected")
+    
+    def close_connection(self):
+        if self.database is not None:
+            self.database.close()
+    
 
-def write_data(statement: str, data: tuple):
-    get_db().cursor().execute(statement, data)
-    get_db().commit()
+def get_db(name:str) -> Database | None:
+    if name in OpenDatabases.keys():
+        return OpenDatabases[name]
+    else:
+        return None
 
-def read_data(statement: str, parameters: tuple) -> list:
-    return get_db().cursor().execute(statement, parameters).fetchall()
+def setup_db(name:str, tables:list[str], file:str) -> Database:
+    newdb = get_db(name=name)
+    
+    if not newdb:
+        newdb = Database(ident=name, database_path=file, tables=tables, connect=True)
+        OpenDatabases[name] = newdb
 
-def close_connection(exception):
-    global database
-    if database is not None:
-        database.close()
+    return newdb
