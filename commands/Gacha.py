@@ -1,4 +1,6 @@
+from contextlib import suppress
 import discord
+from discord.abc import PrivateChannel
 from discord.ext import commands, tasks
 import Bot
 import other.Permissions as Permissions
@@ -54,12 +56,12 @@ async def gacha_browsecards(ctx : discord.Interaction, page:int = 1):
 #
 #        view = gachalib.BrowserView(False,page=page)
 #
-#        embed = gachalib.cardBrowserEmbed(uid=-1, cards=view.cards, page=page,inventory=False) # pyright: ignore[reportArgumentType]
+#        embed = gachalib.cardBrowserEmbed(uid=-1, cards=view.cards, page=page,inventory=False)
 #
 #        if type(embed) == discord.Embed:
 #            await ctx.response.send_message(content="", embed=embed, view=view)
 #        else:
-#            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
+#            await ctx.response.send_message(content=embed, embed=None, view=view)
 
 
 @gacha_group.command(name="submitcard", description="Submit a new gacha card!")
@@ -78,7 +80,7 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
         else:
             next_id = a[len(a)-1][0] + 1
         
-        if image.content_type.split("/")[0] != "image": # pyright: ignore[reportOptionalMemberAccess]
+        if not image.content_type or image.content_type.split("/")[0] != "image":
             await ctx.response.send_message(
                 f"Your \"IMAGE\" was not an image. I think. Try again with a REAL image.", ephemeral=True,
             )
@@ -98,9 +100,10 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
             title="gacha request!!", description=f"New request for a gacha card from <@{ctx.user.id}> (id = {next_id})"
             )
         message_view = gachalib.RequestView()
-        message_view.message = await approval_channel.send(f"```{additional_info}```" if additional_info else "", embed=embed,view=message_view) # pyright: ignore[reportAttributeAccessIssue]
+        assert not isinstance(approval_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "approval channel assertion"
+        message_view.message = await approval_channel.send(f"```{additional_info}```" if additional_info else "", embed=embed,view=message_view)
 
-        gachalib.cards.update_card(next_id,"request_message_id", message_view.message.id) # pyright: ignore[reportAttributeAccessIssue]
+        gachalib.cards.update_card(next_id,"request_message_id", message_view.message.id)
         
         await ctx.response.send_message(
             f"Dewey submitted your gacha card for approval!!! (ID of {next_id})", ephemeral=True,
@@ -137,8 +140,9 @@ async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", des
                 title="gacha EDIT request!!", description=f"New EDIT request for a gacha card from <@{ctx.user.id}> (id = {id})"
                 )
                 message_view = gachalib.RequestView()
-                message_view.message = await approval_channel.send(embed=embed,view=message_view) # pyright: ignore[reportAttributeAccessIssue]
-                gachalib.cards.update_card(id,"request_message_id",message_view.message.id) # pyright: ignore[reportAttributeAccessIssue]
+                assert not isinstance(approval_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "approval channel assertion"
+                message_view.message = await approval_channel.send(embed=embed,view=message_view)
+                gachalib.cards.update_card(id,"request_message_id",message_view.message.id)
         else:
             await ctx.response.send_message("Card does not exist or you don't own it!")
 
@@ -162,7 +166,7 @@ async def gacha_stats(ctx : discord.Interaction):
 
 
 @gacha_group.command(name="inventory", description="View your inventory!")
-async def gacha_inventory(ctx : discord.Interaction, user: discord.Member = None, page: int = 0, sort: Literal["ID", "Rarity"] = "Rarity"): # pyright: ignore[reportArgumentType]
+async def gacha_inventory(ctx : discord.Interaction, user: discord.Member | None = None, page: int = 0, sort: Literal["ID", "Rarity"] = "Rarity"):
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
         layout = InventoryView(ctx.user, page)
@@ -198,15 +202,15 @@ async def gacha_roll(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         timestamp = gachalib.gacha_user.get_timestamp()
         last_use = gachalib.gacha_user.get_user_timeout(ctx.user.id).last_use
-        time_out = 3600 # 1 hour (seconds)
+        time_out = Bot.DeweyConfig["roll-timeout"] # 3600 seconds for 1 hr
         if (timestamp - last_use) > (time_out) or last_use == -1:
-            cards = [
-                gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=True))[1],
-                gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=True))[1],
-                gachalib.cards.random_card_by_rarity(gachalib.random_rarity())[1]
-            ]
+            cards = []
+            for i in range(3):
+                success, got_card = gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=False if i >= 2 else True))
+                if success:
+                    cards.append(got_card)
 
-            embed = discord.Embed(title="Gacha roll!", description="You rolled 3 cards!", color=gachalib.rarityColors[gachalib.rarest_card(cards).rarity])
+            embed = discord.Embed(title="Gacha roll!", description=f"You rolled {len(cards)} cards!", color=gachalib.rarityColors[gachalib.rarest_card(cards).rarity])
 
             for i in cards:
                 gachalib.cards_inventory.give_user_card(ctx.user.id, i.card_id)
@@ -232,8 +236,8 @@ async def gacha_trade(ctx : discord.Interaction, user:discord.Member):
         if ctx.user.id == user.id:
             await ctx.response.send_message("you can't send a trade request to yurself, dummy!!", ephemeral=True)
             return
-        trade = gachalib.types.Trade(user1=ctx.user, user2=user) # pyright: ignore[reportArgumentType]
-        await ctx.response.send_message(view=gachalib.trade.TradeRequestView(trade)) # pyright: ignore[reportArgumentType]
+        trade = gachalib.types.Trade(user1=ctx.user, user2=user)
+        await ctx.response.send_message(view=gachalib.trade.TradeRequestView(trade))
 
 @gacha_group.command(name="send-card", description="Give someone a card")
 async def gacha_send_card(ctx : discord.Interaction, inv_id:int, user:discord.Member):
@@ -298,7 +302,7 @@ async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
         if type(embed) == discord.Embed:
             await ctx.response.send_message(content="", embed=embed, view=view)
         else:
-            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
+            await ctx.response.send_message(content=embed, suppress_embeds=True, view=view)
     else:
         await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
 

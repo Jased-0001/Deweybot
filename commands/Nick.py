@@ -4,10 +4,12 @@ import Bot
 import other.Permissions as Permissions
 
 @Bot.tree.command(name="nickname", description="Change someone's nickname")
-async def nickname(ctx : discord.Interaction, user: discord.Member = None, nickname: str = None): # pyright: ignore[reportArgumentType]
+async def nickname(ctx : discord.Interaction, user: discord.Member | None = None, nickname: str | None = None):
     if not Permissions.banned(ctx):
         try:
+            assert type(user) == discord.Member
             if user == None: user = ctx.user
+            assert type(user) == discord.Member
             
             previous = user.nick
             await user.edit(nick=nickname)

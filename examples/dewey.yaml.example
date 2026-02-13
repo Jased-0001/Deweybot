@@ -13,6 +13,7 @@ gacha_enabled:
 review: ["",] # [type, id] Set type to "channel" or "dm" and id to a channel id or user id 
 imageurl: # URL where uploaded images are saved 
 image-save-path: # where image should go
+roll-timeout:  # seconds
 
 # suggestions
 suggestions_enabled: 

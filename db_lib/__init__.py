@@ -4,12 +4,12 @@ OpenDatabases = {}
 
 class Database:
     def __init__(self,ident: str, database_path: str, tables: list[str] | None = None, connect: bool = True) -> None:
-        self.ident = ident
-        self.database_path = database_path
-        self.tables = tables
+        self.ident: str = ident
+        self.database_path: str = database_path
+        self.tables: list[str] | None = tables
 
-        self.database = None
-        self.cursor = None
+        self.database: sqlite3.Connection | None = None
+        self.cursor: sqlite3.Cursor | None = None
 
         if connect: 
             self.connect()
@@ -46,7 +46,7 @@ class Database:
         else:
             raise Exception("database was not connected")
     
-    def read_data(self, statement: str, parameters: tuple) -> list:
+    def read_data(self, statement: str, parameters: tuple = ()) -> list:
         if self.database and self.cursor:
             return self.cursor.execute(statement, parameters).fetchall()
         else:

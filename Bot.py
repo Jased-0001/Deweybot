@@ -1,6 +1,7 @@
 import io
 import discord
 #from discord.ext import commands, tasks
+from discord.abc import PrivateChannel
 from yaml import load,Loader
 import traceback
 
@@ -45,8 +46,12 @@ class botClient(discord.Client):
         # remove conflicting vote reactions
         if reactionpayload.channel_id == DeweyConfig["suggestions-channel"] and DeweyConfig["suggestions-enabled"]:
             if not reactionpayload.emoji.name in ["✅","❌"]: return
-            if reactionpayload.user_id == self.user.id: return # pyright: ignore[reportOptionalMemberAccess]
-            message = await client.get_channel(reactionpayload.channel_id).fetch_message(reactionpayload.message_id) # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+            assert self.user, "user is none"
+            if reactionpayload.user_id == self.user.id: return
+            
+            reaction_channel = await client.fetch_channel(reactionpayload.channel_id)
+            assert not isinstance(reaction_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "reaction_channel assertion"
+            message = await reaction_channel.fetch_message(reactionpayload.message_id)
 
             for i in message.reactions:
                 reactors = [discord.Object(id=user.id) async for user in i.users()]
@@ -62,11 +67,14 @@ class botClient(discord.Client):
         return
     
     async def on_error(self, event, error):
+        a = traceback.format_exc()
+        print(a)
         channel = await client.fetch_channel(DeweyConfig["error-channel"])
         buffer = io.BytesIO()
-        buffer.write(traceback.format_exc().encode())
+        buffer.write(a.encode())
         buffer.seek(0)
-        await channel.send(f"<@322495136108118016> got an report for you boss (event {event})\n",file=discord.File(fp=buffer,filename="error.txt")) # pyright: ignore[reportAttributeAccessIssue]
+        assert not isinstance(channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "error channel assertion"
+        await channel.send(f"<@322495136108118016> got an report for you boss (event {event})\n",file=discord.File(fp=buffer,filename="error.txt"))
         buffer.close()
 
 
@@ -75,11 +83,14 @@ tree = discord.app_commands.CommandTree(client)
 
 @tree.error
 async def on_app_command_error(interaction: discord.Interaction, error):
+    a = traceback.format_exc()
+    print(a)
     channel = await client.fetch_channel(DeweyConfig["error-channel"])
     buffer = io.BytesIO()
-    buffer.write(traceback.format_exc().encode())
+    buffer.write(a.encode())
     buffer.seek(0)
-    await channel.send(f"<@322495136108118016> got an report for you boss\n",file=discord.File(fp=buffer,filename="error.txt")) # pyright: ignore[reportAttributeAccessIssue]
+    assert not isinstance(channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "error channel assertion"
+    await channel.send(f"<@322495136108118016> got an report for you boss\n",file=discord.File(fp=buffer,filename="error.txt"))
     buffer.close()
     
     await interaction.followup.send(content="Ay! I gotted an error! Please ping the owners of me!")
