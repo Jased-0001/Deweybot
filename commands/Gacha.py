@@ -209,7 +209,7 @@ async def gacha_roll(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         timestamp = gachalib.gacha_user.get_timestamp()
         last_use = gachalib.gacha_user.get_user_timeout(ctx.user.id).last_use
-        time_out = 1 # 1 hour (seconds)
+        time_out = Bot.DeweyConfig["roll-timeout"] # 3600 seconds for 1 hr
         if (timestamp - last_use) > (time_out) or last_use == -1:
             cards = []
             for i in range(3):
