@@ -165,15 +165,8 @@ async def gacha_stats(ctx : discord.Interaction):
 async def gacha_inventory(ctx : discord.Interaction, user: discord.Member = None, page: int = 0, sort: Literal["ID", "Rarity"] = "Rarity"): # pyright: ignore[reportArgumentType]
     if not Permissions.banned(ctx):
         if page <= 0: page = 1
-
-        view = gachalib.BrowserView(True, user.id if user else ctx.user.id, page=page,sort=sort)
-        
-        embed = view.getPage()
-
-        if type(embed) == discord.Embed:
-            await ctx.response.send_message(content="", embed=embed, view=view)
-        else:
-            await ctx.response.send_message(content=embed, embed=None, view=view) # pyright: ignore[reportArgumentType]
+        layout = InventoryView(ctx.user, page)
+        await ctx.response.send_message(view=layout)
 
 
 @gacha_group.command(name="inventory-completion", description="View your progress in collecting!")

@@ -21,7 +21,7 @@ gacha_database = db_lib.setup_db(name="gacha", tables=
 if not gacha_database:
     raise Exception("Fuck!")
 
-Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary"
+Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary",
     "Common evil", "Uncommon evil", "Rare evil", "Epic evil", "Legendary evil"]
 SortOptions = Literal["ID", "Rarity"]
 
@@ -78,6 +78,93 @@ def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarit
     embed.set_image(url=Bot.DeweyConfig["imageurl"] + card.filename)
     return embed
 
+class SortSelect(discord.ui.Select):
+    def __init__(self, user: discord.User, page: int, sort: str) -> None:
+        self.user = user
+        self.page = page
+        options = [
+            discord.SelectOption(label="Rarity (ascending)"),
+            discord.SelectOption(label="Rarity (descending)"),
+            discord.SelectOption(label="Quantity (ascending)"),
+            discord.SelectOption(label="Quantity (descending)"),
+            discord.SelectOption(label="ID (ascending)"),
+            discord.SelectOption(label="ID (descending)")
+        ]
+        super().__init__(placeholder=sort,max_values=1,min_values=1,options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.edit_message(view=InventoryView(self.user, self.page, self.values[0]))
+
+class BrowseRow(discord.ui.ActionRow):
+    def __init__(self, user: discord.User, page: int, sort: str) -> None:
+        super().__init__()
+        self.user = user
+        self.page = page
+        self.sort = sort
+
+    @discord.ui.button(label="⬅️", style=discord.ButtonStyle.primary, custom_id="left_btn")
+    async def left_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        page = max(self.page-1, 1)
+        await interaction.response.edit_message(view=InventoryView(self.user, page, self.sort))
+
+    @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary, custom_id="right_btn")
+    async def right_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        page = min(self.page+1, 1000)
+        await interaction.response.edit_message(view=InventoryView(self.user, page, self.sort))
+
+class viewCardButton(discord.ui.Button):
+    def __init__(self, card: gachalib.types.Card) -> None:
+        super().__init__(label="View", style=discord.ButtonStyle.secondary)
+        self.card = card
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        image=gacha_crop_image(self.card)
+        await interaction.response.send_message(
+            view=GachaView(self.card, image), file=image, ephemeral=True,
+            allowed_mentions=discord.AllowedMentions(users=False)
+        )
+
+class InventoryView(discord.ui.LayoutView):
+    def __init__(self, user: discord.User, page: int=1, sort: str="Rarity (descending)"):
+        super().__init__(timeout=None)
+        per_page: int = 5
+
+        cards = gachalib.cards_inventory.get_users_cards(user.id)[1]
+        cards_grouped = gachalib.cards.group_like_cards(cards)
+
+        if "Rarity" in sort:
+            cards_grouped = gachalib.cards_inventory.sort_cards_by_rarity(cards_grouped)
+        elif "Quantity" in sort:
+            cards_grouped = gachalib.cards_inventory.sort_cards_by_quantity(cards_grouped)
+        else:
+            cards_grouped = gachalib.cards_inventory.sort_cards_by_id(cards_grouped)
+
+        if "descending" in sort:
+            cards_grouped.reverse()
+
+        cards_page = cards_grouped[(page-1)*per_page:page*per_page]
+
+        items = [
+            discord.ui.TextDisplay("## Inventory Bowser!"),
+            discord.ui.Separator(),
+            discord.ui.ActionRow(SortSelect(user, page, sort)),
+            discord.ui.TextDisplay(f"Page {page}"),
+            discord.ui.Separator(),
+        ]
+        for card in cards_page:
+            items.append(discord.ui.Section(
+                f"### {card[1]} × {card[0].name}",
+                f"({card[0].rarity})",
+                f"-# ID: {card[0].card_id}",
+                accessory=viewCardButton(card[0])
+            ))
+            items.append(discord.ui.Separator())
+        if len(cards_grouped) > 5:
+            items.append(BrowseRow(user, page, sort))
+
+        container = discord.ui.Container(*items)
+        self.add_item(container)
+        
 
 def cardBrowserEmbed(uid:int, cards:list[gachalib.types.Card], page:int = 1, inventory:bool = False) -> discord.Embed | str:
     if inventory: card_grouped = gachalib.cards.group_like_cards(cards)

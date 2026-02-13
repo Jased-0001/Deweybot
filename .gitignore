@@ -2,3 +2,4 @@ __pycache__/
 dewey.yaml
 db_lib/*.db
 gachalib/images/*
+dewey.db

@@ -4,12 +4,21 @@ things to deal with users and their cards
 import gachalib.cards
 import gachalib,gachalib.types
 
-def sort_cards_by_id(a:list[gachalib.types.CardsInventory | gachalib.types.Card]) -> list[gachalib.types.CardsInventory | gachalib.types.Card]:
-    return sorted(a, key=lambda b: b.card_id)
+def sort_cards_by_id(a:list[gachalib.types.CardsInventory | gachalib.types.Card | tuple]) -> list[gachalib.types.CardsInventory | gachalib.types.Card]:
+    if type(a[0]) == gachalib.types.Card or type(a[0]) == gachalib.types.CardsInventory:
+        return sorted(a, key=lambda b: b.card_id)
+    elif type(a[0]) == tuple:
+        return sorted(a, key=lambda b: b[0].card_id)
 
-def sort_cards_by_rarity(a:list[gachalib.types.CardsInventory | gachalib.types.Card]) -> list[gachalib.types.CardsInventory | gachalib.types.Card]:
-    if type(a) == gachalib.types.Card:
-        return sorted(a, key=lambda b: gachalib.rarity_order[a.rarity])
+# this returns grouped cards, which is a bit inconsistent but eh
+def sort_cards_by_quantity(a:list[tuple]) -> tuple(gachalib.types.Card, int):
+    return sorted(a, key=lambda b: b[1])
+
+def sort_cards_by_rarity(a:list[gachalib.types.CardsInventory | gachalib.types.Card | tuple]) -> list[gachalib.types.CardsInventory | gachalib.types.Card]:
+    if type(a[0]) == gachalib.types.Card:
+        return sorted(a, key=lambda b: gachalib.rarity_order[b.rarity])
+    elif type(a[0]) == tuple:
+        return sorted(a, key=lambda b: gachalib.rarity_order[b[0].rarity])
     else:
         #didn't test this
         return sorted(a, key=lambda b: gachalib.rarity_order[gachalib.cards.get_card_by_id(card_id=b.card_id)[1].rarity])
