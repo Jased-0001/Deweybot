@@ -166,11 +166,10 @@ async def gacha_stats(ctx : discord.Interaction):
 
 
 @gacha_group.command(name="inventory", description="View your inventory!")
-async def gacha_inventory(ctx : discord.Interaction, page: int = 0, sort: Literal["ID", "Rarity"] = "Rarity"):
+async def gacha_inventory(ctx : discord.Interaction, show: bool=True):
     if not Permissions.banned(ctx):
-        if page <= 0: page = 1
-        layout = InventoryView(ctx.user, page)
-        await ctx.response.send_message(view=layout)
+        layout = InventoryView(ctx.user, 1)
+        await ctx.response.send_message(view=layout, ephemeral=not show)
 
 
 @gacha_group.command(name="inventory-completion", description="View your progress in collecting!")
