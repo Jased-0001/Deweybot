@@ -1,31 +1,35 @@
+from code import interact
 import Bot
 import gachalib.cards, gachalib.cards_inventory, gachalib.types
 import discord
 import math
 
-async def check_user(trade: gachalib.types.Trade, interaction: discord.Interaction, user: discord.User | None = None):
+async def check_user(trade: gachalib.types.Trade, interaction: discord.Interaction, user: discord.User | discord.Member | None = None):
     if user and interaction.user.id != user.id:
         await interaction.response.send_message("You can't do this!!", ephemeral=True)
         return False
-    if interaction.user.id == trade.user1.id or interaction.user.id == trade.user2.id: # pyright: ignore[reportOptionalMemberAccess]
+    
+    if interaction.user.id == trade.user1.id or interaction.user.id == trade.user2.id: 
         return True
+    
     await interaction.response.send_message("You can't interact with this trade", ephemeral=True)
+
     return False
 
 def get_user_cards(trade: gachalib.types.Trade, interaction: discord.Interaction):
     t_cards = trade.user1_cards
-    if interaction.user.id == trade.user2.id: # pyright: ignore[reportOptionalMemberAccess]
+    if interaction.user.id == trade.user2.id: 
         t_cards = trade.user2_cards
     return t_cards
 
 def get_user(trade: gachalib.types.Trade, interaction: discord.Interaction):
     user = trade.user1
-    if interaction.user.id == trade.user2.id: # pyright: ignore[reportOptionalMemberAccess]
+    if interaction.user.id == trade.user2.id: 
         user = trade.user2
     return user
 
 def user_cards_text(cards: list[gachalib.types.CardsInventory]):
-    card_grouped = gachalib.cards.group_like_cards(cards) # pyright: ignore[reportArgumentType]
+    card_grouped = gachalib.cards.group_like_cards(cards)
 
     field = ""
     for a in card_grouped:
@@ -57,11 +61,13 @@ class TradeSucessView(discord.ui.LayoutView):
 
 async def do_trade(trade: gachalib.types.Trade, interaction: discord.Interaction):
     for a in trade.user1_cards:
-        gachalib.cards_inventory.change_card_owner(trade.user2.id, a.inv_id) # pyright: ignore[reportOptionalMemberAccess]
+        gachalib.cards_inventory.change_card_owner(trade.user2.id, a.inv_id) 
     for b in trade.user2_cards:
-        gachalib.cards_inventory.change_card_owner(trade.user1.id, b.inv_id) # pyright: ignore[reportOptionalMemberAccess]
-    await trade.accept_message.delete() # pyright: ignore[reportOptionalMemberAccess]
-    await trade.message.delete() # pyright: ignore[reportOptionalMemberAccess]
+        gachalib.cards_inventory.change_card_owner(trade.user1.id, b.inv_id) 
+    if trade.accept_message:
+        await trade.accept_message.delete() 
+    if trade.message:
+        await trade.message.delete() 
     await interaction.response.send_message(view=TradeSucessView(trade))
 
 #########################
@@ -80,14 +86,15 @@ async def add_cards_to_trade(trade: gachalib.types.Trade, interaction: discord.I
 
     a_cards = a_cards[0:ammount]
 
-    if len(gachalib.cards.group_like_cards(t_cards + a_cards)) > 10: # pyright: ignore[reportArgumentType]
+    if len(gachalib.cards.group_like_cards(t_cards + a_cards)) > 10:
         await interaction.response.send_message("You can only have up to 10 different cards per trade.", ephemeral=True)
         return
 
     t_cards.extend(a_cards)
     await interaction.response.defer()
     await unaccept_trade(trade)
-    await trade.message.edit(view=TradeView(trade)) # pyright: ignore[reportArgumentType, reportOptionalMemberAccess]
+    assert trade.message, "trade.message assertion"
+    await trade.message.edit(view=TradeView(trade))
 
 class TradeAddModal(discord.ui.Modal):
     def __init__(self, trade: gachalib.types.Trade) -> None:
@@ -95,9 +102,11 @@ class TradeAddModal(discord.ui.Modal):
         self.trade = trade
 
         self.add_item(discord.ui.TextInput(label="Card ID"))
-        self.add_item(discord.ui.TextInput(label="Ammount"))
+        self.add_item(discord.ui.TextInput(label="Amount"))
 
     async def on_submit(self, interaction: discord.Interaction):
+        assert isinstance(self.children[0], discord.ui.TextInput), "TradeAddModal assertion failed (self.children[0] not discord.ui.TextInput)"
+        assert isinstance(self.children[1], discord.ui.TextInput), "TradeAddModal assertion failed (self.children[1] not discord.ui.TextInput)"
         await add_cards_to_trade(self.trade, interaction, int(self.children[0].value), int(self.children[1].value))
 
 #########################
@@ -112,10 +121,10 @@ class TradeRemoveSelect(discord.ui.Select):
         self.t_cards = get_user_cards(trade, embed_interact)
 
         options = []
-        for card in gachalib.cards.group_like_cards(self.t_cards): # pyright: ignore[reportArgumentType]
+        for card in gachalib.cards.group_like_cards(self.t_cards):
             options.append(discord.SelectOption(
                 label=f"{card[1]} × {card[0].name} ({card[0].rarity})\n",
-                value=card[0].card_id
+                value=str(card[0].card_id)
             ))
 
         super().__init__(placeholder="Select a card to remove",max_values=1,min_values=1,options=options)
@@ -130,7 +139,8 @@ class TradeRemoveSelect(discord.ui.Select):
             if card.card_id == sel_id:
                 self.t_cards.remove(card)
         await unaccept_trade(self.trade)
-        await self.trade.message.edit(view=TradeView(self.trade)) # pyright: ignore[reportArgumentType, reportOptionalMemberAccess]
+        assert self.trade.message, "self.trade.message assertion"
+        await self.trade.message.edit(view=TradeView(self.trade))
 
 class TradeRemoveView(discord.ui.LayoutView):
     def __init__(self, trade: gachalib.types.Trade, embed_interact: discord.Interaction) -> None:
@@ -149,7 +159,7 @@ class TradeRemoveView(discord.ui.LayoutView):
 #########################
 
 class TradeAddRow(discord.ui.ActionRow):
-    def __init__(self, page: int, cards: tuple[int, list[gachalib.types.Card]], trade: gachalib.types.Trade, embed_interact: discord.Interaction):
+    def __init__(self, page: int, cards: list[tuple[gachalib.types.Card, int]], trade: gachalib.types.Trade, embed_interact: discord.Interaction):
         super().__init__()
         self.page = page
         self.cards = cards
@@ -175,9 +185,9 @@ class TradeAddNumberSelect(discord.ui.Select):
         cards = gachalib.cards_inventory.get_users_cards_by_card_id(get_user(trade, embed_interact).id, card_id)[1]
 
         options = []
-        for i in range(1, min(len(cards)+1, 25)): # pyright: ignore[reportArgumentType]
+        for i in range(1, min(len(cards)+1, 25)):
             options.append(discord.SelectOption(
-                label=i
+                label=str(i)
             ))
 
         super().__init__(placeholder="Select number of cards to add",max_values=1,min_values=1,options=options)
@@ -202,16 +212,16 @@ class TradeAddNumber(discord.ui.LayoutView):
         self.add_item(container)
 
 class TradeAddSelect(discord.ui.Select):
-    def __init__(self, page:int, cards: tuple[int, list[gachalib.types.Card]], trade: gachalib.types.Trade, embed_interact: discord.Interaction):
+    def __init__(self, page:int, cards: list[tuple[gachalib.types.Card, int]], trade: gachalib.types.Trade, embed_interact: discord.Interaction):
         self.page = page
         self.trade = trade
         self.embed_interact = embed_interact
 
         options = []
-        for card in cards: # pyright: ignore[reportArgumentType]
+        for card in cards:
             options.append(discord.SelectOption(
                 label=f"[{card[1]}x] {card[0].name} ({card[0].rarity})\n",
-                value=card[0].card_id
+                value=str(card[0].card_id)
             ))
 
         super().__init__(placeholder="Select a card to add",max_values=1,min_values=1,options=options)
@@ -265,16 +275,20 @@ class TradeReqestRow(discord.ui.ActionRow):
 
     @discord.ui.button(label="Accept", style=discord.ButtonStyle.success, row=0, custom_id="accept_btn")
     async def add_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        if await check_user(self.trade, interaction, self.trade.user2): # pyright: ignore[reportArgumentType]
-            await interaction.message.delete() # pyright: ignore[reportOptionalMemberAccess]
-            msg = await interaction.response.send_message(view=TradeView(self.trade)) # pyright: ignore[reportArgumentType]
-            self.trade.message = await interaction.channel.fetch_message(msg.message_id)# pyright: ignore[reportArgumentType, reportAttributeAccessIssue, reportOptionalMemberAccess]
+        if await check_user(self.trade, interaction, self.trade.user2):
+            if interaction.message:
+                await interaction.message.delete() 
+            msg = await interaction.response.send_message(view=TradeView(self.trade))
+            assert not isinstance(interaction.channel,(discord.ForumChannel,discord.CategoryChannel)) and interaction.channel, "trade interaction message assertion"
+            assert type(msg.message_id) == int, "msg.message_id is not an int"
+            self.trade.message = await interaction.channel.fetch_message(msg.message_id)
 
     @discord.ui.button(label="Decline", style=discord.ButtonStyle.danger, row=0, custom_id="decline_btn")
     async def remove_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         if await check_user(self.trade, interaction):
             await interaction.response.defer()
-            await interaction.message.delete() # pyright: ignore[reportOptionalMemberAccess]
+            if interaction.message:
+                await interaction.message.delete() 
 
 class TradeRequestView(discord.ui.LayoutView):
     def __init__(self, trade: gachalib.types.Trade):
@@ -300,9 +314,11 @@ async def accept_trade(trade: gachalib.types.Trade, interaction: discord.Interac
     elif trade.accept_message:
         await interaction.response.defer()
     else:
-        trade.accepted_user = interaction.user # pyright: ignore[reportAttributeAccessIssue]
-        msg = await interaction.response.send_message(view=TradeAcceptView(trade)) # pyright: ignore[reportArgumentType]
-        trade.accept_message = await interaction.channel.fetch_message(msg.message_id) # pyright: ignore[reportAttributeAccessIssue, reportArgumentType, reportOptionalMemberAccess]
+        trade.accepted_user = interaction.user
+        msg = await interaction.response.send_message(view=TradeAcceptView(trade))
+        assert not isinstance(interaction.channel,(discord.ForumChannel,discord.CategoryChannel)) and interaction.channel, "trade interaction message assertion"
+        assert type(msg.message_id) == int, "msg.message_id is not an int"
+        trade.accept_message = await interaction.channel.fetch_message(msg.message_id)
 
 async def unaccept_trade(trade: gachalib.types.Trade):
     if trade.accept_message:
@@ -331,6 +347,8 @@ class TradeAcceptView(discord.ui.LayoutView):
         super().__init__(timeout=None)
         self.trade = trade
 
+        assert trade.accepted_user, "trade.accepted_user is already none"
+
         container = discord.ui.Container(
             discord.ui.TextDisplay("## Accept trade?"),
             discord.ui.TextDisplay(f"{trade.accepted_user.mention} would like to agree to this trade!"),
@@ -341,7 +359,7 @@ class TradeAcceptView(discord.ui.LayoutView):
         self.add_item(container)
 
     async def on_timeout(self):
-        await unaccept_trade(trade)
+        await unaccept_trade(self.trade)
 
 #########################
 #     Main Trade UI     #
@@ -392,4 +410,5 @@ class TradeView(discord.ui.LayoutView):
 
     async def on_timeout(self):
         await unaccept_trade(self.trade)
-        await self.trade.message.delete()
+        if self.trade.message:
+            await self.trade.message.delete()

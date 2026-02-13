@@ -4,16 +4,16 @@ from dataclasses import dataclass, field
 
 class Card:
     def __init__(self,
-                 maker_id:int=-1,request_message_id:int=-1,card_id:int=-1,accepted:bool=False,
-                 name:str="", description:str="",rarity:str="",filename:str="") -> None:
-        self.maker_id           = maker_id
-        self.request_message_id = request_message_id
-        self.card_id            = card_id
-        self.accepted           = accepted
-        self.name               = name
-        self.description        = description
-        self.rarity             = rarity
-        self.filename           = filename
+                 maker_id:int=0,request_message_id:int=0,card_id:int=0,accepted:bool=False,
+                 name:str="Default", description:str="Lorem ipsum...",rarity:str="Rare",filename:str="") -> None:
+        self.maker_id: int           = maker_id
+        self.request_message_id: int = request_message_id
+        self.card_id: int            = card_id
+        self.accepted: bool          = accepted
+        self.name: str               = name
+        self.description: str        = description
+        self.rarity: str             = rarity
+        self.filename: str           = filename
     
     def __repr__(self):
         return f'{self.__class__.__name__} (name = {self.name} - cardid= {self.card_id})'
@@ -46,13 +46,13 @@ class GachaUser:
     
 @dataclass
 class Trade:
+    user1: discord.Member | discord.User
+    user2: discord.Member | discord.User
     message: discord.Message | None = None
-    user1: discord.Member | None = None
-    user2: discord.Member | None = None
+    accept_message: discord.Message | None= None
+    accepted_user: discord.Member | discord.User | None= None
     user1_cards: list[CardsInventory] = field(default_factory=list)
     user2_cards: list[CardsInventory] = field(default_factory=list)
-    accept_message: discord.Message | None = None
-    accepted_user: discord.Member | None = None
 
     def __repr__(self):
-        return f'{self.__class__.__name__} (user1id = {self.user1.id} - user2id = {self.user2.id} - user1cards = {self.user2_cards} - user2cards = {self.user2_cards})' # pyright: ignore[reportOptionalMemberAccess]
+        return f'{self.__class__.__name__} (user1id = {self.user1.id} - user2id = {self.user2.id} - user1cards = {self.user2_cards} - user2cards = {self.user2_cards})'

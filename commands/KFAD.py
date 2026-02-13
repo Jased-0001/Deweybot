@@ -1,5 +1,6 @@
 import io
 import discord
+from discord.abc import PrivateChannel
 from discord.ext import commands, tasks
 import Bot
 import other.Permissions as Permissions
@@ -8,16 +9,17 @@ import datetime,random
 
 
 
-gfad_group = discord.app_commands.Group(name="gfad", description="God for a day")
+gfad_group = discord.app_commands.Group(name="gfad", description="God for a day", guild_only=True)
 
-async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime, guild:discord.Guild,getmembers:bool) -> tuple[list[discord.Member], list[dict[int,int]]]:
-    unique_authors = {}
+async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime, guild:discord.Guild,getmembers:bool) -> tuple[list[discord.Member | discord.User], dict[str,int]]:
+    unique_authors: dict[str, int] = {}
     not_allowed = []
-    qualifiers = []
+    qualifiers: list[discord.Member | discord.User] = []
 
     genchannel = await Bot.client.fetch_channel(Bot.DeweyConfig["kfad-general"])
 
-    async for message in genchannel.history(limit=None, before=range_end, after=range_start): # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue] # 
+    assert not isinstance(genchannel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "general channel assertion"
+    async for message in genchannel.history(limit=None, before=range_end, after=range_start):
         #just get unique users first
         if not message.author.id in not_allowed:
             if message.author.bot: not_allowed.append(message.author.id)
@@ -39,13 +41,13 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
     if getmembers:
         for uid,messagecount in unique_authors.items():
             if messagecount >= message_requirement:
-                user = guild.get_member(uid)
+                user = guild.get_member(int(uid))
                 if user == None:
-                    user = await guild.fetch_member(uid)
+                    user = await guild.fetch_member(int(uid))
 
                 qualifiers.append(user)
 
-    return (qualifiers, unique_authors) # pyright: ignore[reportReturnType]
+    return (qualifiers, unique_authors)
 
 @gfad_group.command(name="help", description="What is a 'god' and why for a day?")
 async def gfad_help(ctx : discord.Interaction):
@@ -63,7 +65,8 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
         
         await ctx.response.defer(ephemeral=False)
 
-        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True) # pyright: ignore[reportArgumentType]
+        assert ctx.guild, "ctx.guild assertion"
+        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True)
         print(qualifiers)
 
         if len(qualifiers) == 0:
@@ -71,13 +74,15 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
             return
         pick = random.choice(qualifiers)
 
-        role = ctx.guild.get_role(Bot.DeweyConfig["kfad-role"]) # pyright: ignore[reportOptionalMemberAccess]
-        for i in role.members: # pyright: ignore[reportOptionalMemberAccess]
-            await i.remove_roles(role, reason="god for a day roll") # pyright: ignore[reportArgumentType]
+        role = ctx.guild.get_role(Bot.DeweyConfig["kfad-role"])
+        assert role, "could not find role"
+        for i in role.members:
+            await i.remove_roles(role, reason="god for a day roll")
+        
+        if type(pick) == discord.Member:
+            await pick.add_roles(role,reason="god got a day!!!!")
 
-        await pick.add_roles(role,reason="god got a day!!!!") # pyright: ignore[reportArgumentType]
-
-        await ctx.followup.send(content=f"{pick.display_name} is the God for the Day!", silent=True, ephemeral=False)
+        await ctx.followup.send(content=f"{pick.display_name} is the God for the Day!{' (please give role)' if type(pick) == discord.User else ''}", silent=True, ephemeral=False)
 
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
@@ -90,7 +95,8 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         
         await ctx.response.defer(ephemeral=False)
 
-        _,abcdefghijklmnopqrstuvwxyz = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False) # pyright: ignore[reportArgumentType]
+        assert ctx.guild, "ctx.guild assertion"
+        _,abcdefghijklmnopqrstuvwxyz = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=False)
         lalala = {}
 
         if len(abcdefghijklmnopqrstuvwxyz) == 0:
@@ -102,9 +108,9 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
                 lalala[str(uid)] = messagecount
 
         string = ""
-        for uid,count in lalala.items(): # pyright: ignore[reportAttributeAccessIssue]
-            loser = await ctx.guild.fetch_member(uid) # pyright: ignore[reportOptionalMemberAccess]
-            string += loser.name + ": " + str(count) + "\n" # pyright: ignore[reportOptionalMemberAccess]
+        for uid,count in lalala.items():
+            loser = await ctx.guild.fetch_member(uid)
+            string += loser.name + ": " + str(count) + "\n"
         buffer = io.BytesIO()
         buffer.write(string.encode())
         buffer.seek(0)
