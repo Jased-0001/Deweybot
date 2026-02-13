@@ -81,7 +81,7 @@ def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarit
     return embed
 
 class SortSelect(discord.ui.Select):
-    def __init__(self, user: discord.User, page: int, sort: str) -> None:
+    def __init__(self, user: discord.User | discord.Member, page: int, sort: str) -> None:
         self.user = user
         self.page = page
         options = [
@@ -98,7 +98,7 @@ class SortSelect(discord.ui.Select):
         await interaction.response.edit_message(view=InventoryView(self.user, self.page, self.values[0]))
 
 class BrowseRow(discord.ui.ActionRow):
-    def __init__(self, user: discord.User, page: int, sort: str) -> None:
+    def __init__(self, user: discord.User | discord.Member, page: int, sort: str) -> None:
         super().__init__()
         self.user = user
         self.page = page
@@ -127,24 +127,24 @@ class viewCardButton(discord.ui.Button):
         )
 
 class InventoryView(discord.ui.LayoutView):
-    def __init__(self, user: discord.User, page: int=1, sort: str="Rarity (descending)"):
+    def __init__(self, user: discord.User | discord.Member, page: int=1, sort: str="Rarity (descending)"):
         super().__init__(timeout=None)
-        per_page: int = 5
+        per_page = 5
 
         cards = gachalib.cards_inventory.get_users_cards(user.id)[1]
         cards_grouped = gachalib.cards.group_like_cards(cards)
 
         if "Rarity" in sort:
-            cards_grouped = gachalib.cards_inventory.sort_cards_by_rarity(cards_grouped)
+            cards_grouped = sorted(cards_grouped, key=lambda b: gachalib.rarity_order[gachalib.cards.get_card_by_id(card_id=b[0].card_id)[1].rarity])
         elif "Quantity" in sort:
-            cards_grouped = gachalib.cards_inventory.sort_cards_by_quantity(cards_grouped)
+            cards_grouped = sorted(cards_grouped, key=lambda b: b[1])
         else:
-            cards_grouped = gachalib.cards_inventory.sort_cards_by_id(cards_grouped)
+            cards_grouped = sorted(cards_grouped, key=lambda b: b[0].card_id)
 
         if "descending" in sort:
             cards_grouped.reverse()
 
-        cards_page = cards_grouped[(page-1)*per_page:page*per_page]
+        cards_page: list[tuple[gachalib.types.Card, int]] = cards_grouped[(page-1)*per_page:page*per_page]
 
         items = [
             discord.ui.TextDisplay("## Inventory Bowser!"),
