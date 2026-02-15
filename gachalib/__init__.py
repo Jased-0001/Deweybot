@@ -181,6 +181,7 @@ class AdminSelect(discord.ui.Select):
             discord.SelectOption(label="Deny"),
             discord.SelectOption(label="Common"),
             discord.SelectOption(label="Uncommon"),
+            discord.SelectOption(label="Rare"),
             discord.SelectOption(label="Epic"),
             discord.SelectOption(label="Legendary")
         ]
