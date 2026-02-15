@@ -9,7 +9,7 @@ import datetime,random
 
 
 
-gfad_group = discord.app_commands.Group(name="gfad", description="God for a day", guild_ids=[Bot.DeweyConfig["main-guild"]],guild_only=True)
+gfad_group = discord.app_commands.Group(name="gfad", description="God for a day")
 
 async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime, guild:discord.Guild,getmembers:bool) -> tuple[list[discord.Member | discord.User], dict[str,int]]:
     unique_authors: dict[str, int] = {}
