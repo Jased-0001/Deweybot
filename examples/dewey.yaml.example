@@ -1,6 +1,7 @@
 # Bot misc
 token: 
 error-channel: # channel to log errors to
+main-guild:
 
 banned-role: 
 permission-override: []
