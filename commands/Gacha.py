@@ -9,7 +9,7 @@ from gachalib import *
 # General card commands 
 #######################################
 
-gacha_group = discord.app_commands.Group(name="gacha", description="Dewey GACHA!!!", allowed_installs=)
+gacha_group = discord.app_commands.Group(name="gacha", description="Dewey GACHA!!!")
 
 
 @gacha_group.command(name="help", description="What is a gacha?")
