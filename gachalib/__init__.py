@@ -1,6 +1,3 @@
-from ast import ClassDef
-from configparser import UnnamedSectionDisabledError
-from symtable import Class
 from commands import Gacha
 import db_lib,Bot
 import gachalib.cards, gachalib.cards_inventory, gachalib.gacha_user, gachalib.types, gachalib.trade
@@ -9,7 +6,7 @@ from random import randint
 from typing import Literal
 import math
 import textwrap
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageOps
 import io
 
 gacha_database = db_lib.setup_db(name="gacha", tables=
