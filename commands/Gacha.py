@@ -310,6 +310,7 @@ async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
     if Permissions.is_override(ctx):
             await ctx.response.send_message(
                 view=gachalib.UnacceptedView(),
+                ephemeral=True if ctx.guild else False,
                 allowed_mentions=discord.AllowedMentions(users=False)
             )
     else:
