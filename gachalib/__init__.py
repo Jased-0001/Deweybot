@@ -1,3 +1,6 @@
+from ast import ClassDef
+from configparser import UnnamedSectionDisabledError
+from symtable import Class
 from commands import Gacha
 import db_lib,Bot
 import gachalib.cards, gachalib.cards_inventory, gachalib.gacha_user, gachalib.types, gachalib.trade
@@ -92,24 +95,30 @@ class SortSelect(discord.ui.Select):
         super().__init__(placeholder=sort,max_values=1,min_values=1,options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(view=InventoryView(self.user, self.page, self.values[0]))
+        await interaction.response.edit_message(view=InventoryView(self.user, self.values[0], self.page))
 
 class BrowseRow(discord.ui.ActionRow):
-    def __init__(self, user: discord.User | discord.Member, page: int, sort: str) -> None:
+    def __init__(self, view, page: int, *args) -> None:
         super().__init__()
-        self.user = user
+        self.args = args
         self.page = page
-        self.sort = sort
+        self.mView = view
 
     @discord.ui.button(label="⬅️", style=discord.ButtonStyle.primary, custom_id="left_btn")
     async def left_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         page = max(self.page-1, 1)
-        await interaction.response.edit_message(view=InventoryView(self.user, page, self.sort))
+        await interaction.response.edit_message(
+            view=self.mView(*self.args, page=page),
+            allowed_mentions=discord.AllowedMentions(users=False)
+        )
 
     @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary, custom_id="right_btn")
     async def right_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         page = min(self.page+1, 1000)
-        await interaction.response.edit_message(view=InventoryView(self.user, page, self.sort))
+        await interaction.response.edit_message(
+            view=self.mView(*self.args, page=page),
+            allowed_mentions=discord.AllowedMentions(users=False)
+        )
 
 class viewCardButton(discord.ui.Button):
     def __init__(self, card: gachalib.types.Card) -> None:
@@ -124,7 +133,7 @@ class viewCardButton(discord.ui.Button):
         )
 
 class InventoryView(discord.ui.LayoutView):
-    def __init__(self, user: discord.User | discord.Member, page: int=1, sort: str="Rarity (descending)"):
+    def __init__(self, user: discord.User | discord.Member, sort: str="Rarity (descending)", page: int=1,):
         super().__init__(timeout=None)
         per_page = 5
 
@@ -158,12 +167,66 @@ class InventoryView(discord.ui.LayoutView):
                 accessory=viewCardButton(card[0])
             ))
             items.append(discord.ui.Separator())
-        if len(cards_grouped) > 5:
-            items.append(BrowseRow(user, page, sort))
+        if len(cards_grouped) > per_page:
+            items.append(BrowseRow(InventoryView, page, user, sort))
 
         container = discord.ui.Container(*items)
         self.add_item(container)
-        
+
+class AdminSelect(discord.ui.Select):
+    def __init__(self, page: int, card_id) -> None:
+        self.page = page
+        self.card_id = card_id
+        options = [
+            discord.SelectOption(label="Deny"),
+            discord.SelectOption(label="Common"),
+            discord.SelectOption(label="Uncommon"),
+            discord.SelectOption(label="Epic"),
+            discord.SelectOption(label="Legendary")
+        ]
+        super().__init__(placeholder="Rarity",max_values=1,min_values=1,options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        card = gachalib.cards.get_card_by_id(self.card_id)[1]
+        if self.values[0] == "Deny":
+            await gachalib.cards.approve_card(False, card)
+        else:
+            gachalib.cards.update_card(self.card_id, "rarity", self.values[0])
+            await gachalib.cards.approve_card(True, card)
+        await interaction.response.edit_message(
+            view=UnacceptedView(self.page),
+            allowed_mentions=discord.AllowedMentions(users=False)
+        )
+
+class UnacceptedView(discord.ui.LayoutView):
+    def __init__(self, page: int=1):
+        super().__init__(timeout=None)
+        per_page = 4
+
+        cards = gachalib.cards.get_unapproved_cards()[1]
+
+        cards_page = cards[(page-1)*per_page:page*per_page]
+
+        items = [
+            discord.ui.TextDisplay("## Unapproved cards"),
+            discord.ui.Separator(),
+            discord.ui.TextDisplay(f"Page {page}"),
+            discord.ui.Separator(),
+        ]
+        for card in cards_page:
+            items.append(discord.ui.Section(
+                f"### {card.name}",
+                f"{card.description}",
+                f"-# ID: {card.card_id} by: <@{card.maker_id}>",
+                accessory=discord.ui.Thumbnail(Bot.DeweyConfig["imageurl"] + card.filename)
+            ))
+            items.append(discord.ui.ActionRow(AdminSelect(page, card.card_id)))
+            items.append(discord.ui.Separator())
+        if len(cards) > per_page:
+            items.append(BrowseRow(UnacceptedView, page))
+
+        container = discord.ui.Container(*items)
+        self.add_item(container)
 
 def cardBrowserEmbed(uid:int, cards:list[gachalib.types.CardsInventory] | list[gachalib.types.Card] | list[gachalib.types.CardsInventory | gachalib.types.Card], page:int = 1, inventory:bool = False) -> discord.Embed | str:
     startpage = (5*(page-1))+1
