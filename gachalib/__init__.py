@@ -187,12 +187,11 @@ class AdminSelect(discord.ui.Select):
         super().__init__(placeholder="Rarity",max_values=1,min_values=1,options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        card = gachalib.cards.get_card_by_id(self.card_id)[1]
         if self.values[0] == "Deny":
-            await gachalib.cards.approve_card(False, card)
+            await gachalib.cards.approve_card(False, gachalib.cards.get_card_by_id(self.card_id)[1])
         else:
             gachalib.cards.update_card(self.card_id, "rarity", self.values[0])
-            await gachalib.cards.approve_card(True, card)
+            await gachalib.cards.approve_card(True, gachalib.cards.get_card_by_id(self.card_id)[1])
         await interaction.response.edit_message(
             view=UnacceptedView(self.page),
             allowed_mentions=discord.AllowedMentions(users=False)
