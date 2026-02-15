@@ -1,0 +1,13 @@
+The DB is structured as:
+
+
+
+deweycoins table:           - Contains every user and their balance and statistics
+
+
+uid INTEGER                 - Discord user ID
+balance INTEGER             - The user's balance
+highestbalance INTEGER      - - Statistic - The highest balance a user ever had
+transactions INTEGER        - - Statistic - How many transactions that the user made
+spent INTEGER               - - Statistic - How much a user spent in total
+totalearned INTEGER         - - Statistic - How much a user earned in total

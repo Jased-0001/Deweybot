@@ -5,6 +5,7 @@ import other.Permissions as Permissions
 import gif
 
 @Bot.tree.command(name="house", description="house dr house md car accident funny gifs")
+@discord.app_commands.allowed_installs(guilds=True, users=True)
 async def house(ctx : discord.Interaction, text: str):
     if not Permissions.banned(ctx):
         await ctx.response.defer()

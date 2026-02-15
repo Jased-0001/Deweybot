@@ -1,6 +1,3 @@
-from code import interact
-from urllib import response
-
 from commands import Gacha
 import db_lib,Bot
 import gachalib.cards, gachalib.cards_inventory, gachalib.gacha_user, gachalib.types, gachalib.trade

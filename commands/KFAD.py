@@ -50,12 +50,14 @@ async def get_qualifiers(message_requirement:int, range_start:datetime.datetime,
     return (qualifiers, unique_authors)
 
 @gfad_group.command(name="help", description="What is a 'god' and why for a day?")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
 async def gfad_help(ctx : discord.Interaction):
     if not Permissions.banned(ctx):
         await ctx.response.send_message(content="Test!", ephemeral=True)
 
 
 @gfad_group.command(name="z-roll", description="! ADMIN ONLY ! Roll GOD 🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
 async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
     if Permissions.is_override(ctx):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
@@ -86,6 +88,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
 
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
 async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int = -1):
     if Permissions.is_override(ctx):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
