@@ -79,7 +79,7 @@ class botClient(discord.Client):
 
 
 client = botClient()
-tree = discord.app_commands.CommandTree(client)
+tree = discord.app_commands.CommandTree(client, allowed_installs=discord.app_commands.AppInstallationType(guild=True,user=True))
 
 @tree.error
 async def on_app_command_error(interaction: discord.Interaction, error):
