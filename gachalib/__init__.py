@@ -1,3 +1,5 @@
+from ast import List
+from PIL.ImageFont import Layout
 from commands import Gacha
 import db_lib,Bot
 import gachalib.cards, gachalib.cards_inventory, gachalib.gacha_user, gachalib.types, gachalib.trade
@@ -49,7 +51,7 @@ def gacha_crop_image(card: gachalib.types.Card):
     buffer = io.BytesIO()
     img.save(buffer, format="png")
     buffer.seek(0)
-    return discord.File(fp=buffer, filename="image.png")
+    return discord.File(fp=buffer, filename=f"{card.card_id}.png")
 
 class GachaView(discord.ui.LayoutView):
     def __init__(self, card: gachalib.types.Card, image: discord.File):
@@ -78,9 +80,10 @@ def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarit
     return embed
 
 class SortSelect(discord.ui.Select):
-    def __init__(self, user: discord.User | discord.Member, page: int, sort: str) -> None:
+    def __init__(self, user: discord.User | discord.Member,  sort: str, button: bool, page: int,) -> None:
         self.user = user
         self.page = page
+        self.button = button
         options = [
             discord.SelectOption(label="Rarity (ascending)"),
             discord.SelectOption(label="Rarity (descending)"),
@@ -92,7 +95,8 @@ class SortSelect(discord.ui.Select):
         super().__init__(placeholder=sort,max_values=1,min_values=1,options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.edit_message(view=InventoryView(self.user, self.values[0], self.page))
+        layout = InventoryView(self.user, self.values[0], self.button, self.page)
+        await interaction.response.edit_message(view=layout, attachments=layout.images)
 
 class BrowseRow(discord.ui.ActionRow):
     def __init__(self, view, page: int, *args) -> None:
@@ -104,16 +108,20 @@ class BrowseRow(discord.ui.ActionRow):
     @discord.ui.button(label="⬅️", style=discord.ButtonStyle.primary, custom_id="left_btn")
     async def left_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         page = max(self.page-1, 1)
+        layout = self.mView(*self.args, page=page)
         await interaction.response.edit_message(
-            view=self.mView(*self.args, page=page),
+            view=layout,
+            attachments=layout.images,
             allowed_mentions=discord.AllowedMentions(users=False)
         )
 
     @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary, custom_id="right_btn")
     async def right_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         page = min(self.page+1, 1000)
+        layout = self.mView(*self.args, page=page)
         await interaction.response.edit_message(
-            view=self.mView(*self.args, page=page),
+            view=layout,
+            attachments=layout.images,
             allowed_mentions=discord.AllowedMentions(users=False)
         )
 
@@ -130,9 +138,10 @@ class viewCardButton(discord.ui.Button):
         )
 
 class InventoryView(discord.ui.LayoutView):
-    def __init__(self, user: discord.User | discord.Member, sort: str="Rarity (descending)", page: int=1,):
+    def __init__(self, user: discord.User | discord.Member, sort: str="Rarity (descending)", button: bool=True, page: int=1,):
         super().__init__(timeout=None)
-        per_page = 5
+        per_page = 5 - button
+        self.images: list[discord.File] = []
 
         cards = gachalib.cards_inventory.get_users_cards(user.id)[1]
         cards_grouped = gachalib.cards.group_like_cards(cards)
@@ -152,20 +161,23 @@ class InventoryView(discord.ui.LayoutView):
         items = [
             discord.ui.TextDisplay("## Inventory Bowser!"),
             discord.ui.Separator(),
-            discord.ui.ActionRow(SortSelect(user, page, sort)),
+            discord.ui.ActionRow(SortSelect(user, sort, button, page)),
             discord.ui.TextDisplay(f"Page {page}"),
             discord.ui.Separator(),
         ]
         for card in cards_page:
+            image = gacha_crop_image(card[0])
+            self.images.append(image)
             items.append(discord.ui.Section(
                 f"### {card[1]} × {card[0].name}",
-                f"({card[0].rarity})",
+                f"({card[0].rarity})\n"
                 f"-# ID: {card[0].card_id}",
-                accessory=viewCardButton(card[0])
+                accessory=discord.ui.Thumbnail(image)
             ))
+            items.append(discord.ui.ActionRow(viewCardButton(card[0]))) if button else None
             items.append(discord.ui.Separator())
         if len(cards_grouped) > per_page:
-            items.append(BrowseRow(InventoryView, page, user, sort))
+            items.append(BrowseRow(InventoryView, page, user, sort, button))
 
         container = discord.ui.Container(*items)
         self.add_item(container)
@@ -190,8 +202,10 @@ class AdminSelect(discord.ui.Select):
         else:
             gachalib.cards.update_card(self.card_id, "rarity", self.values[0])
             await gachalib.cards.approve_card(True, gachalib.cards.get_card_by_id(self.card_id)[1])
+        layout = UnacceptedView(self.page)
         await interaction.response.edit_message(
-            view=UnacceptedView(self.page),
+            view=layout,
+            attachments=layout.images,
             allowed_mentions=discord.AllowedMentions(users=False)
         )
 
@@ -199,7 +213,7 @@ class UnacceptedView(discord.ui.LayoutView):
     def __init__(self, page: int=1):
         super().__init__(timeout=None)
         per_page = 4
-
+        self.images: list[discord.File] = []
         cards = gachalib.cards.get_unapproved_cards()[1]
 
         cards_page = cards[(page-1)*per_page:page*per_page]
@@ -211,11 +225,13 @@ class UnacceptedView(discord.ui.LayoutView):
             discord.ui.Separator(),
         ]
         for card in cards_page:
+            image = gacha_crop_image(card)
+            self.images.append(image)
             items.append(discord.ui.Section(
                 f"### {card.name}",
                 f"{card.description}",
                 f"-# ID: {card.card_id} by: <@{card.maker_id}>",
-                accessory=discord.ui.Thumbnail(Bot.DeweyConfig["imageurl"] + card.filename)
+                accessory=discord.ui.Thumbnail(image)
             ))
             items.append(discord.ui.ActionRow(AdminSelect(page, card.card_id)))
             items.append(discord.ui.Separator())

@@ -172,10 +172,10 @@ async def gacha_stats(ctx : discord.Interaction):
 
 
 @gacha_group.command(name="inventory", description="View your inventory!")
-async def gacha_inventory(ctx : discord.Interaction, show: bool=True):
+async def gacha_inventory(ctx : discord.Interaction, show: bool=True, viewButton: bool=False):
     if not Permissions.banned(ctx):
-        layout = InventoryView(ctx.user, page=1)
-        await ctx.response.send_message(view=layout, ephemeral=not show)
+        layout = InventoryView(ctx.user, button=viewButton, page=1)
+        await ctx.response.send_message(view=layout, files=layout.images, ephemeral=not show)
 
 
 @gacha_group.command(name="inventory-completion", description="View your progress in collecting!")
@@ -308,8 +308,10 @@ async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gach
 @gacha_group.command(name="z-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
 async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
     if Permissions.is_override(ctx):
+            layout = gachalib.UnacceptedView()
             await ctx.response.send_message(
-                view=gachalib.UnacceptedView(),
+                view=layout,
+                files=layout.images,
                 ephemeral=True if ctx.guild else False,
                 allowed_mentions=discord.AllowedMentions(users=False)
             )
