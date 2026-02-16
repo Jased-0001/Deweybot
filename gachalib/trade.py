@@ -408,7 +408,7 @@ class TradeView(discord.ui.LayoutView):
         self.add_item(container)
         self.add_item(TradeActionRow(trade))
 
-    async def on_timeout(self):
-        await unaccept_trade(self.trade)
-        if self.trade.message:
-            await self.trade.message.delete()
+    #async def on_timeout(self):
+    #    await unaccept_trade(self.trade)
+    #    if self.trade.message:
+    #        await self.trade.message.delete()
