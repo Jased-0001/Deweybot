@@ -8,6 +8,7 @@ permission-override: []
 
 # Db settings
 gacha-sqlite-path:
+deweycoins-sqlite-path: 
 
 # Gacha settings
 gacha_enabled: 
@@ -25,10 +26,11 @@ deweycoins-enabled:
 
 # gfad
 kfad-enabled: 
-kfad-disallowed-roles: 
+kfad-disallowed-roles: []
 kfad-must-have:  # messages
 kfad-role: 
-kfad-general: 
+kfad-channels: []
+kfad-god-channel:  
 
 # others
 nick-enabled: 
