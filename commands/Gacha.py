@@ -172,9 +172,9 @@ async def gacha_stats(ctx : discord.Interaction):
 
 
 @gacha_group.command(name="inventory", description="View your inventory!")
-async def gacha_inventory(ctx : discord.Interaction, show: bool=True, viewButton: bool=False):
+async def gacha_inventory(ctx : discord.Interaction, show: bool=True, view_button: bool=False):
     if not Permissions.banned(ctx):
-        layout = InventoryView(ctx.user, button=viewButton, page=1)
+        layout = InventoryView(ctx.user, button=view_button, page=1)
         await ctx.response.send_message(view=layout, files=layout.images, ephemeral=not show)
 
 
@@ -234,6 +234,19 @@ async def gacha_roll(ctx : discord.Interaction):
                 f"Aw! You're in Dewey Timeout! Try again <t:{last_use+time_out}:R>"
             )
 
+
+if Bot.DeweyConfig["deweycoins-enabled"]:
+    @gacha_group.command(name="sellcard", description="Sell a card!")
+    async def gacha_sell_card(ctx : discord.Interaction):
+        await ctx.response.send_message("TO BE IMPLEMENTED", ephemeral=True)
+
+    @gacha_group.command(name="buypack", description="Buy a special PACK of Deweycards")
+    async def gacha_buy_pack(ctx : discord.Interaction):
+        await ctx.response.send_message("TO BE IMPLEMENTED", ephemeral=True)
+
+    @gacha_group.command(name="valuecard", description="Check the value of a card in DeweyCoin")
+    async def gacha_get_price(ctx : discord.Interaction):
+        await ctx.response.send_message("TO BE IMPLEMENTED", ephemeral=True)
 
 # Trading
 #######################################

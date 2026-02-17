@@ -16,6 +16,13 @@ print(money_database)
 if not money_database:
     raise Exception("Fuck!")
 
+
+def updateValues(update:list[str],values:list[str | int],id:int) -> None:
+    assert len(update) == len(values)
+    for i in range(len(update)):
+        money_database.write_data(statement=
+                                  f"UPDATE deweycoins SET {update[i]}=? WHERE uid = (?)", data=(values[i],id))
+
 def getUserInfo(user: int | discord.Member | discord.User) -> moneylib.types.User:
     if type(user) == discord.Member or type(user) == discord.User:
         user = user.id
@@ -23,4 +30,26 @@ def getUserInfo(user: int | discord.Member | discord.User) -> moneylib.types.Use
     return moneylib.types.User(uid=a[0],balance=a[1],statistics=moneylib.types.Statistics(
         highestbalance=a[2],transactions=a[3],spent=a[4],totalearned=a[5]
     ))
+
+def giveCoins(user: int | discord.Member | discord.User, coins:int) -> None:
+    if type(user) == discord.Member or type(user) == discord.User:
+        user = user.id
+
+    coinuser = getUserInfo(user=user)
+
+    coinuser.balance += coins
+    coinuser.statistics.transactions += 1
+
+    if coins < 0: # took away coins
+        coinuser.statistics.spent -= coins
+    elif coins > 0: # gave coins
+        coinuser.statistics.totalearned += coins
+        if coinuser.statistics.highestbalance < coinuser.balance:
+            coinuser.statistics.highestbalance = coinuser.balance
+    print(coinuser)
+    updateValues(update=["balance","highestbalance","transactions","totalearned","spent"],
+                 values=[coinuser.balance,coinuser.statistics.highestbalance
+                  ,coinuser.statistics.transactions, coinuser.statistics.totalearned
+                  ,coinuser.statistics.spent],id=coinuser.uid)
+
 print(getUserInfo(user=322495136108118016))

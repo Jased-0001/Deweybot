@@ -13,30 +13,39 @@ gfad_group = discord.app_commands.Group(name="gfad", description="God for a day"
 
 async def get_qualifiers(message_requirement:int, range_start:datetime.datetime, range_end:datetime.datetime, guild:discord.Guild,getmembers:bool) -> tuple[list[discord.Member | discord.User], dict[str,int]]:
     unique_authors: dict[str, int] = {}
-    not_allowed = []
+    not_allowed: list[int] = []
     qualifiers: list[discord.Member | discord.User] = []
 
-    genchannel = await Bot.client.fetch_channel(Bot.DeweyConfig["kfad-general"])
-
-    assert not isinstance(genchannel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "general channel assertion"
-    async for message in genchannel.history(limit=None, before=range_end, after=range_start):
-        #just get unique users first
+    gfad_channels = Bot.DeweyConfig["kfad-channels"]
+    godchannel = await Bot.client.fetch_channel(Bot.DeweyConfig["kfad-god-channel"])
+    
+    assert not isinstance(godchannel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "god channel assertion"
+    async for message in godchannel.history(limit=None, before=range_end, after=range_start):
         if not message.author.id in not_allowed:
-            if message.author.bot: not_allowed.append(message.author.id)
-            else: 
-                if type(message.author) == discord.Member:
-                    users_roles = [y.id for y in message.author.roles]
-                    for i in Bot.DeweyConfig["kfad-disallowed-roles"]:
-                        if i in users_roles:
-                            not_allowed.append(message.author.id)
+            #not_allowed.append(message.author.id)
+            pass
 
-                    if not message.author.id in not_allowed:
-                        if str(message.author.id) in unique_authors:
-                            unique_authors[str(message.author.id)] += 1
-                        else:
-                            unique_authors[str(message.author.id)] = 1
-                else:
-                    not_allowed.append(message.author.id)
+    for i in gfad_channels:
+        cool_channel = await Bot.client.fetch_channel(i)
+        assert not isinstance(cool_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), f"channel assertion '{i}' did not yeild usable channel"
+        async for message in cool_channel.history(limit=None, before=range_end, after=range_start):
+            #just get unique users first
+            if not message.author.id in not_allowed:
+                if message.author.bot: not_allowed.append(message.author.id)
+                else: 
+                    if type(message.author) == discord.Member:
+                        users_roles = [y.id for y in message.author.roles]
+                        for i in Bot.DeweyConfig["kfad-disallowed-roles"]:
+                            if i in users_roles:
+                                not_allowed.append(message.author.id)
+
+                        if not message.author.id in not_allowed:
+                            if str(message.author.id) in unique_authors:
+                                unique_authors[str(message.author.id)] += 1
+                            else:
+                                unique_authors[str(message.author.id)] = 1
+                    else:
+                        not_allowed.append(message.author.id)
 
     if getmembers:
         for uid,messagecount in unique_authors.items():
@@ -60,7 +69,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
     if Permissions.is_override(ctx):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(weeks=1)
+        range_start = range_now - datetime.timedelta(weeks=1, days=1)
         range_end = range_now - datetime.timedelta(days=1)
         
         await ctx.response.defer(ephemeral=False)
@@ -82,7 +91,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
         if type(pick) == discord.Member:
             await pick.add_roles(role,reason="god got a day!!!!")
 
-        await ctx.followup.send(content=f"{pick.display_name} is the God for the Day!{' (please give role)' if type(pick) == discord.User else ''}", silent=True, ephemeral=False)
+        await ctx.followup.send(content=f"{pick.display_name} is the God for the Day (until <t:{round(range_now.timestamp())}:f>! to have a chance to be god make sure you're active in the server :) {' (please give role)' if type(pick) == discord.User else ''}", silent=True, ephemeral=False)
 
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
@@ -90,8 +99,8 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
     if Permissions.is_override(ctx):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(weeks=1)
-        range_end = range_now - datetime.timedelta(days=1)
+        range_start = range_now - datetime.timedelta(weeks=1, days=1)
+        range_end = range_now - datetime.timedelta(days=0)
         
         await ctx.response.defer(ephemeral=False)
 
@@ -114,6 +123,6 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         buffer = io.BytesIO()
         buffer.write(string.encode())
         buffer.seek(0)
-        await ctx.followup.send(content=f"Qualifiers",file=discord.File(fp=buffer,filename="abc.txt"))
+        await ctx.followup.send(content=f"Qualifiers <t:{round(range_end.timestamp())}>",file=discord.File(fp=buffer,filename="abc.txt"))
 
 Bot.tree.add_command(gfad_group)

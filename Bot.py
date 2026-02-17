@@ -66,7 +66,7 @@ class botClient(discord.Client):
         
         return
     
-    async def on_error(self, event, error):
+    async def on_error(self, event, error = None):
         a = traceback.format_exc()
         print(a)
         channel = await client.fetch_channel(DeweyConfig["error-channel"])
