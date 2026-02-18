@@ -91,7 +91,7 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
         if type(pick) == discord.Member:
             await pick.add_roles(role,reason="god got a day!!!!")
 
-        await ctx.followup.send(content=f"{pick.display_name} is the God for the Day (until <t:{round(range_now.timestamp())}:f>! to have a chance to be god make sure you're active in the server :) {' (please give role)' if type(pick) == discord.User else ''}", silent=True, ephemeral=False)
+        await ctx.followup.send(content=f"{pick.display_name} is the God for the Day (until <t:{round(range_now.timestamp())}:f>, <t:{round(range_now.timestamp())}:R>! to have a chance to be god make sure you're active in the server :) {' (please give role)' if type(pick) == discord.User else ''}", silent=True, ephemeral=False)
 
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
