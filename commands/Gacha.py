@@ -192,6 +192,25 @@ async def gacha_stats_spread(ctx : discord.Interaction):
 
         await ctx.response.send_message(embed=embed)
 
+@gacha_group.command(name="stats-accepted-spread", description="accepted card spread")
+async def gacha_stats_accepted_spread(ctx : discord.Interaction):
+    if not Permissions.banned(ctx):
+        embed = discord.Embed(title="Statistics", description="WIP, i was just curious abpuit these :) stats :)")
+        spread = {}
+
+        for i in get_args(gachalib.Rarities):
+            spread[i] = 0
+
+        _, cards = gachalib.cards.get_cards()
+
+        for card in cards:
+            spread[card.rarity] += 1
+
+        for rarityname,count in spread.items():
+            embed.add_field(name=rarityname, value=f"has {count}")
+
+        await ctx.response.send_message(embed=embed)
+
 # Self card management
 #######################################
 
