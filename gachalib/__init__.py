@@ -11,6 +11,8 @@ import textwrap
 from PIL import Image, ImageOps
 import io
 
+import moneylib
+
 gacha_database = db_lib.setup_db(name="gacha", tables=
                                  ["CREATE TABLE gacha \
 (maker_id int(19), request_message_id int(20), id int(5), accepted bool(1), name varchar(256), description varchar(256), rarity varchar(256), filename varchar(256));",
@@ -22,8 +24,8 @@ gacha_database = db_lib.setup_db(name="gacha", tables=
 if not gacha_database:
     raise Exception("Fuck!")
 
-Rarities = Literal["Common", "Uncommon", "Rare", "Epic", "Legendary",
-    "Common evil", "Uncommon evil", "Rare evil", "Epic evil", "Legendary evil"]
+Rarities = Literal["None", "Common", "Uncommon", "Rare", "Epic", "Legendary",
+    "None evil", "Common evil", "Uncommon evil", "Rare evil", "Epic evil", "Legendary evil"]
 SortOptions = Literal["ID", "Rarity"]
 
 rarityColors = {
@@ -43,6 +45,19 @@ rarity_order = {
     "Epic":      4, "Epic evil":      10,
     "Legendary": 5, "Legendary evil": 11,
 }
+
+if Bot.DeweyConfig["deweycoins-enabled"]:
+    rarity_costs = {
+        "None":      999999, "None evil":      999999,
+        "Common":    100,    "Common evil":    99,
+        "Uncommon":  300,    "Uncommon evil":  299,
+        "Rare":      1000,   "Rare evil":      999,
+        "Epic":      3000,   "Epic evil":      2999,
+        "Legendary": 10000,  "Legendary evil": 9999,
+    }
+    def getCardCost(card: gachalib.types.Card) -> int:
+        return rarity_costs[card.rarity]
+
 
 def gacha_crop_image(card: gachalib.types.Card):
     img = Image.open(f"{Bot.DeweyConfig["image-save-path"]}/{card.filename}")
@@ -416,3 +431,31 @@ class PackView(discord.ui.View):
             await interaction.response.send_message(
                 view=GachaView(card,image), file=image, ephemeral=True
             )
+
+if Bot.DeweyConfig["deweycoins-enabled"]:
+    class CardSellConfirmation(discord.ui.View):
+        def __init__(self,owner: int, inventory_ids: list[gachalib.types.CardsInventory], rarity: Rarities):
+            super().__init__(timeout=None)
+            self.message = None
+            self.owner: int = owner
+            self.inventory_ids: list[gachalib.types.CardsInventory] = inventory_ids
+            self.rarity: Rarities = rarity
+        
+        def isowner(self,interaction):
+            assert interaction.user, "interaction had no user"
+            return True if self.owner == interaction.user.id else False
+
+        @discord.ui.button(label="SELL! SELL! SELL!", style=discord.ButtonStyle.green)
+        async def sell_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+            if not self.isowner(interaction=interaction):
+                await interaction.response.send_message(content="You don't own this view!")
+                return
+            # CHECK IF STILL OWNS CARDS
+            owed = rarity_costs[self.rarity] * len(self.inventory_ids)
+            for i in self.inventory_ids:
+                assert Bot.client.user, "bot has no user"
+                gachalib.cards_inventory.change_card_owner(user_id=Bot.client.user.id, inv_id=i.inv_id)
+                print("GAVE TO DEWEY")
+                
+            moneylib.giveCoins(self.owner, owed)
+            await interaction.response.send_message(content=f"Success! +D¢{owed} (now D¢{moneylib.getUserInfo(self.owner).balance})")

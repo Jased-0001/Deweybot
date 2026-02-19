@@ -31,14 +31,14 @@ def getUserInfo(user: int | discord.Member | discord.User) -> moneylib.types.Use
         highestbalance=a[2],transactions=a[3],spent=a[4],totalearned=a[5]
     ))
 
-def giveCoins(user: int | discord.Member | discord.User, coins:int) -> None:
+def giveCoins(user: int | discord.Member | discord.User, coins:int, doTransaction:bool=True) -> None:
     if type(user) == discord.Member or type(user) == discord.User:
         user = user.id
 
     coinuser = getUserInfo(user=user)
 
     coinuser.balance += coins
-    coinuser.statistics.transactions += 1
+    coinuser.statistics.transactions += 1 if doTransaction else 0
 
     if coins < 0: # took away coins
         coinuser.statistics.spent -= coins
@@ -51,5 +51,3 @@ def giveCoins(user: int | discord.Member | discord.User, coins:int) -> None:
                  values=[coinuser.balance,coinuser.statistics.highestbalance
                   ,coinuser.statistics.transactions, coinuser.statistics.totalearned
                   ,coinuser.statistics.spent],id=coinuser.uid)
-
-print(getUserInfo(user=322495136108118016))

@@ -71,12 +71,12 @@ def change_card_owner(user_id:int,inv_id:int) -> bool:
         return False
     
 
-def ownsCard(id:int,uid:int) -> bool:
+def ownsCard(id:int,uid:int) -> tuple[bool, int]:
     a = gachalib.gacha_database.read_data(f"SELECT id FROM gacha_cards WHERE (user_id,card_id) = (?,?);", (uid,id))
     if len(a) == 0:
-        return False
+        return (False,len(a))
     else:
-        return True
+        return (True,len(a))
     
 def get_all_issued() -> list[gachalib.types.CardsInventory]:
     try:

@@ -1,3 +1,5 @@
+from typing import get_args
+
 import discord
 from discord.abc import PrivateChannel
 from discord.ext import commands, tasks
@@ -36,7 +38,7 @@ async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
     if not Permissions.banned(ctx):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
-            if gachalib.cards_inventory.ownsCard(id=card.card_id,uid=ctx.user.id) or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
+            if gachalib.cards_inventory.ownsCard(id=card.card_id,uid=ctx.user.id)[0] or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
                 image=gacha_crop_image(card)
                 await ctx.response.send_message(
                     view=GachaView(card, image), file=image, ephemeral=not show,
@@ -166,6 +168,29 @@ async def gacha_stats(ctx : discord.Interaction):
         await ctx.response.send_message(embed=embed)
 
 
+@gacha_group.command(name="stats-spread", description="card spread")
+async def gacha_stats_spread(ctx : discord.Interaction):
+    if not Permissions.banned(ctx):
+        embed = discord.Embed(title="Statistics", description="WIP, i was just curious abpuit these :) stats :)")
+        spread = {}
+
+        for i in get_args(gachalib.Rarities):
+            spread[i] = 0
+
+        cards = gachalib.cards_inventory.get_all_issued()
+        cards_ = []
+
+        for i in cards:
+            success, card = gachalib.cards.get_card_by_id(card_id=i.card_id)
+            if success: cards_.append(card)
+
+        for card in cards_:
+            spread[card.rarity] += 1
+
+        for rarityname,count in spread.items():
+            embed.add_field(name=rarityname, value=f"has {count}")
+
+        await ctx.response.send_message(embed=embed)
 
 # Self card management
 #######################################
@@ -237,10 +262,31 @@ async def gacha_roll(ctx : discord.Interaction):
 
 if Bot.DeweyConfig["deweycoins-enabled"]:
     @gacha_group.command(name="sellcard", description="Sell a card!")
-    async def gacha_sell_card(ctx : discord.Interaction):
-        await ctx.response.send_message("TO BE IMPLEMENTED", ephemeral=True)
+    async def gacha_sell_card(ctx : discord.Interaction, card_id : int, quantity : int = 1):
+        success, card = gachalib.cards.get_card_by_id(card_id=card_id)
+        user_owns_card, user_quantity = gachalib.cards_inventory.ownsCard(id=card_id, uid=ctx.user.id)
 
-    @gacha_group.command(name="buypack", description="Buy a special PACK of Deweycards")
+        if not success:
+            await ctx.response.send_message("That card doesn't exist", ephemeral=False)
+            return
+        
+        if quantity < 0: 
+            await ctx.response.send_message("You can't sell negative cards", ephemeral=False)
+            return
+        
+        if user_owns_card:
+            if user_quantity >= quantity:
+                _, user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(user_id=ctx.user.id,card_id=card_id)
+                cards_to_be_sold = user_cards[0:quantity]
+                view = gachalib.CardSellConfirmation(owner=ctx.user.id,inventory_ids=cards_to_be_sold,rarity=card.rarity)
+                await ctx.response.send_message(f"Do you want to sell sell {'this' if quantity == 1 else f'these x{quantity}'} {card.rarity} '\
+{card.name + ("" if quantity == 1 else "s")}' for D¢{gachalib.getCardCost(card=card) * quantity}", ephemeral=False,view=view)
+            else:
+                await ctx.response.send_message("You don't have enough of this card to sell!", ephemeral=False)
+        else:
+            await ctx.response.send_message("You don't own any of this card!", ephemeral=False)
+
+    @gacha_group.command(name="buypack", description="!TODO! Buy a special PACK of Deweycards")
     async def gacha_buy_pack(ctx : discord.Interaction):
         await ctx.response.send_message("TO BE IMPLEMENTED", ephemeral=True)
 
