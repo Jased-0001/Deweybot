@@ -450,7 +450,13 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
             if not self.isowner(interaction=interaction):
                 await interaction.response.send_message(content="You don't own this view!")
                 return
-            # CHECK IF STILL OWNS CARDS
+            
+            users_cards = gachalib.cards_inventory.get_users_cards(user_id=self.owner)[1]
+            for i in self.inventory_ids:
+                if not i in users_cards:
+                    await interaction.response.send_message(content=f"You ain't own some the card you sellin'")
+                    return
+
             owed = rarity_costs[self.rarity] * len(self.inventory_ids)
             for i in self.inventory_ids:
                 assert Bot.client.user, "bot has no user"
