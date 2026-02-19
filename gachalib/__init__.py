@@ -49,11 +49,11 @@ rarity_order = {
 if Bot.DeweyConfig["deweycoins-enabled"]:
     rarity_costs = {
         "None":      999999, "None evil":      999999,
-        "Common":    100,    "Common evil":    99,
-        "Uncommon":  300,    "Uncommon evil":  299,
-        "Rare":      1000,   "Rare evil":      999,
-        "Epic":      3000,   "Epic evil":      2999,
-        "Legendary": 10000,  "Legendary evil": 9999,
+        "Common":    1,    "Common evil":    2,
+        "Uncommon":  3,    "Uncommon evil":  6,
+        "Rare":      10,   "Rare evil":      20,
+        "Epic":      30,   "Epic evil":      60,
+        "Legendary": 100,  "Legendary evil": 200,
     }
     def getCardCost(card: gachalib.types.Card) -> int:
         return rarity_costs[card.rarity]
