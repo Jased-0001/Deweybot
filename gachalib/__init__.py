@@ -95,50 +95,53 @@ def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarit
     return embed
 
 class SortSelect(discord.ui.Select):
-    def __init__(self, user: discord.User | discord.Member,  sort: str, button: bool, page: int,) -> None:
+    def __init__(self, user: discord.User | discord.Member,  sort: str, button: bool) -> None:
         self.user = user
-        self.page = page
         self.button = button
         options = [
-            discord.SelectOption(label="Rarity (ascending)"),
-            discord.SelectOption(label="Rarity (descending)"),
-            discord.SelectOption(label="Quantity (ascending)"),
-            discord.SelectOption(label="Quantity (descending)"),
-            discord.SelectOption(label="ID (ascending)"),
-            discord.SelectOption(label="ID (descending)")
+            discord.SelectOption(label="Rarity"),
+            discord.SelectOption(label="Quantity"),
+            discord.SelectOption(label="ID"),
         ]
         super().__init__(placeholder=sort,max_values=1,min_values=1,options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        layout = InventoryView(self.user, self.values[0], self.button, self.page)
+        layout = InventoryView(self.user, self.values[0], self.button, 1)
         await interaction.response.edit_message(view=layout, attachments=layout.images)
 
 class BrowseRow(discord.ui.ActionRow):
-    def __init__(self, view, page: int, *args) -> None:
+    def __init__(self, view, page: int, num_pages: int, *args) -> None:
         super().__init__()
         self.args = args
         self.page = page
         self.mView = view
+        self.num_pages = num_pages
 
-    @discord.ui.button(label="⬅️", style=discord.ButtonStyle.primary, custom_id="left_btn")
+    async def edit(self, interaction, page):
+        layout = self.mView(*self.args, page=page)
+        await interaction.response.edit_message(
+            view=layout,
+            attachments=layout.images,
+            allowed_mentions=discord.AllowedMentions(users=False)
+        )
+
+    @discord.ui.button(emoji="⏪", style=discord.ButtonStyle.primary, custom_id="first_btn")
+    async def first_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self.edit(interaction, 1)
+
+    @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.primary, custom_id="left_btn")
     async def left_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         page = max(self.page-1, 1)
-        layout = self.mView(*self.args, page=page)
-        await interaction.response.edit_message(
-            view=layout,
-            attachments=layout.images,
-            allowed_mentions=discord.AllowedMentions(users=False)
-        )
+        await self.edit(interaction, page)
 
-    @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary, custom_id="right_btn")
+    @discord.ui.button(emoji="➡️", style=discord.ButtonStyle.primary, custom_id="right_btn")
     async def right_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        page = min(self.page+1, 1000)
-        layout = self.mView(*self.args, page=page)
-        await interaction.response.edit_message(
-            view=layout,
-            attachments=layout.images,
-            allowed_mentions=discord.AllowedMentions(users=False)
-        )
+        page = min(self.page+1, self.num_pages)
+        await self.edit(interaction, page)
+
+    @discord.ui.button(emoji="⏩", style=discord.ButtonStyle.primary, custom_id="max_btn")
+    async def max_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        await self.edit(interaction, self.num_pages)
 
 class viewCardButton(discord.ui.Button):
     def __init__(self, card: gachalib.types.Card) -> None:
@@ -153,31 +156,29 @@ class viewCardButton(discord.ui.Button):
         )
 
 class InventoryView(discord.ui.LayoutView):
-    def __init__(self, user: discord.User | discord.Member, sort: str="Rarity (descending)", button: bool=True, page: int=1,):
+    def __init__(self, user: discord.User | discord.Member, sort: str="Rarity", button: bool=True, page: int=1,):
         super().__init__(timeout=None)
         per_page = 5 - button
         self.images: list[discord.File] = []
 
         cards = gachalib.cards_inventory.get_users_cards(user.id)[1]
         cards_grouped = gachalib.cards.group_like_cards(cards)
+        num_pages = math.ceil(len(cards_grouped) / per_page)
 
-        if "Rarity" in sort:
-            cards_grouped = sorted(cards_grouped, key=lambda b: gachalib.rarity_order[gachalib.cards.get_card_by_id(card_id=b[0].card_id)[1].rarity])
-        elif "Quantity" in sort:
-            cards_grouped = sorted(cards_grouped, key=lambda b: b[1])
+        if sort == "Rarity":
+            cards_grouped = sorted(cards_grouped, key=lambda b: gachalib.rarity_order[gachalib.cards.get_card_by_id(card_id=b[0].card_id)[1].rarity], reverse=True)
+        elif sort == "Quantity":
+            cards_grouped = sorted(cards_grouped, key=lambda b: b[1], reverse=True)
         else:
             cards_grouped = sorted(cards_grouped, key=lambda b: b[0].card_id)
-
-        if "descending" in sort:
-            cards_grouped.reverse()
 
         cards_page: list[tuple[gachalib.types.Card, int]] = cards_grouped[(page-1)*per_page:page*per_page]
 
         items = [
             discord.ui.TextDisplay("## Inventory Bowser!"),
             discord.ui.Separator(),
-            discord.ui.ActionRow(SortSelect(user, sort, button, page)),
-            discord.ui.TextDisplay(f"Page {page}"),
+            discord.ui.ActionRow(SortSelect(user, sort, button)),
+            discord.ui.TextDisplay(f"Page {page}/{num_pages}"),
             discord.ui.Separator(),
         ]
         for card in cards_page:
@@ -191,8 +192,8 @@ class InventoryView(discord.ui.LayoutView):
             ))
             items.append(discord.ui.ActionRow(viewCardButton(card[0]))) if button else None
             items.append(discord.ui.Separator())
-        if len(cards_grouped) > per_page:
-            items.append(BrowseRow(InventoryView, page, user, sort, button))
+        if num_pages > 1:
+            items.append(BrowseRow(InventoryView, page, num_pages, user, sort, button))
 
         container = discord.ui.Container(*items)
         self.add_item(container)
@@ -230,13 +231,13 @@ class UnacceptedView(discord.ui.LayoutView):
         per_page = 4
         self.images: list[discord.File] = []
         cards = gachalib.cards.get_unapproved_cards()[1]
-
+        num_pages = math.ceil(len(cards) / per_page)
         cards_page = cards[(page-1)*per_page:page*per_page]
 
         items = [
             discord.ui.TextDisplay("## Unapproved cards"),
             discord.ui.Separator(),
-            discord.ui.TextDisplay(f"Page {page}"),
+            discord.ui.TextDisplay(f"Page {page}/{num_pages}"),
             discord.ui.Separator(),
         ]
         for card in cards_page:
@@ -250,8 +251,8 @@ class UnacceptedView(discord.ui.LayoutView):
             ))
             items.append(discord.ui.ActionRow(AdminSelect(page, card.card_id)))
             items.append(discord.ui.Separator())
-        if len(cards) > per_page:
-            items.append(BrowseRow(UnacceptedView, page))
+        if num_pages > 1:
+            items.append(BrowseRow(UnacceptedView, page, num_pages))
 
         container = discord.ui.Container(*items)
         self.add_item(container)

@@ -166,12 +166,12 @@ class TradeAddRow(discord.ui.ActionRow):
         self.trade = trade
         self.embed_interact = embed_interact
 
-    @discord.ui.button(label="⬅️", style=discord.ButtonStyle.primary, custom_id="left_btn")
+    @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.primary, custom_id="left_btn")
     async def left_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         page = max(self.page-1, 1)
         await interaction.response.edit_message(view=TradeAddView(page, self.trade, self.embed_interact))
 
-    @discord.ui.button(label="➡️", style=discord.ButtonStyle.primary, custom_id="right_btn")
+    @discord.ui.button(emoji="➡️", style=discord.ButtonStyle.primary, custom_id="right_btn")
     async def right_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         page = min(self.page+1, math.ceil(len(self.cards)/25))
         await interaction.response.edit_message(view=TradeAddView(page, self.trade, self.embed_interact))
