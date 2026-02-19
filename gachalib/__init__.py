@@ -1,6 +1,3 @@
-from ast import List
-from PIL.ImageFont import Layout
-from commands import Gacha
 import db_lib,Bot
 import gachalib.cards, gachalib.cards_inventory, gachalib.gacha_user, gachalib.types, gachalib.trade
 import discord
@@ -93,6 +90,10 @@ def gacha_embed(title:str, description:str, card:gachalib.types.Card, show_rarit
     if show_rarity: embed.add_field(name="Rarity!", value=card.rarity)
     embed.set_image(url=Bot.DeweyConfig["imageurl"] + card.filename)
     return embed
+
+#########################
+#      Inventory UI     #
+#########################
 
 class SortSelect(discord.ui.Select):
     def __init__(self, user: discord.User | discord.Member,  sort: str, button: bool) -> None:
@@ -205,6 +206,10 @@ class InventoryView(discord.ui.LayoutView):
         container = discord.ui.Container(*items)
         self.add_item(container)
 
+#########################
+#     Unnaccepted UI    #
+#########################
+
 class AdminSelect(discord.ui.Select):
     def __init__(self, page: int, card_id) -> None:
         self.page = page
@@ -259,10 +264,19 @@ class UnacceptedView(discord.ui.LayoutView):
             items.append(discord.ui.ActionRow(AdminSelect(page, card.card_id)))
             items.append(discord.ui.Separator())
         if num_pages > 1:
-            items.append(BrowseRow(UnacceptedView, page, num_pages))
+            browse_row = BrowseRow(InventoryView, page, num_pages)
+            if page == 1:
+                browse_row.children[0].disabled = True  # type: ignore
+                browse_row.children[1].disabled = True  # type: ignore
+            elif page == num_pages:
+                browse_row.children[2].disabled = True  # type: ignore
+                browse_row.children[3].disabled = True  # type: ignore
+            items.append(browse_row)
 
         container = discord.ui.Container(*items)
         self.add_item(container)
+
+#########################
 
 def cardBrowserEmbed(uid:int, cards:list[gachalib.types.CardsInventory] | list[gachalib.types.Card] | list[gachalib.types.CardsInventory | gachalib.types.Card], page:int = 1, inventory:bool = False) -> discord.Embed | str:
     startpage = (5*(page-1))+1
