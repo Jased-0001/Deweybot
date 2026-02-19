@@ -17,24 +17,28 @@ if not money_database:
     raise Exception("Fuck!")
 
 
+def register_user(user: int) -> moneylib.types.User:
+    money_database.write_data(statement="INSERT INTO deweycoins \
+(uid,balance,highestbalance,transactions,spent,totalearned) \
+VALUES (?,?,?,?,?,?)", data=(user,0,0,0,0,0))
+    return moneylib.types.User(uid=user)
+
 def updateValues(update:list[str],values:list[str | int],id:int) -> None:
     assert len(update) == len(values)
     for i in range(len(update)):
         money_database.write_data(statement=
                                   f"UPDATE deweycoins SET {update[i]}=? WHERE uid = (?)", data=(values[i],id))
 
-def getUserInfo(user: int | discord.Member | discord.User) -> moneylib.types.User:
-    if type(user) == discord.Member or type(user) == discord.User:
-        user = user.id
-    a = money_database.read_data(statement="SELECT uid,balance,highestbalance,transactions,spent,totalearned FROM deweycoins WHERE uid = (?)", parameters=(user,))[0]
-    return moneylib.types.User(uid=a[0],balance=a[1],statistics=moneylib.types.Statistics(
-        highestbalance=a[2],transactions=a[3],spent=a[4],totalearned=a[5]
-    ))
+def getUserInfo(user: int) -> moneylib.types.User:
+    try:
+        a = money_database.read_data(statement="SELECT uid,balance,highestbalance,transactions,spent,totalearned FROM deweycoins WHERE uid = (?)", parameters=(user,))[0]
+        return moneylib.types.User(uid=a[0],balance=a[1],statistics=moneylib.types.Statistics(
+            highestbalance=a[2],transactions=a[3],spent=a[4],totalearned=a[5]
+        ))
+    except IndexError:
+        return register_user(user=user)
 
-def giveCoins(user: int | discord.Member | discord.User, coins:int, doTransaction:bool=True) -> None:
-    if type(user) == discord.Member or type(user) == discord.User:
-        user = user.id
-
+def giveCoins(user: int, coins:int, doTransaction:bool=True) -> None:
     coinuser = getUserInfo(user=user)
 
     coinuser.balance += coins

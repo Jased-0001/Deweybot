@@ -434,12 +434,12 @@ class PackView(discord.ui.View):
 
 if Bot.DeweyConfig["deweycoins-enabled"]:
     class CardSellConfirmation(discord.ui.View):
-        def __init__(self,owner: int, inventory_ids: list[gachalib.types.CardsInventory], rarity: Rarities):
+        def __init__(self,owner: int, inventory_ids: list[gachalib.types.CardsInventory], rarity: str):
             super().__init__(timeout=None)
             self.message = None
             self.owner: int = owner
             self.inventory_ids: list[gachalib.types.CardsInventory] = inventory_ids
-            self.rarity: Rarities = rarity
+            self.rarity: str = rarity
         
         def isowner(self,interaction):
             assert interaction.user, "interaction had no user"
@@ -456,6 +456,6 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
                 assert Bot.client.user, "bot has no user"
                 gachalib.cards_inventory.change_card_owner(user_id=Bot.client.user.id, inv_id=i.inv_id)
                 print("GAVE TO DEWEY")
-                
+
             moneylib.giveCoins(self.owner, owed)
             await interaction.response.send_message(content=f"Success! +D¢{owed} (now D¢{moneylib.getUserInfo(self.owner).balance})")
