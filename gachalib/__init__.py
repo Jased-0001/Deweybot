@@ -259,13 +259,10 @@ class UnacceptedView(discord.ui.LayoutView):
             items.append(discord.ui.ActionRow(AdminSelect(page, card.card_id)))
             items.append(discord.ui.Separator())
         if num_pages > 1:
-            browse_row = BrowseRow(InventoryView, page, num_pages)
-            if page == 1:
-                browse_row.children[0].disabled = True  # type: ignore
-                browse_row.children[1].disabled = True  # type: ignore
-            elif page == num_pages:
-                browse_row.children[2].disabled = True  # type: ignore
-                browse_row.children[3].disabled = True  # type: ignore
+            browse_row = BrowseRow(UnacceptedView, page, num_pages)
+            if type(browse_row.children[0]) == discord.ui.Button and type(browse_row.children[1]) == discord.ui.Button:
+                browse_row.children[0].disabled = page == 1
+                browse_row.children[1].disabled = page == num_pages
             items.append(browse_row)
 
         container = discord.ui.Container(*items)
