@@ -415,11 +415,11 @@ class RequestView(discord.ui.View):
 
         self.disable()
 
-    @discord.ui.button(label="BAN FROM DEWEY", style=discord.ButtonStyle.danger, row=1, custom_id="ban_btn")
-    async def ban_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await interaction.response.send_message(f"not implemented", ephemeral=True)
-        self.disable()
-
+    #@discord.ui.button(label="BAN FROM DEWEY", style=discord.ButtonStyle.danger, row=1, custom_id="ban_btn")
+    #async def ban_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+    #    await interaction.response.send_message(f"not implemented", ephemeral=True)
+    #    self.disable()
+    
     def disable(self):
         for child in self.children:
             if type(child) == discord.ui.Button:
@@ -461,8 +461,9 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
 
         @discord.ui.button(label="SELL! SELL! SELL!", style=discord.ButtonStyle.green)
         async def sell_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+            assert Bot.client.user, "bot has no user"
             if not self.isowner(interaction=interaction):
-                await interaction.response.send_message(content="You don't own this view!")
+                await interaction.response.send_message(content="You don't own this view!", ephemeral=True)
                 return
             
             users_cards = gachalib.cards_inventory.get_users_cards(user_id=self.owner)[1]
@@ -473,9 +474,14 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
 
             owed = rarity_costs[self.rarity] * len(self.inventory_ids)
             for i in self.inventory_ids:
-                assert Bot.client.user, "bot has no user"
+                botaccount = moneylib.getUserInfo(Bot.client.user.id)
+                if botaccount.balance < owed: 
+                    await interaction.response.send_message(content=f"I don't actually have enough money to buy this from you!")
+                    return
+
                 gachalib.cards_inventory.change_card_owner(user_id=Bot.client.user.id, inv_id=i.inv_id)
                 print("GAVE TO DEWEY")
 
-            moneylib.giveCoins(self.owner, owed)
+            moneylib.giveCoins(user=self.owner, coins=owed)
+            moneylib.giveCoins(user=Bot.client.user.id, coins=-owed)
             await interaction.response.send_message(content=f"Success! +D¢{owed} (now D¢{moneylib.getUserInfo(self.owner).balance})")
