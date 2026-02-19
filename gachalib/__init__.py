@@ -100,9 +100,12 @@ class SortSelect(discord.ui.Select):
         self.user = user
         self.button = button
         options = [
-            discord.SelectOption(label="Rarity"),
-            discord.SelectOption(label="Quantity"),
-            discord.SelectOption(label="ID"),
+            discord.SelectOption(label="Rarity (ascending)"),
+            discord.SelectOption(label="Rarity (descending)"),
+            discord.SelectOption(label="Quantity (ascending)"),
+            discord.SelectOption(label="Quantity (descending)"),
+            discord.SelectOption(label="ID (ascending)"),
+            discord.SelectOption(label="ID (descending)"),
         ]
         super().__init__(placeholder=sort,max_values=1,min_values=1,options=options)
 
@@ -126,10 +129,6 @@ class BrowseRow(discord.ui.ActionRow):
             allowed_mentions=discord.AllowedMentions(users=False)
         )
 
-    @discord.ui.button(emoji="⏪", style=discord.ButtonStyle.primary, custom_id="first_btn")
-    async def first_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await self.edit(interaction, 1)
-
     @discord.ui.button(emoji="⬅️", style=discord.ButtonStyle.primary, custom_id="left_btn")
     async def left_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         page = max(self.page-1, 1)
@@ -139,10 +138,6 @@ class BrowseRow(discord.ui.ActionRow):
     async def right_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         page = min(self.page+1, self.num_pages)
         await self.edit(interaction, page)
-
-    @discord.ui.button(emoji="⏩", style=discord.ButtonStyle.primary, custom_id="max_btn")
-    async def max_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
-        await self.edit(interaction, self.num_pages)
 
 class viewCardButton(discord.ui.Button):
     def __init__(self, card: gachalib.types.Card) -> None:
@@ -157,7 +152,7 @@ class viewCardButton(discord.ui.Button):
         )
 
 class InventoryView(discord.ui.LayoutView):
-    def __init__(self, user: discord.User | discord.Member, sort: str="Rarity", button: bool=True, page: int=1,):
+    def __init__(self, user: discord.User | discord.Member, sort: str="Rarity (descending)", button: bool=True, page: int=1,):
         super().__init__(timeout=None)
         per_page = 5 - button
         self.images: list[discord.File] = []
@@ -166,12 +161,15 @@ class InventoryView(discord.ui.LayoutView):
         cards_grouped = gachalib.cards.group_like_cards(cards)
         num_pages = math.ceil(len(cards_grouped) / per_page)
 
-        if sort == "Rarity":
-            cards_grouped = sorted(cards_grouped, key=lambda b: gachalib.rarity_order[gachalib.cards.get_card_by_id(card_id=b[0].card_id)[1].rarity], reverse=True)
-        elif sort == "Quantity":
-            cards_grouped = sorted(cards_grouped, key=lambda b: b[1], reverse=True)
+        if "Rarity" in sort:
+            cards_grouped = sorted(cards_grouped, key=lambda b: gachalib.rarity_order[gachalib.cards.get_card_by_id(card_id=b[0].card_id)[1].rarity])
+        elif "Quantity" in sort:
+            cards_grouped = sorted(cards_grouped, key=lambda b: b[1])
         else:
             cards_grouped = sorted(cards_grouped, key=lambda b: b[0].card_id)
+
+        if "descending" in sort:
+            cards_grouped.reverse()
 
         cards_page: list[tuple[gachalib.types.Card, int]] = cards_grouped[(page-1)*per_page:page*per_page]
 
@@ -195,12 +193,9 @@ class InventoryView(discord.ui.LayoutView):
             items.append(discord.ui.Separator())
         if num_pages > 1:
             browse_row = BrowseRow(InventoryView, page, num_pages, user, sort, button)
-            if page == 1:
-                browse_row.children[0].disabled = True  # type: ignore
-                browse_row.children[1].disabled = True  # type: ignore
-            elif page == num_pages:
-                browse_row.children[2].disabled = True  # type: ignore
-                browse_row.children[3].disabled = True  # type: ignore
+            if type(browse_row.children[0]) == discord.ui.Button and type(browse_row.children[1]) == discord.ui.Button:
+                browse_row.children[0].disabled = page == 1
+                browse_row.children[1].disabled = page == num_pages
             items.append(browse_row)
 
         container = discord.ui.Container(*items)
