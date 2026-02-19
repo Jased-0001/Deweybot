@@ -193,7 +193,14 @@ class InventoryView(discord.ui.LayoutView):
             items.append(discord.ui.ActionRow(viewCardButton(card[0]))) if button else None
             items.append(discord.ui.Separator())
         if num_pages > 1:
-            items.append(BrowseRow(InventoryView, page, num_pages, user, sort, button))
+            browse_row = BrowseRow(InventoryView, page, num_pages, user, sort, button)
+            if page == 1:
+                browse_row.children[0].disabled = True  # type: ignore
+                browse_row.children[1].disabled = True  # type: ignore
+            elif page == num_pages:
+                browse_row.children[2].disabled = True  # type: ignore
+                browse_row.children[3].disabled = True  # type: ignore
+            items.append(browse_row)
 
         container = discord.ui.Container(*items)
         self.add_item(container)
