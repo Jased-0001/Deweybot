@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 import glob
 from PIL import Image, ImageSequence, ImageOps
 path = "./gachalib/images"
