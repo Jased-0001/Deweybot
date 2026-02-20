@@ -21,7 +21,7 @@ for file in files:
     if len(small) > 1:
         ext = "gif"
         small[0].save(
-            f"{path}/small/{filename}.{ext}",format="GIF",save_all=True,append_images=small[1:],loop=0,durations=durations
+            f"{path}/small/{filename}.{ext}",format="GIF",save_all=True,append_images=small[1:],loop=0,durations=durations,disposal=2
         )
         inv_frames[0].save(
             f"{path}/E{filename}.{ext}",format="GIF",save_all=True,append_images=inv_frames[1:],loop=0,durations=durations
