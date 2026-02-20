@@ -35,10 +35,40 @@ async def gacha_stats(ctx : discord.Interaction, show: bool=True, user: discord.
     embed.add_field(name=f"How many transactions {'you' if sayyou else 'they'}'ve made", value=f"{userstuff.transactions}")
     await ctx.response.send_message(embed=embed, ephemeral=not show)
 
-@coin_group.command(name="z-givecoins", description=" ! ADMIN ONLY ! give coins")
-async def gacha_give_coin(ctx : discord.Interaction, user: discord.Member | discord.User | None, coins:int):
+@coin_group.command(name="givecoins", description="Give coins to someone else")
+async def gacha_give_coin(ctx : discord.Interaction, user: discord.Member | discord.User, coins:int):
     if user == None: user = ctx.user
-    moneylib.giveCoins(user.id, coins)
-    await ctx.response.send_message("ok",ephemeral=True)
+    if coins <= 0:
+        await ctx.response.send_message(content=f"You can't give no money!",ephemeral=True)
+        return
+
+
+    us = moneylib.getUserInfo(ctx.user.id)
+    other = moneylib.getUserInfo(user.id)
+
+    if us.balance >= coins:
+        us.balance -= coins
+        other.balance += coins
+        moneylib.giveCoins(user=ctx.user.id, coins=-coins)
+        moneylib.giveCoins(user=user.id, coins=coins)
+        await ctx.response.send_message(content=f"Okay! You now have {us.balance}, and they have {other.balance}",ephemeral=False)
+    else:
+        await ctx.response.send_message(content=f"You don't have enough!",ephemeral=False)
+
+@coin_group.command(name="z-movecoins", description=" ! ADMIN ONLY ! force move coins from user -> user (ex. take from dewey) (allows debt)")
+async def gacha_z_move_coin(ctx : discord.Interaction, from_user:discord.Member | discord.User, to_user: discord.Member | discord.User | None, coins:int):
+    if Permissions.is_override(ctx):
+        if to_user == None: to_user = ctx.user
+        moneylib.giveCoins(from_user.id, -coins)
+        moneylib.giveCoins(to_user.id, coins)
+        await ctx.response.send_message("ok",ephemeral=True)
+
+@coin_group.command(name="z-givecoins", description=" ! ADMIN ONLY ! materialize coins (i advice against doing this)")
+async def gacha_z_give_coin(ctx : discord.Interaction, user: discord.Member | discord.User | None, coins:int):
+    if Permissions.is_override(ctx):
+        if user == None: user = ctx.user
+        moneylib.giveCoins(user.id, coins)
+        await ctx.response.send_message("ok",ephemeral=True)
+
 
 Bot.tree.add_command(coin_group)
