@@ -1,0 +1,29 @@
+The DB is structured as:
+
+
+
+gacha table:                - Contains every user-made gacha card and information about them
+
+maker_id int(19)            - Discord UID of who made the card
+request_message_id int(20)  - Discord message ID of the approval embed (for buttons)
+id int(5)                   - ID of card
+accepted bool(1)            - Whether the card was accepted or not
+name varchar(256)           - Name of the card
+description varchar(256)    - Description of the card
+rarity varchar(256)         - Rarity of the card (Common, Uncommon, Rare, Epic, Legendary)
+filename varchar(256)       - Name of the image file on disk
+
+
+
+gacha_user table:           - Has cooldowns for users
+
+user_id int(19)             - Discord UID
+last_use int(20)            - Unix Timestamp of last use
+
+
+
+gacha_cards table           - Inventory, everyone's inventory 
+
+id int(20)                  - ID of specific card "Inventory ID"
+card_id int(5)              - Gacha card ID
+user_id int(19)             - Discord UID of owner 

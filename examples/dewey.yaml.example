@@ -1,3 +1,37 @@
+# Bot misc
 token: 
+error-channel: # channel to log errors to
+main-guild:
+
 banned-role: 
 permission-override: []
+
+# Db settings
+gacha-sqlite-path:
+deweycoins-sqlite-path: 
+
+# Gacha settings
+gacha_enabled: 
+review: ["",] # [type, id] Set type to "channel" or "dm" and id to a channel id or user id 
+imageurl: # URL where uploaded images are saved 
+image-save-path: # where image should go
+roll-timeout:  # seconds
+
+# suggestions
+suggestions_enabled: 
+suggestions-channel: # suggestions channel
+
+# deweycoins
+deweycoins-enabled: 
+
+# gfad
+kfad-enabled: 
+kfad-disallowed-roles: []
+kfad-must-have:  # messages
+kfad-role: 
+kfad-channels: []
+kfad-god-channel:  
+
+# others
+nick-enabled: 
+gif-enabled: 

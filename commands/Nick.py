@@ -1,22 +1,33 @@
 import discord
 from discord.ext import commands, tasks
 import Bot
-import Permissions
+import other.Permissions as Permissions
 
 @Bot.tree.command(name="nickname", description="Change someone's nickname")
-async def self(ctx : discord.Interaction, user: discord.Member, nickname: str):
+@discord.app_commands.allowed_installs(guilds=True, users=False)
+async def nickname(ctx : discord.Interaction, user: discord.Member | discord.User | None = None, nickname: str | None = None):
     if not Permissions.banned(ctx):
         try:
+            if user == None:
+                user = ctx.user
+            assert type(user) == discord.Member
+            
             previous = user.nick
             await user.edit(nick=nickname)
             await ctx.response.send_message(
                 f"<:Dewey:1463436505849528425> Dewey blast! <:Dewey:1463436505849528425> (name changed `{previous}` -> `{nickname}`)", ephemeral=False
             )
         except Exception as e:
-            await ctx.response.send_message(
-                "Aw blast (or whatever dewey would say, i havent watched the show) i had an error", ephemeral=True
-            )
-            raise e
+            if "403" in str(e):
+                await ctx.response.send_message(
+                    "You cannot nick Okayxairen (403 error)", ephemeral=True
+                )
+            elif "400" in str(e):
+                await ctx.response.send_message(
+                    str(e), ephemeral=True
+                )
+            else:
+                raise e
     else:
         await ctx.response.send_message(
             f"You will be destroyed for your crimes.", ephemeral=True

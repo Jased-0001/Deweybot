@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands, tasks
 import Bot
-import Permissions
+import other.Permissions as Permissions
 
 @Bot.tree.command(name="Testcommand", description="echo test")
 async def self(ctx : discord.Interaction, test_argument: str):

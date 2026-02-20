@@ -1,5 +1,5 @@
 # Code i stole from stackoverflow because mine didn't work
-from PIL import Image, ImageDraw, ImageSequence, ImageFont, GifImagePlugin
+from PIL import Image, ImageDraw, ImageSequence, ImageFont
 import io, textwrap, sys
 
 im = Image.open('./gif/base.gif')
@@ -13,7 +13,7 @@ def gen(text):
     for frame in ImageSequence.Iterator(im):
         # Get size
         d = ImageDraw.Draw(frame)
-        textHeight = d.multiline_textbbox((0, 0), font=font, text=text, spacing=15)[3] + 24
+        textHeight = round(d.multiline_textbbox((0, 0), font=font, text=text, spacing=15)[3]) + 24
 
         # Weird bs I don't understand
         b = io.BytesIO()
