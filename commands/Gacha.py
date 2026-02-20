@@ -3,6 +3,7 @@ from typing import get_args
 import discord
 from discord.abc import PrivateChannel
 from discord.ext import commands, tasks
+from PIL import Image, ImageSequence, ImageOps
 import Bot
 import other.Permissions as Permissions
 
@@ -39,7 +40,7 @@ async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
             if gachalib.cards_inventory.ownsCard(id=card.card_id,uid=ctx.user.id)[0] or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
-                image=gacha_crop_image(card)
+                image=get_small_thumbnail(card)
                 await ctx.response.send_message(
                     view=GachaView(card, image), file=image, ephemeral=not show,
                     allowed_mentions=discord.AllowedMentions(users=False)
@@ -90,13 +91,46 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
                 f"Your \"IMAGE\" was not an image. I think. Try again with a REAL image.", ephemeral=True,
             )
             return
-        
+        await ctx.response.defer()
+
         extension = image.filename.split(".")
         extension = extension[len(extension)-1]
 
-        filename = f'CARD-{next_id}.{extension}'
-        with open(f"{Bot.DeweyConfig["image-save-path"]}/{filename}", "wb") as f:
+        filename = f'CARD-{next_id}'
+        with open(f"{Bot.DeweyConfig["image-save-path"]}/{filename}.{extension}", "wb") as f:
             await image.save(f)
+
+        small = []
+        inv_frames = []
+        inv_small = []
+        durations = []
+        # Loop over each frame in the animated image
+        data = await image.read()
+        img = Image.open(io.BytesIO(data))
+
+        for frame in ImageSequence.Iterator(img):
+            small.append(ImageOps.contain(frame, (350, 500)))
+            inv_frames.append(ImageOps.invert(frame.convert("RGB")))
+            inv_small.append(ImageOps.contain(inv_frames[-1], (350, 500)))
+            durations.append(frame.info.get("duration", 40))
+        path = f"{Bot.DeweyConfig["image-save-path"]}"
+        ext = "png"
+        if len(small) > 1:
+            ext = "gif"
+            small[0].save(
+                f"{path}/small/{filename}.{ext}",format="GIF",save_all=True,append_images=small[1:],loop=0,durations=durations,disposal=2
+            )
+            inv_frames[0].save(
+                f"{path}/E{filename}.{ext}",format="GIF",save_all=True,append_images=inv_frames[1:],loop=0,durations=durations
+            )
+            inv_small[0].save(
+                f"{path}/small/E{filename}.{ext}",format="GIF",save_all=True,append_images=inv_small[1:],loop=0,durations=durations
+            )
+        else:
+            small[0].save(f"{path}/small/{filename}.{ext}", format="png")
+            inv_frames[0].save(f"{path}/E{filename}.{ext}", format="png")
+            inv_small[0].save(f"{path}/small/E{filename}.{ext}", format="png")
+        filename += f".{ext}"
 
         gachalib.cards.register_new_card(ctx.user.id,-1,next_id,name,description,"None",filename)
 
@@ -110,7 +144,7 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
 
         gachalib.cards.update_card(next_id,"request_message_id", message_view.message.id)
         
-        await ctx.response.send_message(
+        await ctx.followup.send(
             f"Dewey submitted your gacha card for approval!!! (ID of {next_id})", ephemeral=True,
         )
 
@@ -219,7 +253,7 @@ async def gacha_stats_accepted_spread(ctx : discord.Interaction):
 async def gacha_inventory(ctx : discord.Interaction, show: bool=True, view_button: bool=False):
     if not Permissions.banned(ctx):
         layout = InventoryView(ctx.user, button=view_button, page=1)
-        await ctx.response.send_message(view=layout, files=layout.images, ephemeral=not show)
+        await ctx.response.send_message(view=layout, ephemeral=not show)
 
 
 @gacha_group.command(name="inventory-completion", description="View your progress in collecting!")
@@ -389,7 +423,6 @@ async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
             layout = gachalib.UnacceptedView()
             await ctx.response.send_message(
                 view=layout,
-                files=layout.images,
                 ephemeral=True if ctx.guild else False,
                 allowed_mentions=discord.AllowedMentions(users=False)
             )

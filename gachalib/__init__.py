@@ -5,8 +5,8 @@ from random import randint
 from typing import Literal
 import math
 import textwrap
-from PIL import Image, ImageOps
 import io
+import os
 
 import moneylib
 
@@ -54,16 +54,15 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
     }
     def getCardCost(card: gachalib.types.Card) -> int:
         return rarity_costs[card.rarity]
+    
+def get_small_filename(card: gachalib.types.Card):
+    filename = card.filename.split(".")[0]
+    filename += ".gif" if os.path.isfile(f"{Bot.DeweyConfig["image-save-path"]}/small/{filename}.gif") else ".png"
+    return filename
 
-
-def gacha_crop_image(card: gachalib.types.Card):
-    img = Image.open(f"{Bot.DeweyConfig["image-save-path"]}/{card.filename}")
-    img = ImageOps.contain(img, (350, 350))
-    img = ImageOps.invert(img.convert("RGB")) if card.card_id < 0 else img
-    buffer = io.BytesIO()
-    img.save(buffer, format="png")
-    buffer.seek(0)
-    return discord.File(fp=buffer, filename=f"{card.card_id}.png")
+def get_small_thumbnail(card: gachalib.types.Card):
+    filename = get_small_filename(card)
+    return discord.File(f"{Bot.DeweyConfig["image-save-path"]}/small/{filename}")
 
 class GachaView(discord.ui.LayoutView):
     def __init__(self, card: gachalib.types.Card, image: discord.File):
@@ -111,7 +110,7 @@ class SortSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         layout = InventoryView(self.user, self.values[0], self.button, 1)
-        await interaction.response.edit_message(view=layout, attachments=layout.images)
+        await interaction.response.edit_message(view=layout)
 
 class BrowseRow(discord.ui.ActionRow):
     def __init__(self, view, page: int, num_pages: int, *args) -> None:
@@ -125,7 +124,6 @@ class BrowseRow(discord.ui.ActionRow):
         layout = self.mView(*self.args, page=page)
         await interaction.response.edit_message(
             view=layout,
-            attachments=layout.images,
             allowed_mentions=discord.AllowedMentions(users=False)
         )
 
@@ -145,7 +143,7 @@ class viewCardButton(discord.ui.Button):
         self.card = card
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        image=gacha_crop_image(self.card)
+        image=get_small_thumbnail(self.card)
         await interaction.response.send_message(
             view=GachaView(self.card, image), file=image, ephemeral=True,
             allowed_mentions=discord.AllowedMentions(users=False)
@@ -155,7 +153,7 @@ class InventoryView(discord.ui.LayoutView):
     def __init__(self, user: discord.User | discord.Member, sort: str="Rarity (descending)", button: bool=True, page: int=1,):
         super().__init__(timeout=None)
         per_page = 5 - button
-        self.images: list[discord.File] = []
+        self.images: list[str] = []
 
         cards = gachalib.cards_inventory.get_users_cards(user.id)[1]
         cards_grouped = gachalib.cards.group_like_cards(cards)
@@ -181,7 +179,7 @@ class InventoryView(discord.ui.LayoutView):
             discord.ui.Separator(),
         ]
         for card in cards_page:
-            image = gacha_crop_image(card[0])
+            image = f"{Bot.DeweyConfig["imageurl"]}/small/{get_small_filename(card[0])}"
             self.images.append(image)
             items.append(discord.ui.Section(
                 f"### {card[1]} × {card[0].name}",
@@ -228,7 +226,6 @@ class AdminSelect(discord.ui.Select):
         layout = UnacceptedView(self.page)
         await interaction.response.edit_message(
             view=layout,
-            attachments=layout.images,
             allowed_mentions=discord.AllowedMentions(users=False)
         )
 
@@ -236,7 +233,7 @@ class UnacceptedView(discord.ui.LayoutView):
     def __init__(self, page: int=1):
         super().__init__(timeout=None)
         per_page = 4
-        self.images: list[discord.File] = []
+        self.images: list[str] = []
         cards = gachalib.cards.get_unapproved_cards()[1]
         num_pages = math.ceil(len(cards) / per_page)
         cards_page = cards[(page-1)*per_page:page*per_page]
@@ -248,7 +245,7 @@ class UnacceptedView(discord.ui.LayoutView):
             discord.ui.Separator(),
         ]
         for card in cards_page:
-            image = gacha_crop_image(card)
+            image = f"{Bot.DeweyConfig["imageurl"]}/small/{get_small_filename(card)}"
             self.images.append(image)
             items.append(discord.ui.Section(
                 f"### {card.name}",
@@ -441,7 +438,7 @@ class PackView(discord.ui.View):
     async def btn_callback(self, interaction: discord.Interaction) -> None:
         if interaction.data and "custom_id" in interaction.data:
             card = self.cards[int(interaction.data["custom_id"])]
-            image=gacha_crop_image(card)
+            image=get_small_thumbnail(card)
             await interaction.response.send_message(
                 view=GachaView(card,image), file=image, ephemeral=True
             )

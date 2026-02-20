@@ -9,7 +9,7 @@ import gachalib.cards
 import gachalib.types
 
 def evilify(card):
-    return ("EVIL " + card[0], card[1], card[2] + " evil", card[3], card[4], card[5], card[6] * -1)
+    return ("EVIL " + card[0], card[1], card[2] + " evil", "E" + card[3], card[4], card[5], card[6] * -1)
 
 # Getting cards (multiple)
 ######################################

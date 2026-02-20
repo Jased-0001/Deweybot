@@ -1,5 +1,5 @@
 # Code i stole from stackoverflow because mine didn't work
-from PIL import Image, ImageDraw, ImageSequence, ImageFont, GifImagePlugin
+from PIL import Image, ImageDraw, ImageSequence, ImageFont
 import io, textwrap, sys
 
 im = Image.open('./gif/base.gif')
