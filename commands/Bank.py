@@ -28,7 +28,7 @@ async def gacha_stats(ctx : discord.Interaction, show: bool=True, user: discord.
     sayyou = user.id == ctx.user.id
 
     embed = discord.Embed(title="Stats!", description="Dolla dolla, dolla dolla")
-    userstuff = moneylib.getUserInfo(ctx.user.id).statistics
+    userstuff = moneylib.getUserInfo(user=user.id).statistics
     embed.add_field(name=f"Highest balance {'you' if sayyou else 'they'}'ve ever had", value=f"D¢{userstuff.highestbalance}")
     embed.add_field(name=f"How much total {'you' if sayyou else 'they'}'ve spent", value=f"D¢{userstuff.spent}")
     embed.add_field(name=f"How much {'you' if sayyou else 'they'}'ve earned", value=f"D¢{userstuff.totalearned}")
