@@ -20,7 +20,7 @@ async def version(ctx : discord.Interaction):
     )
 
 @Bot.tree.command(name="sexer", description="Sexer")
-@discord.app_commands.allowed_installs(guilds=True, users=False)
+@discord.app_commands.allowed_installs(guilds=True, users=True)
 async def sexer(ctx : discord.Interaction):
     sexer = open("other/ytp_sexer.mp4", "rb")
     await ctx.response.send_message(file=discord.File(fp=sexer, filename="sexer.mp4"))
