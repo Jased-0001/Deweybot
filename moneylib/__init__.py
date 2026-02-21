@@ -20,7 +20,7 @@ if not money_database:
 def register_user(user: int) -> moneylib.types.User:
     money_database.write_data(statement="INSERT INTO deweycoins \
 (uid,balance,highestbalance,transactions,spent,totalearned) \
-VALUES (?,?,?,?,?,?)", data=(user,0,0,0,0,0))
+VALUES (?,?,?,?,?,?,?,?)", data=(user,0,0,0,0,0,0,0))
     return moneylib.types.User(uid=user)
 
 def updateValues(update:list[str],values:list[str | int],id:int) -> None:
@@ -31,9 +31,10 @@ def updateValues(update:list[str],values:list[str | int],id:int) -> None:
 
 def getUserInfo(user: int) -> moneylib.types.User:
     try:
-        a = money_database.read_data(statement="SELECT uid,balance,highestbalance,transactions,spent,totalearned FROM deweycoins WHERE uid = (?)", parameters=(user,))[0]
+        a = money_database.read_data(statement="SELECT uid,balance,highestbalance,transactions,spent,totalearned,\
+lostgambling,gainedgambling FROM deweycoins WHERE uid = (?)", parameters=(user,))[0]
         return moneylib.types.User(uid=a[0],balance=a[1],statistics=moneylib.types.Statistics(
-            highestbalance=a[2],transactions=a[3],spent=a[4],totalearned=a[5]
+            highestbalance=a[2],transactions=a[3],spent=a[4],totalearned=a[5],lostgambling=a[6],gainedgambling=a[7]
         ))
     except IndexError:
         return register_user(user=user)

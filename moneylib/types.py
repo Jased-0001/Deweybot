@@ -1,13 +1,17 @@
 class Statistics:
-    def __init__(self,highestbalance:int=0,transactions:int=0,spent:int=0,totalearned:int=0) -> None:
+    def __init__(self,highestbalance:int=0,transactions:int=0,spent:int=0,totalearned:int=0,
+                 lostgambling:int=0,gainedgambling:int=0) -> None:
         self.highestbalance:int  = highestbalance
         self.transactions:int    = transactions
         self.spent:int           = spent
         self.totalearned:int     = totalearned
+        self.lostgambling:int    = lostgambling
+        self.gainedgambling:int  = gainedgambling
 
     def __repr__(self):
         return f"(Statistics highestbalance = '{self.highestbalance}', transactions = {self.transactions}\
-, spent = {self.spent}, totalearned = {self.totalearned})"
+, spent = {self.spent}, totalearned = {self.totalearned}, lostgambling = {self.lostgambling}, gainedgambling =\
+ {self.gainedgambling})"
     def __eq__(self, other):
         return self.highestbalance == other.higherbalance and self.transactions == other.transactions and \
             self.spent == other.spent and self.totalearned == other.totalearned
