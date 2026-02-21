@@ -18,3 +18,10 @@ async def version(ctx : discord.Interaction):
     await ctx.response.send_message(
         f"Yo yo yo man, its the big dewbert!\n{Bot.version}", ephemeral=True
     )
+
+@Bot.tree.command(name="sexer", description="What version am I?")
+@discord.app_commands.allowed_installs(guilds=True, users=False)
+async def sexer(ctx : discord.Interaction):
+    sexer = open("other/ytp_sexer.mp4", "rb")
+    await ctx.response.send_message(file=discord.File(fp=sexer, filename="sexer.mp4"))
+    sexer.close()
