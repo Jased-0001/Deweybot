@@ -92,10 +92,14 @@ class DoorsView(discord.ui.View):
 
         await self.disable(reveal=True)
 
+
     async def on_timeout(self) -> None:
         await self.disable(reveal=True)
+        
+        if self.enabled:
+            await self.message.edit_original_response(content="(Timed out! You lost it all.)")
 
-        await self.message.edit_original_response(content="(Timed out! You lost it all.)")
+            self.enabled = False
 
     async def disable(self, reveal:bool):
         for child in self.children:
