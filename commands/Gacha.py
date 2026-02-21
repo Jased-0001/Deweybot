@@ -1,13 +1,29 @@
-from typing import get_args
+
+import Bot
+import other.Permissions as Permissions
 
 import discord
 from discord.abc import PrivateChannel
 from discord.ext import commands, tasks
-from PIL import Image, ImageSequence, ImageOps
-import Bot
-import other.Permissions as Permissions
 
-from gachalib import *
+from typing import get_args
+from PIL import Image, ImageSequence, ImageOps
+import io
+
+import gachalib
+import gachalib.types
+import gachalib.cards_inventory
+import gachalib.cards
+import gachalib.gacha_user
+import gachalib.trade
+
+import gachalib.views
+import gachalib.views.card
+import gachalib.views.inventory
+import gachalib.views.pack
+import gachalib.views.request
+import gachalib.views.unaccepted
+if Bot.DeweyConfig["deweycoins-enabled"]: import gachalib.views.cardsell
 
 # General card commands 
 #######################################
@@ -40,9 +56,9 @@ async def gacha_viewcard(ctx : discord.Interaction, id: int, show:bool=False):
         success,card = gachalib.cards.get_card_by_id(id)
         if success:
             if gachalib.cards_inventory.ownsCard(id=card.card_id,uid=ctx.user.id)[0] or Permissions.is_override(ctx) or ctx.user.id == card.maker_id:
-                image=get_small_thumbnail(card)
+                image=gachalib.get_small_thumbnail(card)
                 await ctx.response.send_message(
-                    view=GachaView(card, image), file=image, ephemeral=not show,
+                    view=gachalib.views.card.GachaView(card, image), file=image, ephemeral=not show,
                     allowed_mentions=discord.AllowedMentions(users=False)
                 )
             else:
@@ -138,7 +154,7 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
             card=gachalib.types.Card(name=name, description=description,rarity="None",filename=filename),
             title="gacha request!!", description=f"New request for a gacha card from <@{ctx.user.id}> (id = {next_id})"
             )
-        message_view = gachalib.RequestView()
+        message_view = gachalib.views.request.RequestView()
         assert not isinstance(approval_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "approval channel assertion"
         message_view.message = await approval_channel.send(f"```{additional_info}```" if additional_info else "", embed=embed,view=message_view)
 
@@ -181,7 +197,7 @@ async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", des
                 card=card,
                 title="gacha EDIT request!!", description=f"New EDIT request for a gacha card from <@{ctx.user.id}> (id = {id})"
                 )
-                message_view = gachalib.RequestView()
+                message_view = gachalib.views.request.RequestView()
                 assert not isinstance(approval_channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "approval channel assertion"
                 message_view.message = await approval_channel.send(embed=embed,view=message_view)
                 gachalib.cards.update_card(id,"request_message_id",message_view.message.id)
@@ -252,7 +268,7 @@ async def gacha_stats_accepted_spread(ctx : discord.Interaction):
 @gacha_group.command(name="inventory", description="View your inventory!")
 async def gacha_inventory(ctx : discord.Interaction, show: bool=True, view_button: bool=False):
     if not Permissions.banned(ctx):
-        layout = InventoryView(ctx.user, button=view_button, page=1)
+        layout = gachalib.views.inventory.InventoryView(ctx.user, button=view_button, page=1)
         await ctx.response.send_message(view=layout, ephemeral=not show)
 
 
@@ -304,7 +320,7 @@ async def gacha_roll(ctx : discord.Interaction):
                 numText = "[New]" if len(user_cards[1]) < 2 else f"[{len(user_cards[1])}x]"
                 embed.add_field(name=f"{numText} {i.name}\n({i.rarity})", value=f"{i.description}\n-# ID: {i.card_id}")
 
-            await ctx.response.send_message(embed=embed, view=gachalib.PackView(cards))
+            await ctx.response.send_message(embed=embed, view=gachalib.views.pack.PackView(cards))
             
             gachalib.gacha_user.set_user_timeout(ctx.user.id,gachalib.gacha_user.get_timestamp())
         else:
@@ -331,7 +347,7 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
             if user_quantity >= quantity:
                 _, user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(user_id=ctx.user.id,card_id=card_id)
                 cards_to_be_sold = user_cards[0:quantity]
-                view = gachalib.CardSellConfirmation(owner=ctx.user.id,inventory_ids=cards_to_be_sold,rarity=card.rarity)
+                view = gachalib.views.cardsell.CardSellConfirmation(owner=ctx.user.id,inventory_ids=cards_to_be_sold,rarity=card.rarity)
                 await ctx.response.send_message(f"Do you want to sell sell {'this' if quantity == 1 else f'these x{quantity}'} {card.rarity} '\
 {card.name + ("" if quantity == 1 else "s")}' for D¢{gachalib.getCardCost(card=card) * quantity}", ephemeral=False,view=view)
             else:
@@ -420,7 +436,7 @@ async def z_gacha_admin_setrarity(ctx : discord.Interaction, id:int, rarity:gach
 @gacha_group.command(name="z-admin-unapproved-cards", description="!MOD ONLY! See all non-approved cards")
 async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
     if Permissions.is_override(ctx):
-            layout = gachalib.UnacceptedView()
+            layout = gachalib.views.unaccepted.UnacceptedView()
             await ctx.response.send_message(
                 view=layout,
                 ephemeral=True if ctx.guild else False,
