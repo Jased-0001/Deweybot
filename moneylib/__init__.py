@@ -9,7 +9,9 @@ money_database = db_lib.setup_db(name="deweycoins", tables=["""CREATE TABLE "dew
 	"highestbalance"	INTEGER,
 	"transactions"	INTEGER,
 	"spent"	INTEGER,
-	"totalearned"	INTEGER
+	"totalearned"	INTEGER,
+    "lostgambling" INTEGER,
+    "gainedgambling" INTEGER
 );""",], file=Bot.DeweyConfig["deweycoins-sqlite-path"])
 
 print(money_database)
@@ -19,7 +21,7 @@ if not money_database:
 
 def register_user(user: int) -> moneylib.types.User:
     money_database.write_data(statement="INSERT INTO deweycoins \
-(uid,balance,highestbalance,transactions,spent,totalearned) \
+(uid,balance,highestbalance,transactions,spent,totalearned,lostgambling,gainedgambling) \
 VALUES (?,?,?,?,?,?,?,?)", data=(user,0,0,0,0,0,0,0))
     return moneylib.types.User(uid=user)
 

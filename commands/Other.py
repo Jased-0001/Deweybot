@@ -19,7 +19,7 @@ async def version(ctx : discord.Interaction):
         f"Yo yo yo man, its the big dewbert!\n{Bot.version}", ephemeral=True
     )
 
-@Bot.tree.command(name="sexer", description="What version am I?")
+@Bot.tree.command(name="sexer", description="Sexer")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
 async def sexer(ctx : discord.Interaction):
     sexer = open("other/ytp_sexer.mp4", "rb")

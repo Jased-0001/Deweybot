@@ -42,60 +42,63 @@ class DoorsView(discord.ui.View):
     
     async def door_callback(self, interaction: discord.Interaction):
         assert Bot.client.user, "bot has no user"
-        if self.enabled:
-            assert interaction.data and "custom_id" in interaction.data, "button callback called for non button (maybe?)"
-            self.enabled = False
-            
-            modifier = int(interaction.data["custom_id"])
-            if modifier == 1:
-                await interaction.response.send_message(f"Im sorry but you lost it all :(")
+        if interaction.user.id == self.message.user.id:
+            if self.enabled:
+                assert interaction.data and "custom_id" in interaction.data, "button callback called for non button (maybe?)"
+                self.enabled = False
+                
+                modifier = int(interaction.data["custom_id"])
+                if modifier == 1:
+                    await interaction.response.send_message(f"Im sorry but you lost it all :(")
 
 
-                moneylib.updateValues(update=["lostgambling"],values=[
-                    moneylib.getUserInfo(user=self.message.user.id).statistics.lostgambling + self.bet
-                ],id=self.message.user.id)
+                    moneylib.updateValues(update=["lostgambling"],values=[
+                        moneylib.getUserInfo(user=self.message.user.id).statistics.lostgambling + self.bet
+                    ],id=self.message.user.id)
 
-                moneylib.updateValues(update=["gainedgambling"],values=[
-                    moneylib.getUserInfo(user=Bot.client.user.id).statistics.gainedgambling + self.bet
-                ],id=Bot.client.user.id)
-            elif modifier == 2:
-                await interaction.response.send_message(f"Im sorry but you lost half of it all...")
-                # give half of the money back (round up)
-                moneylib.giveCoins(user=self.message.user.id, coins=math.ceil(self.bet/2)) # return rounded up half bet
-                moneylib.giveCoins(user=Bot.client.user.id, coins=-(math.ceil(self.bet/2)))  # keep rounded down half bet
-
-
-                moneylib.updateValues(update=["lostgambling"],values=[
-                    moneylib.getUserInfo(user=self.message.user.id).statistics.lostgambling + math.floor(self.bet/2)
-                ],id=self.message.user.id)
-
-                moneylib.updateValues(update=["gainedgambling"],values=[
-                    moneylib.getUserInfo(user=Bot.client.user.id).statistics.gainedgambling + math.floor(self.bet/2)
-                ],id=Bot.client.user.id)
-            elif modifier == 3:
-                await interaction.response.send_message(":slot_machine: :slot_machine: :slot_machine: :slot_machine: :slot_machine: YOU WIN!!!!!!!!!!!!!!!!!! DOUBLE!")
-                # take the money given to dewey away and give 2x back
-                moneylib.giveCoins(user=self.message.user.id, coins=self.bet*2) # return rounded up half bet
-                moneylib.giveCoins(user=Bot.client.user.id, coins=-self.bet*2)
+                    moneylib.updateValues(update=["gainedgambling"],values=[
+                        moneylib.getUserInfo(user=Bot.client.user.id).statistics.gainedgambling + self.bet
+                    ],id=Bot.client.user.id)
+                elif modifier == 2:
+                    await interaction.response.send_message(f"Im sorry but you lost half of it all...")
+                    # give half of the money back (round up)
+                    moneylib.giveCoins(user=self.message.user.id, coins=math.ceil(self.bet/2)) # return rounded up half bet
+                    moneylib.giveCoins(user=Bot.client.user.id, coins=-(math.ceil(self.bet/2)))  # keep rounded down half bet
 
 
-                moneylib.updateValues(update=["lostgambling"],values=[
-                    moneylib.getUserInfo(user=Bot.client.user.id).statistics.lostgambling + self.bet
-                ],id=Bot.client.user.id)
+                    moneylib.updateValues(update=["lostgambling"],values=[
+                        moneylib.getUserInfo(user=self.message.user.id).statistics.lostgambling + math.floor(self.bet/2)
+                    ],id=self.message.user.id)
 
-                moneylib.updateValues(update=["gainedgambling"],values=[
-                    moneylib.getUserInfo(user=self.message.user.id).statistics.gainedgambling + self.bet
-                ],id=self.message.user.id)
-            else:
-                await interaction.response.send_message("It is known.")
-                raise Exception(f"door callback modifier is '{modifier}'")
+                    moneylib.updateValues(update=["gainedgambling"],values=[
+                        moneylib.getUserInfo(user=Bot.client.user.id).statistics.gainedgambling + math.floor(self.bet/2)
+                    ],id=Bot.client.user.id)
+                elif modifier == 3:
+                    await interaction.response.send_message(":slot_machine: :slot_machine: :slot_machine: :slot_machine: :slot_machine: YOU WIN!!!!!!!!!!!!!!!!!! DOUBLE!")
+                    # take the money given to dewey away and give 2x back
+                    moneylib.giveCoins(user=self.message.user.id, coins=self.bet*2) # return rounded up half bet
+                    moneylib.giveCoins(user=Bot.client.user.id, coins=-self.bet*2)
 
-        await self.disable(reveal=True)
+
+                    moneylib.updateValues(update=["lostgambling"],values=[
+                        moneylib.getUserInfo(user=Bot.client.user.id).statistics.lostgambling + self.bet
+                    ],id=Bot.client.user.id)
+
+                    moneylib.updateValues(update=["gainedgambling"],values=[
+                        moneylib.getUserInfo(user=self.message.user.id).statistics.gainedgambling + self.bet
+                    ],id=self.message.user.id)
+                else:
+                    await interaction.response.send_message("It is known.")
+                    raise Exception(f"door callback modifier is '{modifier}'")
+
+            await self.disable(reveal=True)
+        else:
+            await interaction.response.send_message("YOU CANT RUN THIS")
 
 
     async def on_timeout(self) -> None:
         await self.disable(reveal=True)
-        
+
         if self.enabled:
             await self.message.edit_original_response(content="(Timed out! You lost it all.)")
 
