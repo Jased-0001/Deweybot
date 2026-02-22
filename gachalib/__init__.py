@@ -17,7 +17,7 @@ gacha_database = db_lib.setup_db(name="gacha", tables=
               "CREATE TABLE gacha_cards \
 (id int(20), card_id int(5), user_id int(19));"
               "CREATE TABLE settings\
-uid	int(19), roll_reminder_dm bool(1), roll_auto_sell bool(1)",], file=Bot.DeweyConfig["gacha-sqlite-path"])
+(uid int(19), roll_reminder_dm bool(1), roll_auto_sell bool(1));",], file=Bot.DeweyConfig["gacha-sqlite-path"])
 
 if not gacha_database:
     raise Exception("Fuck!")
