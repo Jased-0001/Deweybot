@@ -55,7 +55,7 @@ class BuyButton(discord.ui.Button):
 
         elif self.pack_type == "premium":
             balance = moneylib.getUserInfo(user=interaction.user.id).balance
-            if balance > prices["premium"]:
+            if balance >= prices["premium"]:
                 for i in range(3):
                     success, got_card = gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=False))
                     if success:
@@ -63,9 +63,12 @@ class BuyButton(discord.ui.Button):
                 moneylib.giveCoins(user=interaction.user.id, coins=-prices["premium"])
                 moneylib.giveCoins(user=Bot.client.user.id, coins=prices["premium"])
                 await self.roll_do(cards, interaction)
+            else:
+                await interaction.response.send_message(f"You don't have enough coins! (D¢{balance})")
+        
         else:
             balance = moneylib.getUserInfo(user=interaction.user.id).balance
-            if balance > prices["evil"]:
+            if balance >= prices["evil"]:
                 for i in range(3):
                     success, got_card = gachalib.cards.random_card_by_rarity(gachalib.random_rarity(restraint=False if i >= 2 else True), evil_chance=12)
                     if success:
@@ -73,6 +76,8 @@ class BuyButton(discord.ui.Button):
                 moneylib.giveCoins(user=interaction.user.id, coins=-prices["evil"])
                 moneylib.giveCoins(user=Bot.client.user.id, coins=prices["evil"])
                 await self.roll_do(cards, interaction)
+            else:
+                await interaction.response.send_message(f"You don't have enough coins! (D¢{balance})")
     
 class BuyPackView(discord.ui.LayoutView):
     def __init__(self, user: discord.User | discord.Member) -> None:
