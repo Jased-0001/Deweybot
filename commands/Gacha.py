@@ -25,6 +25,8 @@ import gachalib.views.request
 import gachalib.views.unaccepted
 if Bot.DeweyConfig["deweycoins-enabled"]: import gachalib.views.cardsell
 
+gacha_settings = gachalib.gacha_settings
+
 # General card commands 
 #######################################
 
@@ -387,6 +389,23 @@ async def gacha_trade(ctx : discord.Interaction, user:discord.Member):
 #    await ctx.response.send_message(test)
 
 
+
+# Settings
+#######################################
+
+
+gacha_settings_group = discord.app_commands.Group(name="settings", description="Dewey GACHA!!! SETTINGS!!!")
+
+@gacha_settings_group.command(name="roll-reminders", description="Enable/disable gacha rolling reminders")
+async def gacha_settings_roll_reminders(ctx : discord.Interaction, set:bool):
+    if not Permissions.banned(ctx):
+        gacha_settings.set_setting(uid=ctx.user.id, name="roll_reminder_dm", value=set)
+        await ctx.response.send_message("Okay, you will be reminded when you can roll." if set else "Okay, you won't be reminded when you can roll")
+
+
+
+
+
 # Admin commands
 #######################################
 
@@ -445,4 +464,5 @@ async def z_gacha_admin_unapproved_cards(ctx : discord.Interaction):
     else:
         await ctx.response.send_message("Yo. You not part of the \"Gang\"", ephemeral=True)
 
+gacha_group.add_command(gacha_settings_group)
 Bot.tree.add_command(gacha_group)

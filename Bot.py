@@ -1,6 +1,6 @@
 import io
 import discord
-#from discord.ext import commands, tasks
+from discord.ext import tasks
 from discord.abc import PrivateChannel
 from yaml import load,Loader
 import traceback
@@ -8,7 +8,9 @@ import traceback
 with open("dewey.yaml", "r") as f:
     DeweyConfig = load(stream=f, Loader=Loader)
 
+import gachalib
 import other.Permissions as Permissions
+import other.Settings as Settings
 from subprocess import check_output, CalledProcessError
 
 
@@ -25,6 +27,11 @@ class botClient(discord.Client):
         super().__init__(intents = discord.Intents.all())
         self.synced = False
     async def on_ready(self):
+        if DeweyConfig["gacha-enabled"]:
+            if DeweyConfig["gacha-reminder-task"]:
+                gachalib.reminder_task.start()
+                print(" [reminder_task] started reminder task")
+
         await self.wait_until_ready()
         if not self.synced:
             await tree.sync()
@@ -33,6 +40,7 @@ class botClient(discord.Client):
         await self.change_presence(activity=discord.Activity(name=f"Dewin' it ({version})", type=3))
 
         print(f"Dewey'd as {self.user}")
+
 
     async def on_message(self, message: discord.Message):
         if message.author == self.user:
@@ -101,6 +109,7 @@ if DeweyConfig["gacha-enabled"]: import commands.Gacha
 if DeweyConfig["gif-enabled"]: import commands.Gif
 if DeweyConfig["kfad-enabled"]: import commands.KFAD
 if DeweyConfig["deweycoins-enabled"]: import commands.Bank
+import commands.Settings
 import commands.Other
 
 # RUN

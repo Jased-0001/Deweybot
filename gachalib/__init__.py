@@ -1,10 +1,13 @@
 import db_lib,Bot
-import gachalib.cards, gachalib.types
+import gachalib.cards, gachalib.types, gachalib.gacha_user
 import discord
+from discord.ext import tasks
 from random import randint
 from typing import Literal
 import math
 import os
+
+import other.Settings as Settings
 
 gacha_database = db_lib.setup_db(name="gacha", tables=
                                  ["CREATE TABLE gacha \
@@ -12,7 +15,9 @@ gacha_database = db_lib.setup_db(name="gacha", tables=
               "CREATE TABLE gacha_user \
 (user_id int(19), last_use int(20));",
               "CREATE TABLE gacha_cards \
-(id int(20), card_id int(5), user_id int(19));",], file=Bot.DeweyConfig["gacha-sqlite-path"])
+(id int(20), card_id int(5), user_id int(19));"
+              "CREATE TABLE settings\
+uid	int(19), roll_reminder_dm bool(1), roll_auto_sell bool(1)",], file=Bot.DeweyConfig["gacha-sqlite-path"])
 
 if not gacha_database:
     raise Exception("Fuck!")
@@ -39,6 +44,11 @@ rarity_order = {
     "Legendary": 5, "Legendary evil": 11,
 }
 
+
+gacha_settings = Settings.Settings(db_ident="gacha")
+
+
+
 if Bot.DeweyConfig["deweycoins-enabled"]:
     rarity_costs = {
         "None":      999999, "None evil":      999999,
@@ -52,6 +62,39 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
     def getCardCost(card: gachalib.types.Card) -> int:
         return rarity_costs[card.rarity]
 
+
+if Bot.DeweyConfig["gacha-reminder-task"]:
+    @tasks.loop(minutes=5)
+    async def reminder_task():
+        start = gachalib.gacha_user.get_timestamp()
+
+        everyone_with_timeout = gachalib.gacha_user.get_everyone_with_timeouts()
+        qualifiers_to_dm = []
+
+        for user in everyone_with_timeout:
+            setting = gacha_settings.get_setting(uid=user.user_id,name="roll_reminder_dm")
+
+            if setting == 1:
+                timestamp = gachalib.gacha_user.get_timestamp()
+                time_out = Bot.DeweyConfig["roll-timeout"] # 3600 seconds for 1 hr
+                if (timestamp - user.last_use) > (time_out) and not user.last_use == -2:
+                    qualifiers_to_dm.append(user.user_id)
+
+        
+        for i in qualifiers_to_dm:
+            user = Bot.client.get_user(i)
+            if user == None: user = await Bot.client.fetch_user(i)
+
+            dm_channel = user.dm_channel
+
+            if not dm_channel: dm_channel = await user.create_dm()
+            
+            await dm_channel.send("Hey, it's me again, Dewey. You can roll your Gacha again.\n-# you can disable this... `/gacha settings roll-reminders`")
+
+            #set the timeout to -2 so they don't qualify again (we don't dm them again)
+            gachalib.gacha_user.set_user_timeout(user_id=i,unix_time=-2)
+        end = gachalib.gacha_user.get_timestamp()
+        print(f" [reminder_task] took {round(end-start)}s")
 
 def get_small_filename(card: gachalib.types.Card):
     filename = card.filename.split(".")[0]

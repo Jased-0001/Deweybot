@@ -70,11 +70,11 @@ def get_db(name:str) -> Database | None:
     else:
         return None
 
-def setup_db(name:str, tables:list[str], file:str) -> Database:
+def setup_db(name:str, tables:list[str], file:str, verbose:bool = False) -> Database:
     newdb = get_db(name=name)
     
     if not newdb:
-        newdb = Database(ident=name, database_path=file, tables=tables, connect=True)
+        newdb = Database(ident=name, database_path=file, tables=tables, connect=True, verbose=verbose)
         OpenDatabases[name] = newdb
 
     return newdb

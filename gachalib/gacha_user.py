@@ -2,6 +2,15 @@ import gachalib, gachalib.types
 
 from time import time
 
+def get_everyone_with_timeouts() -> list[gachalib.types.GachaUser]:
+    a = gachalib.gacha_database.read_data("SELECT user_id,last_use FROM gacha_user")
+    b = []
+
+    for user in a:
+        b.append(gachalib.types.GachaUser(user_id=user[0], last_use=user[1]))
+        
+    return b
+
 def get_user_timeout(user_id:int) -> gachalib.types.GachaUser:
     a = gachalib.gacha_database.read_data(f"SELECT last_use FROM gacha_user WHERE (user_id) = (?)", (user_id,))
 

@@ -27,3 +27,12 @@ gacha_cards table           - Inventory, everyone's inventory
 id int(20)                  - ID of specific card "Inventory ID"
 card_id int(5)              - Gacha card ID
 user_id int(19)             - Discord UID of owner 
+
+
+
+settings table:             - Settings for Gacha
+
+
+uid int(19)                 - Discord user id
+roll_reminder_dm bool(1)    - Reminder to roll setting
+roll_auto_sell bool(1)      - Setting to auto sell
