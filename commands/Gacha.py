@@ -1,5 +1,8 @@
 
+from PIL.ImageFont import Layout
+
 import Bot
+import gachalib.views.buy_packs
 import other.Permissions as Permissions
 
 import discord
@@ -355,9 +358,10 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
         else:
             await ctx.response.send_message("You don't own any of this card!", ephemeral=False)
 
-    @gacha_group.command(name="buypack", description="!TODO! Buy a special PACK of Deweycards")
+    @gacha_group.command(name="buypack", description="Buy a special PACK of Deweycards")
     async def gacha_buy_pack(ctx : discord.Interaction):
-        await ctx.response.send_message("TO BE IMPLEMENTED", ephemeral=True)
+        layout = gachalib.views.buy_packs.BuyPackView(ctx.user)
+        await ctx.response.send_message(view=layout, ephemeral=True)
 
     @gacha_group.command(name="valuecard", description="Check the value of a card in DeweyCoin")
     async def gacha_get_price(ctx : discord.Interaction):
