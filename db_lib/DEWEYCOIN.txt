@@ -13,3 +13,10 @@ spent INTEGER               - - Statistic - How much a user spent in total
 totalearned INTEGER         - - Statistic - How much a user earned in total
 lostgambling INTEGER        - - Statistic - How much a user lost while gambling
 gainedgambling INTEGER      - - Statistic - How much a user profited while gambling
+
+
+
+settings table:             - Settings for Deweycoin
+
+
+uid INTEGER                 - Discord user ID

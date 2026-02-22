@@ -12,7 +12,10 @@ money_database = db_lib.setup_db(name="deweycoins", tables=["""CREATE TABLE "dew
 	"totalearned"	INTEGER,
     "lostgambling" INTEGER,
     "gainedgambling" INTEGER
-);""",], file=Bot.DeweyConfig["deweycoins-sqlite-path"])
+);""","""
+CREATE TABLE "settings" (
+	"uid"	INTEGER
+);"""], file=Bot.DeweyConfig["deweycoins-sqlite-path"])
 
 print(money_database)
 if not money_database:
