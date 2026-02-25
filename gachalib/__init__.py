@@ -64,7 +64,7 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
 
 
 if Bot.DeweyConfig["gacha-reminder-task"]:
-    @tasks.loop(minutes=5)
+    @tasks.loop(minutes=1)
     async def reminder_task():
         start = gachalib.gacha_user.get_timestamp()
 
@@ -76,7 +76,7 @@ if Bot.DeweyConfig["gacha-reminder-task"]:
 
             if setting == 1:
                 timestamp = gachalib.gacha_user.get_timestamp()
-                time_out = Bot.DeweyConfig["roll-timeout"] # 3600 seconds for 1 hr
+                time_out = Bot.DeweyConfig["roll-timeout"]
                 if (timestamp - user.last_use) > (time_out) and not user.last_use == -2:
                     qualifiers_to_dm.append(user.user_id)
 
