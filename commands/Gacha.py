@@ -211,14 +211,16 @@ async def gacha_editcard(ctx : discord.Interaction, id: int, name: str = "", des
 
 
 @gacha_group.command(name="stats", description="card stats")
-async def gacha_stats(ctx : discord.Interaction):
+async def gacha_stats(ctx : discord.Interaction, user: discord.Member | discord.User | None = None):
     if not Permissions.banned(ctx):
+        if user == None: user = ctx.user
+
         embed = discord.Embed(title="Statistics", description="WIP, i was just curious abpuit these :) stats :)")
         embed.add_field(name="Total Cards", value=len(gachalib.cards.get_cards()[1]))
         embed.add_field(name="Total issued cards", value=len(gachalib.cards_inventory.get_all_issued()))
         embed.add_field(name="Total held cards (waiting)", value=len(gachalib.cards.get_unapproved_cards()[1]))
-        embed.add_field(name="How many cards **YOU** have (excl. evil)", value=len(gachalib.cards_inventory.get_users_cards(user_id=ctx.user.id,include_evil=False)[1]))
-        embed.add_field(name="How many cards **YOU** have (incl. evil)", value=len(gachalib.cards_inventory.get_users_cards(user_id=ctx.user.id,include_evil=True)[1]))
+        embed.add_field(name=f"How many cards {'**YOU**' if user.id == ctx.user.id else '**THEY**'} have (excl. evil)", value=len(gachalib.cards_inventory.get_users_cards(user_id=ctx.user.id,include_evil=False)[1]))
+        embed.add_field(name=f"How many cards {'**YOU**' if user.id == ctx.user.id else '**THEY**'} have (incl. evil)", value=len(gachalib.cards_inventory.get_users_cards(user_id=ctx.user.id,include_evil=True)[1]))
 
         await ctx.response.send_message(embed=embed)
 
