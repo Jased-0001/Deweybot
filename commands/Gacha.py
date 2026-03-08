@@ -354,10 +354,49 @@ if Bot.DeweyConfig["deweycoins-enabled"]:
                 _, user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(user_id=ctx.user.id,card_id=card_id)
                 cards_to_be_sold = user_cards[0:quantity]
                 view = gachalib.views.cardsell.CardSellConfirmation(owner=ctx.user.id,inventory_ids=cards_to_be_sold,rarity=card.rarity, message=ctx)
-                await ctx.response.send_message(f"Do you want to sell sell {'this' if quantity == 1 else f'these x{quantity}'} {card.rarity} '\
+                await ctx.response.send_message(f"Do you want to sell {'this' if quantity == 1 else f'these x{quantity}'} {card.rarity} '\
 {card.name + ("'" if quantity == 1 else "'s")} for D¢{gachalib.getCardCost(card=card) * quantity}", ephemeral=False,view=view)
             else:
                 await ctx.response.send_message("You don't have enough of this card to sell!", ephemeral=False)
+        else:
+            await ctx.response.send_message("You don't own any of this card!", ephemeral=False)
+
+    @gacha_group.command(name="sellall", description="Sell ALL of a card!")
+    async def gacha_sell_all(ctx : discord.Interaction, card_id : int):
+        success, card = gachalib.cards.get_card_by_id(card_id=card_id)
+        user_owns_card, _ = gachalib.cards_inventory.ownsCard(id=card_id, uid=ctx.user.id)
+
+        if not success:
+            await ctx.response.send_message("That card doesn't exist", ephemeral=False)
+            return
+        
+        if user_owns_card:
+            _, user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(user_id=ctx.user.id,card_id=card_id)
+            view = gachalib.views.cardsell.CardSellConfirmation(owner=ctx.user.id,inventory_ids=user_cards,rarity=card.rarity, message=ctx)
+            await ctx.response.send_message(f"Do you want to sell **ALL** {'this' if len(user_cards) == 1 else f'of these x{len(user_cards)}'} {card.rarity} '\
+{card.name + ("'" if user_cards == 1 else "'s")} for D¢{gachalib.getCardCost(card=card) * len(user_cards)}", ephemeral=False,view=view)
+        else:
+            await ctx.response.send_message("You don't own any of this card!", ephemeral=False)
+
+    @gacha_group.command(name="selldupes", description="Sell all DUPLICATES of a card!")
+    async def gacha_sell_all_dupes(ctx : discord.Interaction, card_id : int):
+        success, card = gachalib.cards.get_card_by_id(card_id=card_id)
+        user_owns_card, quantity = gachalib.cards_inventory.ownsCard(id=card_id, uid=ctx.user.id)
+
+        if not success:
+            await ctx.response.send_message("That card doesn't exist", ephemeral=False)
+            return
+        
+        if user_owns_card:
+            if 1 < quantity:
+                quantity -= 1
+                _, user_cards = gachalib.cards_inventory.get_users_cards_by_card_id(user_id=ctx.user.id,card_id=card_id)
+                cards_to_be_sold = user_cards[0:quantity]
+                view = gachalib.views.cardsell.CardSellConfirmation(owner=ctx.user.id,inventory_ids=cards_to_be_sold,rarity=card.rarity, message=ctx)
+                await ctx.response.send_message(f"Do you want to sell {'this' if quantity == 1 else f'these x{quantity}'} {card.rarity} '\
+{card.name + ("'" if quantity == 1 else "'s")} for D¢{gachalib.getCardCost(card=card) * quantity}", ephemeral=False,view=view)
+            else:
+                await ctx.response.send_message("There are no duplicates", ephemeral=False)
         else:
             await ctx.response.send_message("You don't own any of this card!", ephemeral=False)
 
