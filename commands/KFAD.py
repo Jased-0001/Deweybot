@@ -68,17 +68,17 @@ async def gfad_help(ctx : discord.Interaction):
 
 
 @gfad_group.command(name="z-roll", description="! ADMIN ONLY ! Roll GOD 🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲🎲")
-async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
+async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1, days:int = 7, exclude_previous_gods=False):
     if Permissions.is_override(ctx):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(weeks=1, days=1)
+        range_start = range_now - datetime.timedelta(days=days+1)
         range_end = range_now - datetime.timedelta(days=1)
         
         await ctx.response.defer(ephemeral=False,thinking=True)
 
         assert ctx.guild, "ctx.guild assertion"
-        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True)
+        qualifiers, _ = await get_qualifiers(message_requirement=message_requirement, range_start=range_start, range_end=range_end,guild=ctx.guild,getmembers=True, exclude_prev_gods=exclude_previous_gods)
 
         if len(qualifiers) == 0:
             await ctx.followup.send(content=f"(There aren't enough people who qualify)", silent=True, ephemeral=False)
@@ -99,11 +99,11 @@ async def gfad_roll(ctx : discord.Interaction, message_requirement:int = -1):
 
 
 @gfad_group.command(name="z-get-qualifiers", description="! ADMIN ONLY ! Get people who qualify")
-async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int = -1, exclude_prev_gods:bool=True):
+async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int = -1, exclude_prev_gods:bool=True, days:int = 7):
     if Permissions.is_override(ctx):
         if message_requirement == -1: message_requirement = Bot.DeweyConfig["kfad-must-have"]
         range_now = datetime.datetime.today()
-        range_start = range_now - datetime.timedelta(weeks=1, days=1)
+        range_start = range_now - datetime.timedelta(days=days+1)
         range_end = range_now - datetime.timedelta(days=0)
         
         await ctx.response.defer(ephemeral=False, thinking=True)
@@ -129,7 +129,7 @@ async def gfad_get_qualifiers(ctx : discord.Interaction, message_requirement:int
         buffer = io.BytesIO()
         buffer.write(string.encode())
         buffer.seek(0)
-        await ctx.followup.send(content=f"Qualifiers <t:{round(range_end.timestamp())}>",file=discord.File(fp=buffer,filename="abc.txt"))
+        await ctx.followup.send(content=f"Qualifiers <t:{round(range_start.timestamp())}>-<t:{round(range_end.timestamp())}>",file=discord.File(fp=buffer,filename="abc.txt"))
 
 
 Bot.tree.add_command(gfad_group)
