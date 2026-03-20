@@ -10,12 +10,18 @@ admin_group = discord.app_commands.Group(name="z-admin-other", description="g")
 
 @admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
 @discord.app_commands.allowed_installs(guilds=True, users=False)
-async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread):
+async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discord.TextChannel | discord.Thread, reply: str = "0"):
     if Permissions.is_override(ctx):
+        if reply == "0":
+            await channel.send(content=what_said)
+        else:
+            reply_int = int(reply)
+            reply_message = await channel.fetch_message(reply_int)
+            await reply_message.reply(content=what_said)
+
         await ctx.response.send_message(
             f"okay!", ephemeral=True
         )
-        await channel.send(what_said)
 
 if Bot.DeweyConfig["gacha-enabled"]:
     import gachalib
