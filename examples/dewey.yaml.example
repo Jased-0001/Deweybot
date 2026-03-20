@@ -5,6 +5,7 @@ main-guild:
 
 banned-role: # optional
 permission-override: [] # optional
+                        # format of [["member", id], ["role", id]]
 
 # Db settings
 gacha-sqlite-path:
