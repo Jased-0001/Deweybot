@@ -6,6 +6,28 @@ import other.Permissions as Permissions
 
 admin_group = discord.app_commands.Group(name="z-admin-other", description="g")
 
+if Bot.DeweyConfig["reminders-enabled"]:
+    import other.Remindme as Remindme
+
+    
+    @Bot.tree.command(name="remindme", description="Get a DM after X amount of time !")
+    async def remindme(ctx : discord.Interaction, weeks:int=0, days:int=0, hours:int=0, minutes:int=0, note: str = ""):
+        if weeks == 0 and days == 0 and hours == 0 and minutes == 0:
+            await ctx.response.send_message("you have to select a time", ephemeral=True)
+        if len(note) > 256:
+            await ctx.response.send_message("you should shorten your note")
+
+        now = Remindme.datetime.datetime.today()
+        delta = Remindme.datetime.timedelta(weeks=weeks, days=days, hours=hours, minutes=minutes)
+        when = round((now+delta).timestamp())
+
+        message = await ctx.response.send_message("I'll dm you on " + str(now+delta) + f" (<t:{when}>) ")
+        
+        Remindme.setReminder(uid=ctx.user.id,made=round(now.timestamp()),when=when,note=note,message=message.message_id,guild=ctx.guild_id,channel=ctx.channel_id)
+        Remindme.getReminders()
+
+
+
 
 
 @admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")

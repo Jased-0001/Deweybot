@@ -1,0 +1,21 @@
+The DB is structured as:
+
+
+
+remindme table:             - contains users and reminder times
+
+
+uid INTEGER                 - Discord user ID
+made INTEGER                - Unix time, when was made
+whenr INTEGER               - Unix time, when to ring (ends with r because when is an sql keyword)
+note STRING                 - Note
+guild INTEGER               - guild of the message id
+channel INTEGER             - channel of the message id
+message INTEGER             - message id sent when reminder set
+
+
+
+settings table:             - Settings for Deweycoin
+
+
+uid INTEGER                 - Discord user ID

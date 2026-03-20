@@ -10,6 +10,7 @@ permission-override: [] # optional
 # Db settings
 gacha-sqlite-path:
 deweycoins-sqlite-path: 
+reminders-sqlite-path: 
 
 # Gacha settings
 gacha_enabled: 
@@ -37,3 +38,4 @@ kfad-god-channel:
 # others
 nick-enabled: 
 gif-enabled: 
+reminders-enabled: 

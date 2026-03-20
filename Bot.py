@@ -11,6 +11,7 @@ with open("dewey.yaml", "r") as f:
 import gachalib
 import other.Permissions as Permissions
 import other.Settings as Settings
+import other.Remindme
 from subprocess import check_output, CalledProcessError
 
 
@@ -31,6 +32,9 @@ class botClient(discord.Client):
             if DeweyConfig["gacha-reminder-task"]:
                 gachalib.reminder_task.start()
                 print(" [reminder_task] started reminder task")
+        if DeweyConfig["reminders-enabled"]:
+            other.Remindme.remindme_task.start()
+            print(" [EVIL REMINDER TASK] started EVIL reminder task")
 
         await self.wait_until_ready()
         if not self.synced:
