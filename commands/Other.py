@@ -42,11 +42,20 @@ responses = [
     "Signs point to yes"
 ]
 
-if Bot.DeweyConfig["grok-responses"]:
-    @Bot.client.event
-    async def on_message(ctx: discord.Message):
-        if "@grok is this" in ctx.content.lower():
-            await ctx.reply(random.choice(responses))
+
+@Bot.client.event
+async def on_message(message: discord.Message):
+    if Bot.DeweyConfig["grok-responses"]:
+        if "@grok is this" in message.content.lower():
+            await message.reply(random.choice(responses))
+            return
+    if Bot.DeweyConfig["suggestions-enabled"]:
+        if message.author == Bot.client.user:
+            pass
+        if message.channel.id == Bot.DeweyConfig["suggestions-channel"] and not message.content.startswith("!"):
+            await message.add_reaction("✅")
+            await message.add_reaction("❌")
+        return
 
 
 @admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
