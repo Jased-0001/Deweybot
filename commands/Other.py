@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 import Bot
 import other.Permissions as Permissions
 import random
+import re
 
 
 admin_group = discord.app_commands.Group(name="z-admin-other", description="g")
@@ -46,7 +47,8 @@ responses = [
 @Bot.client.event
 async def on_message(message: discord.Message):
     if Bot.DeweyConfig["grok-responses"]:
-        if "@grok is" in message.content.lower() or "@grok am" in message.content.lower():
+        assert Bot.client.user
+        if re.search(f"(@?grok|@?gork|{Bot.client.user.mention}) (am|is|are)", message.content.lower()):
             if random.random() < 0.02:
                 await message.reply("oh poor baby 🥺🥺 do you need the robot to make you pictures? 🥺🥺 yeah? 🥺🥺 do you need the bo-bot to write you essay too? yeah ??? you can't do it?? 🥺🥺 you're a moron??🥺🥺 do you need chat gpt to fuck your wife ?? 🥺🥺🥺")
             else:
