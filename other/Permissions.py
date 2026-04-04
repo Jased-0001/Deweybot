@@ -19,7 +19,7 @@ for i in overrides:
     else:
         raise Exception(i[0], "is not 'role' or 'member' (check permission-override)")
 
-for i in overrides:
+for i in repeat:
     if i[0] == "role":
         repeat_roles.append(i[1])
     elif i[0] == "member":
