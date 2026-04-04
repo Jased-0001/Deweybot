@@ -47,3 +47,5 @@ nick-enabled:
 gif-enabled: 
 reminders-enabled: 
 grok-responses: 
+dewey-repeat-log: # [type, id] Set type to "channel" or "dm" and id to a channel id or user id 
+dewey-repeat-allowed: # format of [["member", id], ["role", id]]
