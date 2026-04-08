@@ -91,11 +91,11 @@ def get_db(name:str) -> BaseDatabase | None:
     else:
         return None
 
-def setup_db(name:str, file:str, verbose:bool = False) -> BaseDatabase:
+def setup_db(name:str, file:str) -> BaseDatabase:
     newdb = get_db(name=name)
     
     if not newdb:
-        newdb = SQLite3Database(ident=name, database_path=file, connect=True, verbose=verbose)
+        newdb = SQLite3Database(ident=name, database_path=file, connect=True, verbose=False)
         OpenDatabases[name] = newdb
 
     return newdb

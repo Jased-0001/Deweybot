@@ -99,6 +99,8 @@ if Bot.DeweyConfig["gacha-reminder-task"]:
             gachalib.gacha_user.set_user_timeout(user_id=i,unix_time=-2)
         end = gachalib.gacha_user.get_timestamp()
         print(f" [reminder_task] took {round(end-start)}s")
+    
+    Bot.client.on_ready_functions.append(gachalib.reminder_task.start)
 
 def get_small_filename(card: gachalib.types.Card):
     filename = card.filename.split(".")[0]

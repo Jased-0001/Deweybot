@@ -23,7 +23,6 @@ if Bot.DeweyConfig["reminders-enabled"]:
     #        "uid"	INTEGER
     #    );"""]
 
-    print(reminders_db)
     if not reminders_db:
         raise Exception("Fuck!")
 
@@ -82,3 +81,5 @@ if Bot.DeweyConfig["reminders-enabled"]:
 
             #set the timeout to -2 so they don't qualify again (we don't dm them again)
             removeReminder(uid=i.uid,when=i.when,made=i.made,messageid=i.message)
+    
+    Bot.client.on_ready_functions.append(remindme_task.start)

@@ -1,17 +1,17 @@
 import io
+from types import CoroutineType, MethodType
 import discord
 from discord.ext import tasks
 from discord.abc import PrivateChannel
 from yaml import load,Loader
 import traceback
+from inspect import iscoroutinefunction
 
 with open("dewey.yaml", "r") as f:
     DeweyConfig = load(stream=f, Loader=Loader)
 
-if DeweyConfig["gacha-enabled"]: import gachalib
 import other.Permissions as Permissions
 import other.Settings as Settings
-import other.Remindme
 from subprocess import check_output, CalledProcessError
 
 
@@ -23,18 +23,19 @@ except CalledProcessError:
 
 intents = discord.Intents.all()
 
+
 class botClient(discord.Client):
     def __init__(self):
         super().__init__(intents = discord.Intents.all())
         self.synced = False
+        self.on_ready_functions: list[MethodType] = []
+        self.on_message_functions: list[CoroutineType] = []
+
     async def on_ready(self):
-        if DeweyConfig["gacha-enabled"]:
-            if DeweyConfig["gacha-reminder-task"]:
-                gachalib.reminder_task.start()
-                print(" [reminder_task] started reminder task")
-        if DeweyConfig["reminders-enabled"]:
-            other.Remindme.remindme_task.start()
-            print(" [EVIL REMINDER TASK] started EVIL reminder task")
+        for i in self.on_ready_functions:
+            if isinstance(i, (MethodType)):
+                print(f" [on_ready] running on_ready_function of {i.__name__}")
+                i.__call__()
 
         await self.wait_until_ready()
         if not self.synced:
@@ -43,17 +44,15 @@ class botClient(discord.Client):
            
         await self.change_presence(activity=discord.Activity(name=f"Dewin' it ({version})", type=3))
 
-        print(f"Dewey'd as {self.user}")
+        print(f" [on_ready] Dewey'd as {self.user}")
 
 
     async def on_message(self, message: discord.Message):
-        if message.author == self.user:
-            return
-        if message.channel.id == DeweyConfig["suggestions-channel"] and not message.content.startswith("!") and DeweyConfig["suggestions-enabled"]:
-            await message.add_reaction("✅")
-            await message.add_reaction("❌")
-        return
-        #print(message.author.name + " - " + message.content)
+        for i in self.on_message_functions:
+            if iscoroutinefunction(i):
+                await i.__call__(message)
+
+
     async def on_raw_reaction_add(self, reactionpayload: discord.RawReactionActionEvent):
         # remove conflicting vote reactions
         if reactionpayload.channel_id == DeweyConfig["suggestions-channel"] and DeweyConfig["suggestions-enabled"]:
@@ -88,6 +87,7 @@ class botClient(discord.Client):
         assert not isinstance(channel,(discord.ForumChannel,discord.CategoryChannel,PrivateChannel)), "error channel assertion"
         await channel.send(f"<@322495136108118016> got an report for you boss (event {event})\n",file=discord.File(fp=buffer,filename="error.txt"))
         buffer.close()
+
 
 
 client = botClient()

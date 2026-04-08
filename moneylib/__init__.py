@@ -20,7 +20,6 @@ money_database = db_lib.setup_db(name="deweycoins", file=Bot.DeweyConfig["deweyc
 #	"uid"	INTEGER
 #);"""]
 
-print(money_database)
 if not money_database:
     raise Exception("Fuck!")
 

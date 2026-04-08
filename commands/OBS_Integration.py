@@ -9,7 +9,6 @@ import subprocess, requests
 
 aa = None
 running = False
-cwd = subprocess.run(["pwd"])
 
 
 obs_group = discord.app_commands.Group(name="obs", description="obs grop")

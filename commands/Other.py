@@ -44,9 +44,8 @@ responses = [
 ]
 
 
-@Bot.client.event
-async def on_message(message: discord.Message):
-    if Bot.DeweyConfig["grok-responses"]:
+if Bot.DeweyConfig["grok-responses"]:
+    async def grok_response_message(message: discord.Message):
         assert Bot.client.user
         if re.search(f"(@?grok|@?gork)", message.content.lower()):
             if random.random() < 0.02:
@@ -54,13 +53,17 @@ async def on_message(message: discord.Message):
             else:
                 await message.reply(random.choice(responses))
             return
-    if Bot.DeweyConfig["suggestions-enabled"]:
+    Bot.client.on_message_functions.append(grok_response_message)
+
+if Bot.DeweyConfig["suggestions-enabled"]:
+    async def suggestions_reaction_message(message: discord.Message):
         if message.author == Bot.client.user:
             pass
         if message.channel.id == Bot.DeweyConfig["suggestions-channel"] and not message.content.startswith("!"):
             await message.add_reaction("✅")
             await message.add_reaction("❌")
         return
+    Bot.client.on_message_functions.append(suggestions_reaction_message)
 
 
 @admin_group.command(name="repeat", description="!-ADMIN ONLY-! repeat what said :thumbs_up:")
