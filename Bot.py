@@ -1,5 +1,5 @@
 import io
-from types import CoroutineType, MethodType
+from types import CoroutineType, FunctionType, MethodType
 import discord
 from discord.ext import tasks
 from discord.abc import PrivateChannel
@@ -29,7 +29,7 @@ class botClient(discord.Client):
         super().__init__(intents = discord.Intents.all())
         self.synced = False
         self.on_ready_functions: list[MethodType] = []
-        self.on_message_functions: list[CoroutineType] = []
+        self.on_message_functions: list[CoroutineType | FunctionType] = []
 
     async def on_ready(self):
         for i in self.on_ready_functions:

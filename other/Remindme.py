@@ -57,7 +57,7 @@ if Bot.DeweyConfig["reminders-enabled"]:
         
     @tasks.loop(name="remindme-task", minutes=1)
     async def remindme_task():
-        print(" [EVIL REMINDER TASK] im runnninggg")
+        #print(" [EVIL REMINDER TASK] im runnninggg")
         reminders = getReminders()
         reminder_qualifiers:list[Reminder] = []
 

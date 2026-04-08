@@ -78,16 +78,19 @@ async def adminrepeat(ctx : discord.Interaction, what_said: str, channel: discor
 
         assert not isinstance(log_channel,(discord.ForumChannel,discord.CategoryChannel,Bot.PrivateChannel)), "log channel assertion"
 
-        if channel == None:
-            channel = ctx.channel
+        _channel = channel
 
-        assert channel, "channel assertion"
+        if _channel == None:
+            _channel = ctx.channel
+
+        assert _channel, "channel assertion"
+        assert not isinstance(_channel, (discord.CategoryChannel,discord.ForumChannel)), "channel is category or forum assertion"
 
         if reply == "0":
-            await channel.send(content=what_said)
+            await _channel.send(content=what_said)
         else:
             reply_int = int(reply)
-            reply_message = await channel.fetch_message(reply_int)
+            reply_message = await _channel.fetch_message(reply_int)
             await reply_message.reply(content=what_said)
 
         await ctx.response.send_message(

@@ -49,7 +49,7 @@ class BaseDatabase:
         else:
             raise Exception("database was not connected")
     
-    def read_data(self, statement: str, parameters: tuple = ()) -> list:
+    def read_data(self, statement: str, parameters: tuple = ()) -> list | tuple:
         if self.database and self.cursor:
             if self.verbose: print(f" [SQL] [{self.ident}] read '{statement}' , '{parameters}")
             self.cursor.execute(statement, parameters)

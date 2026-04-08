@@ -98,7 +98,7 @@ if Bot.DeweyConfig["gacha-reminder-task"]:
             #set the timeout to -2 so they don't qualify again (we don't dm them again)
             gachalib.gacha_user.set_user_timeout(user_id=i,unix_time=-2)
         end = gachalib.gacha_user.get_timestamp()
-        print(f" [reminder_task] took {round(end-start)}s")
+        #print(f" [reminder_task] took {round(end-start)}s")
     
     Bot.client.on_ready_functions.append(gachalib.reminder_task.start)
 
