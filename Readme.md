@@ -18,3 +18,6 @@ sudo systemctl start deweybot
 ```
 
 To view logs, run `sudo journalctl -eu deweybot.service`
+
+## Tools
+Run tools from the root of the project (i.e `./tools/convert.py`)
