@@ -71,6 +71,7 @@ class SQLite3Database(BaseDatabase):
         return
 
     def connect(self) -> None:
+        # TODO: would like this if it didn't create a new file if not existing already
         if self.database is None:
             self.database = sqlite3.connect(self.database_path)
             self.cursor = self.database.cursor()

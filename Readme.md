@@ -4,6 +4,8 @@ Discord bot using discord.py for the [okayxairen](https://www.youtube.com/@okayx
 ## Running
 Copy `examples/dewey.yaml.example` to the same directory as StartBot.py and fill it out
 
+After filling out the config file, run `tools/init_databases.py` to initalize the databases you set up.
+
 Run `./StartBot.py` directly or with `python3` or `py`
 
 

@@ -10,15 +10,6 @@ import os
 import other.Settings as Settings
 
 gacha_database = db_lib.setup_db(name="gacha", file=Bot.DeweyConfig["gacha-sqlite-path"])
-# tables=
-#                                  ["CREATE TABLE gacha \
-# (maker_id int(19), request_message_id int(20), id int(5), accepted bool(1), name varchar(256), description varchar(256), rarity varchar(256), filename varchar(256));",
-#               "CREATE TABLE gacha_user \
-# (user_id int(19), last_use int(20));",
-#               "CREATE TABLE gacha_cards \
-# (id int(20), card_id int(5), user_id int(19));"
-#               "CREATE TABLE settings\
-# (uid int(19), roll_reminder_dm bool(1), roll_auto_sell bool(1));",]
 
 if not gacha_database:
     raise Exception("Fuck!")

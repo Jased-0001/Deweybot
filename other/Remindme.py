@@ -10,19 +10,6 @@ if Bot.DeweyConfig["reminders-enabled"]:
     reminders_db = db_lib.setup_db(name="remindme", file=Bot.DeweyConfig["reminders-sqlite-path"])
 
 
-    #tables=["""CREATE TABLE "remindme" (
-    #    "uid"	INTEGER,
-    #    "made"	INTEGER,
-    #    "whenr"	INTEGER,
-    #    "note"	STRING,
-    #    "guild" INTEGER,
-    #    "channel" INTEGER,
-    #    "message" INTEGER
-    #)""","""
-    #    CREATE TABLE "settings" (
-    #        "uid"	INTEGER
-    #    );"""]
-
     if not reminders_db:
         raise Exception("Fuck!")
 

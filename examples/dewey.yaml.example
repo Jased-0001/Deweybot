@@ -8,6 +8,16 @@ permission-override: [] # optional
                         # format of [["member", id], ["role", id]]
 
 # Db settings
+database-type:  # Set to SQLite3 or MySQL
+
+mysql-host:
+mysql-username:
+mysql-password:
+
+mysql-gacha-database:
+mysql-deweycoins-database:
+mysql-reminders-database:
+
 gacha-sqlite-path:
 deweycoins-sqlite-path: 
 reminders-sqlite-path: 

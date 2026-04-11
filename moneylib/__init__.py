@@ -4,21 +4,7 @@ import discord
 import moneylib.types
 
 money_database = db_lib.setup_db(name="deweycoins", file=Bot.DeweyConfig["deweycoins-sqlite-path"])
-#tables=["""CREATE TABLE "deweycoins" (
-#	"uid"	INTEGER,
-#	"balance"	INTEGER,
-#	"highestbalance"	INTEGER,
-#	"transactions"	INTEGER,
-#	"spent"	INTEGER,
-#	"totalearned"	INTEGER,
-#    "lostgambling" INTEGER,
-#    "gainedgambling" INTEGER
-#    "heads" INTEGER,
-#    "tails" INTEGER
-#);""","""
-#CREATE TABLE "settings" (
-#	"uid"	INTEGER
-#);"""]
+
 
 if not money_database:
     raise Exception("Fuck!")
