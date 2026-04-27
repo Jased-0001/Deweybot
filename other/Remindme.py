@@ -7,7 +7,7 @@ import discord
 from discord.ext import tasks
 
 if Bot.DeweyConfig["reminders-enabled"]:
-    reminders_db = db_lib.setup_db(name="remindme", file=Bot.DeweyConfig["reminders-sqlite-path"])
+    reminders_db = db_lib.setup_db(name="reminders")
 
 
     if not reminders_db:

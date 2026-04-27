@@ -9,7 +9,7 @@ import os
 
 import other.Settings as Settings
 
-gacha_database = db_lib.setup_db(name="gacha", file=Bot.DeweyConfig["gacha-sqlite-path"])
+gacha_database = db_lib.setup_db(name="gacha")
 
 if not gacha_database:
     raise Exception("Fuck!")

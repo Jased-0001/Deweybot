@@ -3,7 +3,7 @@ import discord
 
 import moneylib.types
 
-money_database = db_lib.setup_db(name="deweycoins", file=Bot.DeweyConfig["deweycoins-sqlite-path"])
+money_database = db_lib.setup_db(name="deweycoins")
 
 
 if not money_database:

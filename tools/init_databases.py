@@ -16,7 +16,7 @@ GachaTables: tablestype = [
         ("maker_id",           "int(19)"),
         ("request_message_id", "int(20)"),
         ("id",                 "int(5)"),
-        ("accepted",           "bool(1)"),
+        ("accepted",           "BOOL"),
         ("name",               "varchar(256)"),
         ("description",        "varchar(256)"),
         ("rarity",             "varchar(256)"),
@@ -33,8 +33,8 @@ GachaTables: tablestype = [
     ]),
     ("settings", [
         ("uid",              "int(19)"),
-        ("roll_reminder_dm", "bool(1)"),
-        ("roll_auto_sell",   "bool(1)"),
+        ("roll_reminder_dm", "bool"),
+        ("roll_auto_sell",   "bool"),
     ]),
 ]
 
@@ -61,7 +61,7 @@ ReminderTables: tablestype = [
         ("uid",	    "INTEGER"),
         ("made",	"INTEGER"),
         ("whenr",	"INTEGER"),
-        ("note",	"STRING"),
+        ("note",	"varchar(256)"),
         ("guild",   "INTEGER"),
         ("channel", "INTEGER"),
         ("message", "INTEGER"),
@@ -76,9 +76,9 @@ def makeCreateStatement(table:tabletype) -> str:
 
     for i in range(len(table[1])):
         # create '"name" TYPE,'
-        fields += f"    \"{table[1][i][0]}\" {table[1][i][1]}{',' if not i+1==len(table[1]) else ''}\n"
+        fields += f" {table[1][i][0]} {table[1][i][1]}{',' if not i+1==len(table[1]) else ''}\n"
 
-    definition = f"CREATE TABLE \"{table[0]}\" (\n{fields});"
+    definition = f"CREATE TABLE {table[0]} (\n{fields});"
 
     return definition
 
@@ -98,6 +98,7 @@ if __name__ == "__main__":
         reminderdefinitions.append(makeCreateStatement(table=i))
 
     if DeweyConfig["database-type"] == "SQLite3":
+        print("creating SQLite3")
         dbs:list[tuple[str,list]] = [
             ("gacha-sqlite-path",gachadefinitions),
             ("deweycoins-sqlite-path",coinsdefinitions),
@@ -123,6 +124,30 @@ if __name__ == "__main__":
             db.close()
             print("closed")
     elif DeweyConfig["database-type"] == "MySQL":
-        raise Exception("to be implemented")
+        print("creating MySQL")
+        dbs:list[tuple[str,list]] = [
+            ("mysql-gacha-database",gachadefinitions),
+            ("mysql-deweycoins-database",coinsdefinitions),
+            ("mysql-reminders-database",reminderdefinitions),
+            ]
+        for i in dbs:
+            print(f"creating new db @{DeweyConfig[i[0]]}")
+
+            db = pymysql.connect(host=DeweyConfig["mysql-host"],
+                                user=DeweyConfig["mysql-username"],
+                                password=DeweyConfig['mysql-password'],
+                                #database=DeweyConfig[i[0]],
+                                cursorclass=pymysql.cursors.DictCursor)
+            print("Connected to sql")
+            
+            db.cursor().execute(f'CREATE DATABASE {DeweyConfig[i[0]]};')
+            db.cursor().execute(f'USE {DeweyConfig[i[0]]};')
+
+            for x in i[1]:
+                db.cursor().execute(x)
+
+            db.commit()
+            db.close()
+            print("closed")
     else:
         raise Exception("deweyconfig database-type is not SQLite3 or MySQL")

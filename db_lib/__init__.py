@@ -1,5 +1,6 @@
 import sqlite3
 import pymysql
+import Bot
 
 OpenDatabases = {}
 
@@ -20,7 +21,7 @@ class BaseDatabase:
         #if tables:
         #    self.setup_tables(tables=tables)
 
-        print(f" [SQL] [{self.ident}] opened db '{self.database_path}' ({"connected" if connect else "not connected"})")
+        print(f" [db_lib] [{self.ident}] opened db '{self.database_path}' ({"connected" if connect else "not connected"})")
     
     def connect(self) -> None:
         pass
@@ -33,7 +34,7 @@ class BaseDatabase:
     #            except sqlite3.OperationalError as e:
     #                msg = str(e)
     #                if msg.startswith("table ") and msg.endswith(" already exists"):
-    #                    print(f" [SQL] [{self.ident}] {msg}")
+    #                    print(f" [{self.type}] [{self.ident}] {msg}")
     #                else:
     #                    raise e
     #        
@@ -43,7 +44,7 @@ class BaseDatabase:
     
     def write_data(self, statement: str, data: tuple) -> None:
         if self.database and self.cursor:
-            if self.verbose: print(f" [SQL] [{self.ident}] write '{statement}' , '{data}")
+            if self.verbose: print(f" [{self.type}] [{self.ident}] write '{statement}' , '{data}")
             self.cursor.execute(statement, data)
             self.database.commit()
         else:
@@ -51,7 +52,7 @@ class BaseDatabase:
     
     def read_data(self, statement: str, parameters: tuple = ()) -> list | tuple:
         if self.database and self.cursor:
-            if self.verbose: print(f" [SQL] [{self.ident}] read '{statement}' , '{parameters}")
+            if self.verbose: print(f" [{self.type}] [{self.ident}] read '{statement}' , '{parameters}")
             self.cursor.execute(statement, parameters)
             return self.cursor.fetchall()
         else:
@@ -83,7 +84,12 @@ class MySQLDatabase(BaseDatabase):
         return
 
     def connect(self) -> None:
-        raise NotImplemented("mysql is NOT implemented yet!!!!!!!!!!")
+        if self.database is None:
+            self.database = pymysql.connect(host=Bot.DeweyConfig["mysql-host"],
+                user=Bot.DeweyConfig["mysql-username"],
+                password=Bot.DeweyConfig['mysql-password'],
+                database=self.database_path)
+            self.cursor = self.database.cursor(cursor=pymysql.cursors.Cursor)
     
 
 def get_db(name:str) -> BaseDatabase | None:
@@ -92,11 +98,15 @@ def get_db(name:str) -> BaseDatabase | None:
     else:
         return None
 
-def setup_db(name:str, file:str) -> BaseDatabase:
+def setup_db(name:str) -> BaseDatabase:
     newdb = get_db(name=name)
     
     if not newdb:
-        newdb = SQLite3Database(ident=name, database_path=file, connect=True, verbose=False)
+        if Bot.DeweyConfig["database-type"] == "SQLite3": 
+            newdb = SQLite3Database(ident=name, database_path=Bot.DeweyConfig[f"{name}-sqlite-path"], connect=True, verbose=False)
+        elif Bot.DeweyConfig["database-type"] == "MySQL":
+            newdb = MySQLDatabase(ident=name, database_path=Bot.DeweyConfig[f"mysql-{name}-database"], connect=True, verbose=False)
+        else: raise Exception("database-type is not SQLite3 or MySQL")
         OpenDatabases[name] = newdb
 
     return newdb
