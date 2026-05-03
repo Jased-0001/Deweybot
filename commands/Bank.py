@@ -196,7 +196,7 @@ async def money_z_give_coin(ctx : discord.Interaction, user: discord.Member | di
 @coin_group.command(name="z-audit", description=" ! ADMIN ONLY ! how much money exists in the wild")
 async def money_z_audit(ctx : discord.Interaction, show:bool=True):
     if Permissions.is_override(ctx):
-        money = moneylib.money_database.read_data(statement="SELECT balance FROM deweycoins;")
+        money = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="deweycoins",values=["balance"]))
         total_cash = 0
 
         for i in money:

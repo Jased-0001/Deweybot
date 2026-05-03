@@ -18,29 +18,23 @@ class BaseDatabase:
 
         if connect: 
             self.connect()
-        #if tables:
-        #    self.setup_tables(tables=tables)
 
         print(f" [db_lib] [{self.ident}] opened db '{self.database_path}' ({"connected" if connect else "not connected"})")
     
     def connect(self) -> None:
         pass
 
-    #def setup_tables(self, tables:list[str]) -> None:
-    #    if self.database and self.cursor:
-    #        for i in tables:
-    #            try:
-    #                self.cursor.execute(i)
-    #            except sqlite3.OperationalError as e:
-    #                msg = str(e)
-    #                if msg.startswith("table ") and msg.endswith(" already exists"):
-    #                    print(f" [{self.type}] [{self.ident}] {msg}")
-    #                else:
-    #                    raise e
-    #        
-    #        self.database.commit()
-    #    else:
-    #        raise Exception("database was not connected")
+    def create_write_statement(self,table:str,values:list[str]) -> str:
+        return ""
+    
+    def create_update_statement(self,table:str,values:list[str], where:list[str]=[]) -> str:
+        return ""
+    
+    def create_delete_statement(self,table:str, where:list[str]=[]) -> str:
+        return ""
+
+    def create_read_statement(self,table:str,values:list[str], where:list[str]=[]) -> str:
+        return ""
     
     def write_data(self, statement: str, data: tuple) -> None:
         if self.database and self.cursor:
@@ -54,7 +48,9 @@ class BaseDatabase:
         if self.database and self.cursor:
             if self.verbose: print(f" [{self.type}] [{self.ident}] read '{statement}' , '{parameters}")
             self.cursor.execute(statement, parameters)
-            return self.cursor.fetchall()
+            a = self.cursor.fetchall()
+            print(a)
+            return a
         else:
             raise Exception("database was not connected")
     
@@ -71,6 +67,18 @@ class SQLite3Database(BaseDatabase):
         self.type = "SQLite3"
         return
 
+    def create_write_statement(self,table:str,values:list[str]) -> str:
+        return f"INSERT INTO {table} ({",".join(values)}) VALUES ({",".join(["?" for i in range(len(values))])})"
+    
+    def create_update_statement(self,table:str,values:list[str], where:list[str]=[]) -> str:
+        return f"UPDATE {table} SET{",".join([" " + i + "=?" for i in values])}{" WHERE" + " AND ".join([" " + i + "=?" for i in where])}"
+    
+    def create_delete_statement(self,table:str, where:list[str]=[]) -> str:
+        return f"DELETE FROM {table} {" WHERE" + " AND ".join([" " + i + "=?" for i in where])}"
+    
+    def create_read_statement(self,table:str, values:list[str], where:list[str]=[]) -> str:
+        return f"SELECT {",".join(values)} FROM {table}{" WHERE" + " AND ".join([" " + i + " = (?)" for i in where]) if len(where) > 0 else ""}"
+
     def connect(self) -> None:
         # TODO: would like this if it didn't create a new file if not existing already
         if self.database is None:
@@ -82,6 +90,18 @@ class MySQLDatabase(BaseDatabase):
         super().__init__(ident=ident, database_path=database_path, connect=connect, verbose=verbose)
         self.type = "MySQL"
         return
+
+    def create_write_statement(self,table:str,values:list[str]) -> str:
+        return f"INSERT INTO {table} ({",".join(values)}) VALUES ({",".join(["%s" for i in range(len(values))])})"
+    
+    def create_update_statement(self,table:str,values:list[str], where:list[str]=[]) -> str:
+        return f"UPDATE {table} SET{",".join([" " + i + "=%s" for i in values])}{" WHERE" + " AND ".join([" " + i + "=%s" for i in where])}"
+    
+    def create_delete_statement(self,table:str, where:list[str]=[]) -> str:
+        return f"DELETE FROM {table} {" WHERE" + " AND ".join([" " + i + "=%s" for i in where])}"
+
+    def create_read_statement(self,table:str, values:list[str], where:list[str]=[]) -> str:
+        return f"SELECT {",".join(values)} FROM {table}{" WHERE" + " AND ".join([" " + i + " = (%s)" for i in where]) if len(where) > 0 else ""}"
 
     def connect(self) -> None:
         if self.database is None:
@@ -103,9 +123,9 @@ def setup_db(name:str) -> BaseDatabase:
     
     if not newdb:
         if Bot.DeweyConfig["database-type"] == "SQLite3": 
-            newdb = SQLite3Database(ident=name, database_path=Bot.DeweyConfig[f"{name}-sqlite-path"], connect=True, verbose=False)
+            newdb = SQLite3Database(ident=name, database_path=Bot.DeweyConfig[f"{name}-sqlite-path"], connect=True, verbose=True)
         elif Bot.DeweyConfig["database-type"] == "MySQL":
-            newdb = MySQLDatabase(ident=name, database_path=Bot.DeweyConfig[f"mysql-{name}-database"], connect=True, verbose=False)
+            newdb = MySQLDatabase(ident=name, database_path=Bot.DeweyConfig[f"mysql-database"], connect=True, verbose=True)
         else: raise Exception("database-type is not SQLite3 or MySQL")
         OpenDatabases[name] = newdb
 

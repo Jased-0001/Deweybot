@@ -102,7 +102,7 @@ async def gacha_submitcard(ctx : discord.Interaction, name: str, description: st
         else: raise Exception("Dewey config option \"review\" is not set to 'channel' or 'dm'")
 
         
-        a = gachalib.gacha_database.read_data(f"SELECT id FROM gacha;", ())
+        a = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="gacha",values=['id']), parameters=())
         if len(a) == 0:
             next_id = 1
         else:

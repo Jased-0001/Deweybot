@@ -11,9 +11,9 @@ tablestype = list[tabletype]
 
 GachaTables: tablestype = [
     ("gacha", [
-        ("maker_id",           "INTEGER"),
-        ("request_message_id", "INTEGER"),
-        ("id",                 "INTEGER"),
+        ("maker_id",           "BIGINT"),
+        ("request_message_id", "BIGINT"),
+        ("id",                 "BIGINT"),
         ("accepted",           "BOOL"),
         ("name",               "varchar(256)"),
         ("description",        "varchar(256)"),
@@ -21,46 +21,46 @@ GachaTables: tablestype = [
         ("filename",           "varchar(256)"),
     ]),
     ("gacha_user", [
-        ("user_id",  "INTEGER"),
-        ("last_use", "INTEGER"),
+        ("user_id",  "BIGINT"),
+        ("last_use", "BIGINT"),
     ]),
     ("gacha_cards", [
-        ("id",      "INTEGER"),
-        ("card_id", "INTEGER"),
-        ("user_id", "INTEGER"),
+        ("id",      "BIGINT"),
+        ("card_id", "BIGINT"),
+        ("user_id", "BIGINT"),
     ]),
 ]
 
 CoinsTables: tablestype = [
     ("deweycoins", [
-        ("uid",	            "INTEGER"),
-        ("balance",	        "INTEGER"),
-        ("highestbalance",	"INTEGER"),
-        ("transactions",	"INTEGER"),
-        ("spent",	        "INTEGER"),
-        ("totalearned", 	"INTEGER"),
-        ("lostgambling",    "INTEGER"),
-        ("gainedgambling",  "INTEGER"),
-        ("heads",           "INTEGER"),
-        ("tails",           "INTEGER")
+        ("uid",	            "BIGINT"),
+        ("balance",	        "BIGINT"),
+        ("highestbalance",	"BIGINT"),
+        ("transactions",	"BIGINT"),
+        ("spent",	        "BIGINT"),
+        ("totalearned", 	"BIGINT"),
+        ("lostgambling",    "BIGINT"),
+        ("gainedgambling",  "BIGINT"),
+        ("heads",           "BIGINT"),
+        ("tails",           "BIGINT")
     ]),
 ]
 
 ReminderTables: tablestype = [
     ("remindme", [
-        ("uid",	    "INTEGER"),
-        ("made",	"INTEGER"),
-        ("whenr",	"INTEGER"),
+        ("uid",	    "BIGINT"),
+        ("made",	"BIGINT"),
+        ("whenr",	"BIGINT"),
         ("note",	"varchar(256)"),
-        ("guild",   "INTEGER"),
-        ("channel", "INTEGER"),
-        ("message", "INTEGER"),
+        ("guild",   "BIGINT"),
+        ("channel", "BIGINT"),
+        ("message", "BIGINT"),
     ]),
 ]
 
 SettingsTables: tablestype = [
     ("settings", [
-        ("uid",              "INTEGER"),
+        ("uid",              "BIGINT"),
         ("roll_reminder_dm", "bool"),
         ("roll_auto_sell",   "bool"),
     ]),

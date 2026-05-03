@@ -1,6 +1,7 @@
 """
 things to deal with the actual cards
 """
+from Bot import Deweybase
 import gachalib
 from random import randint
 import os
@@ -13,9 +14,10 @@ def evilify(card):
 
 # Getting cards (multiple)
 ######################################
-def db_get_cards(statement: str, parameters: tuple = ()) -> tuple[bool, list[gachalib.types.Card]]:
+def db_get_cards(where:list[str]= [], parameters: tuple = ()) -> tuple[bool, list[gachalib.types.Card]]:
     try:
-        a = gachalib.gacha_database.read_data(statement=statement, parameters=parameters)
+        a = Deweybase.read_data(statement=Deweybase.create_read_statement(table="gacha",values=["name","description","rarity","filename","maker_id","accepted","id"],
+                                                                          where=where), parameters=parameters)
         b = []
 
         for c in a:
@@ -27,17 +29,17 @@ def db_get_cards(statement: str, parameters: tuple = ()) -> tuple[bool, list[gac
     
 # | None
 def get_cards() -> tuple[bool, list[gachalib.types.Card]]:
-    return db_get_cards(statement=f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha")
+    return db_get_cards()
 
 def get_approved_cards() -> tuple[bool, list[gachalib.types.Card]]:
-    return db_get_cards(statement=f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE accepted = True")
+    return db_get_cards(where=["accepted"], parameters=(True,))
 
 def get_cards_sent_by_id(id:int) -> tuple[bool, list[gachalib.types.Card]]:
-    return db_get_cards(statement=f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE (maker_id) = (?)", parameters=(id,))
+    return db_get_cards(where=["maker_id"], parameters=(id,))
 
 
 def get_card_by_id_range(id_start:int, id_end:int) -> tuple[bool, list[gachalib.types.Card]]:
-    a,b = db_get_cards(statement="SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha;")
+    a,b = db_get_cards()
     if a:
         return a, b[id_start-1:id_end]
     else:
@@ -45,7 +47,7 @@ def get_card_by_id_range(id_start:int, id_end:int) -> tuple[bool, list[gachalib.
 
     
 def get_unapproved_cards() -> tuple[bool, list[gachalib.types.Card]]:
-    return db_get_cards(statement=f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE (accepted) = (?);", parameters=(False,))
+    return db_get_cards(where=["accepted"], parameters=(False,))
 
 
 
@@ -55,7 +57,8 @@ def get_unapproved_cards() -> tuple[bool, list[gachalib.types.Card]]:
 
 def get_card_by_id(card_id:int) -> tuple[bool, gachalib.types.Card]:
     try:
-        a = gachalib.gacha_database.read_data(f"SELECT name,description,rarity,filename,maker_id,accepted,id FROM gacha WHERE (id) = (?)", (abs(int(card_id)),))[0]
+        a = Deweybase.read_data(statement=Deweybase.create_read_statement(table="gacha",values=["name","description","rarity","filename","maker_id","accepted","id"],
+                                                                          where=["id"]), parameters=(abs(int(card_id)),))[0]
         a = evilify(a) if int(card_id) < 0 else a
         return (True, gachalib.types.Card(name=a[0],description=a[1],rarity=a[2],filename=a[3],maker_id=a[4],accepted=a[5],card_id=a[6]))
     except IndexError:
@@ -67,7 +70,7 @@ def get_card_by_id(card_id:int) -> tuple[bool, gachalib.types.Card]:
 
 def random_card_by_rarity(rarity:str, evil_chance: int=25) -> tuple[bool, gachalib.types.Card]:
     try:
-        a = gachalib.gacha_database.read_data(f"SELECT id FROM gacha WHERE (rarity,accepted) = (?,?)", (rarity,True))
+        a = Deweybase.read_data(statement=Deweybase.create_read_statement(table="gacha",values=["id"],where=["rarity","accepted"]), parameters=(rarity,True))
         card_id = a[randint(0,len(a)-1)][0]
         card_id = card_id * -1 if randint(1, evil_chance) == 1 else card_id
         success, card = get_card_by_id(card_id)
@@ -126,13 +129,11 @@ async def approve_card(approve:bool, card:gachalib.types.Card) -> tuple[bool, st
 ######################################
 
 def register_new_card(userid:int, messageid:int, id:int, name:str, description:str, rarity:str, filename:str) -> None:
-    gachalib.gacha_database.write_data("INSERT INTO gacha \
-(maker_id, request_message_id, id, accepted, \
-name, description, rarity, filename) \
-VALUES (?,?,?,?,?,?,?,?)", (userid,messageid,id,False,name,description,rarity,filename))
+    Deweybase.write_data(statement=Deweybase.create_write_statement(table="gacha",values=["maker_id", "request_message_id", "id", "accepted", "name", "description", "rarity", "filename"]),
+                         data=(userid,messageid,id,False,name,description,rarity,filename))
     
 def update_card(id:int, update, value) -> None:
-    gachalib.gacha_database.write_data(f"UPDATE gacha SET {update}=? WHERE id=?;", (value,id))
+    Deweybase.write_data(statement=Deweybase.create_update_statement(table="gacha",values=[update],where=["id"]),data=(value,id))
     
 def delete_card(card_id:int) -> bool:
     success, card = get_card_by_id(card_id)
@@ -141,7 +142,7 @@ def delete_card(card_id:int) -> bool:
             os.remove("images/" + card.filename)
         except FileNotFoundError:
             pass
-        gachalib.gacha_database.write_data(f"DELETE FROM gacha WHERE id=(?);", (card_id,))
+        Deweybase.write_data(statement=Deweybase.create_delete_statement(table="gacha",where=["id"]), data=(card_id,))
         return True
     else:
         return False

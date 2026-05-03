@@ -1,4 +1,5 @@
 import discord
+from Bot import Deweybase
 import gachalib
 import gachalib.types, gachalib.cards
 
@@ -10,7 +11,7 @@ class RequestView(discord.ui.View):
     @discord.ui.button(label="Approve", style=discord.ButtonStyle.success, row=0, custom_id="approve_btn")
     async def approve_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         assert interaction.message, "no interaction.message"
-        a = gachalib.gacha_database.read_data(f"SELECT id FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0]
+        a = Deweybase.read_data(statement=Deweybase.create_read_statement(table="gacha",values=["id"], where=["request_message_id"]), parameters=(interaction.message.id,))[0]
         #print("I believe this is id ", a[0])
 
         _, card = gachalib.cards.get_card_by_id(a[0])
@@ -24,7 +25,7 @@ class RequestView(discord.ui.View):
     @discord.ui.button(label="Deny", style=discord.ButtonStyle.secondary, row=0, custom_id="deny_btn")
     async def deny_button_callback(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
         assert interaction.message, "no interaction.message"
-        a = gachalib.gacha_database.read_data(f"SELECT id FROM gacha WHERE (request_message_id) = (?)", (interaction.message.id,))[0]
+        a = Deweybase.read_data(statement=Deweybase.create_read_statement(table="gacha",values=["id"], where=["request_message_id"]), parameters=(interaction.message.id,))[0]
 
         _, card = gachalib.cards.get_card_by_id(a[0])
         _, status = await gachalib.cards.approve_card(False, card)

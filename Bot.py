@@ -6,13 +6,10 @@ from discord.abc import PrivateChannel
 from yaml import load,Loader
 import traceback
 from inspect import iscoroutinefunction
+from subprocess import check_output, CalledProcessError
 
 with open("dewey.yaml", "r") as f:
     DeweyConfig = load(stream=f, Loader=Loader)
-
-import other.Permissions as Permissions
-import other.Settings as Settings
-from subprocess import check_output, CalledProcessError
 
 
 try:
@@ -23,6 +20,12 @@ except CalledProcessError:
 
 intents = discord.Intents.all()
 
+
+import db_lib
+Deweybase = db_lib.setup_db(name="dewey")
+
+import other.Permissions as Permissions
+import other.Settings as Settings
 
 class botClient(discord.Client):
     def __init__(self):

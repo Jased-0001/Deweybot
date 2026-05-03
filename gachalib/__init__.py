@@ -9,11 +9,6 @@ import os
 
 import other.Settings as Settings
 
-gacha_database = db_lib.setup_db(name="gacha")
-
-if not gacha_database:
-    raise Exception("Fuck!")
-
 Rarities = Literal["None", "Common", "Uncommon", "Rare", "Epic", "Legendary",
     "None evil", "Common evil", "Uncommon evil", "Rare evil", "Epic evil", "Legendary evil"]
 SortOptions = Literal["ID", "Rarity"]
@@ -37,7 +32,7 @@ rarity_order = {
 }
 
 
-gacha_settings = Settings.Settings(db_ident="gacha")
+gacha_settings = Settings.Settings()
 
 
 

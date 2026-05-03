@@ -1,9 +1,10 @@
 import gachalib, gachalib.types
+from Bot import Deweybase
 
 from time import time
 
 def get_everyone_with_timeouts() -> list[gachalib.types.GachaUser]:
-    a = gachalib.gacha_database.read_data("SELECT user_id,last_use FROM gacha_user")
+    a = Deweybase.read_data(statement=Deweybase.create_read_statement(table="gacha_user", values=["user_id", "last_use"]))
     b = []
 
     for user in a:
@@ -12,7 +13,7 @@ def get_everyone_with_timeouts() -> list[gachalib.types.GachaUser]:
     return b
 
 def get_user_timeout(user_id:int) -> gachalib.types.GachaUser:
-    a = gachalib.gacha_database.read_data(f"SELECT last_use FROM gacha_user WHERE (user_id) = (?)", (user_id,))
+    a = Deweybase.read_data(statement=Deweybase.create_read_statement(table="gacha_user", values=["last_use"], where=["user_id"]), parameters=(user_id,))
 
     if len(a) == 0:
         return gachalib.types.GachaUser(user_id=user_id,last_use=-1)
@@ -22,9 +23,9 @@ def get_user_timeout(user_id:int) -> gachalib.types.GachaUser:
 
 def set_user_timeout(user_id:int,unix_time:int) -> gachalib.types.GachaUser: #also update
     if get_user_timeout(user_id=user_id).last_use == -1:
-        gachalib.gacha_database.write_data("INSERT INTO gacha_user (user_id,last_use) VALUES (?,?)", (user_id,unix_time))
+        Deweybase.write_data(statement=Deweybase.create_write_statement(table="gacha_user", values=["user_id", "last_use"]), data=(user_id,unix_time))
     else:
-        gachalib.gacha_database.write_data("UPDATE gacha_user SET last_use=? WHERE user_id=?", (unix_time,user_id))
+        Deweybase.write_data(statement=Deweybase.create_update_statement(table="gacha_user",values=["last_use"],where=["user_id"]), data=(unix_time,user_id))
         
     return gachalib.types.GachaUser(user_id=user_id,last_use=unix_time)
 

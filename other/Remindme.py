@@ -1,17 +1,11 @@
 from email import message
 
 import Bot
-import db_lib
 import datetime
 import discord
 from discord.ext import tasks
 
 if Bot.DeweyConfig["reminders-enabled"]:
-    reminders_db = db_lib.setup_db(name="reminders")
-
-
-    if not reminders_db:
-        raise Exception("Fuck!")
 
     class Reminder:
         def __init__(self, uid:int, made:int, when:int, note:str, guild:int, channel:int, message:int):
@@ -25,14 +19,17 @@ if Bot.DeweyConfig["reminders-enabled"]:
 
 
     def setReminder(uid: int, made: int, when: int, note: str, message: int|None,guild:int|None, channel:int|None) -> None:
-        reminders_db.write_data(statement="INSERT INTO remindme (uid,made,whenr,note,message,guild,channel) VALUES (?,?,?,?,?,?,?);", data=(uid,made,when,note,message,guild,channel))
+        Bot.Deweybase.write_data(statement=Bot.Deweybase.create_write_statement(table="remindme",
+        values=["uid","made","whenr","note","message","guild","channel"]), data=(uid,made,when,note,message,guild,channel))
         
     def removeReminder(uid:int,when:int,made:int,messageid:int|None) -> None:
-        reminders_db.write_data(statement=f"DELETE FROM remindme WHERE uid = {uid} AND whenr = {when} AND made = {made} {f"AND message = {messageid}" if messageid else ""};", data=())
+        Bot.Deweybase.write_data(statement=Bot.Deweybase.create_delete_statement(table="remindme",
+        where=["uid","whenr","made"] if not messageid else ["uid","whenr","made","message"]), data=(uid,when,made,)if not messageid else(uid,when,made,messageid,))
         
     def getReminders(whose: None | int = None) -> list[Reminder]:
         try:
-            a = reminders_db.read_data(statement=f"SELECT uid,made,whenr,note,message,guild,channel FROM remindme{" WHERE uid = (?)" if whose else ""}", parameters=(whose,) if whose else ())
+            a = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="remindme",values=["uid","made","whenr","note","message","guild","channel"],
+                                                                                      where=["uid"] if whose else []), parameters=(whose,) if whose else ())
             b = []
 
             for i in a:

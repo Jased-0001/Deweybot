@@ -3,29 +3,29 @@ import discord
 
 import moneylib.types
 
-money_database = db_lib.setup_db(name="deweycoins")
-
-
-if not money_database:
-    raise Exception("Fuck!")
 
 
 def register_user(user: int) -> moneylib.types.User:
-    money_database.write_data(statement="INSERT INTO deweycoins \
-(uid,balance,highestbalance,transactions,spent,totalearned,lostgambling,gainedgambling,heads,tails) \
-VALUES (?,?,?,?,?,?,?,?,?,?)", data=(user,0,0,0,0,0,0,0,0,0))
+    Bot.Deweybase.write_data(statement=Bot.Deweybase.create_write_statement(table="deweycoins",
+    values=["uid","balance","highestbalance","transactions","spent","totalearned","lostgambling","gainedgambling","heads","tails"]),
+    data=(user,0,0,0,0,0,0,0,0,0))
     return moneylib.types.User(uid=user)
 
-def updateValues(update:list[str],values:list[str | int],id:int) -> None:
+def updateValues(update:list[str],values:list[str | int],id:int) -> None: # TODO: update this because it probably doesn't need a weird for loop anymore
     assert len(update) == len(values)
     for i in range(len(update)):
-        money_database.write_data(statement=
-                                  f"UPDATE deweycoins SET {update[i]}=? WHERE uid = (?)", data=(values[i],id))
+        Bot.Deweybase.write_data(statement=Bot.Deweybase.create_update_statement(table="deweycoins",
+        values=[update[i]],
+        where=["uid"]),
+        data=(values[i],id))
 
 def getUserInfo(user: int) -> moneylib.types.User:
     try:
-        a = money_database.read_data(statement="SELECT uid,balance,highestbalance,transactions,spent,totalearned,\
-lostgambling,gainedgambling,heads,tails FROM deweycoins WHERE uid = (?)", parameters=(user,))[0]
+        a = Bot.Deweybase.read_data(statement=Bot.Deweybase.create_read_statement(table="deweycoins",
+        values=["uid","balance","highestbalance","transactions","spent","totalearned","lostgambling","gainedgambling","heads","tails"],
+        where=["uid"]),
+        parameters=(user,))[0]
+        if len(a) == 0: raise IndexError("user not in the thing")
         return moneylib.types.User(uid=a[0],balance=a[1],statistics=moneylib.types.Statistics(
             highestbalance=a[2],transactions=a[3],spent=a[4],totalearned=a[5],lostgambling=a[6],gainedgambling=a[7],heads=a[8],tails=a[9]
         ))
